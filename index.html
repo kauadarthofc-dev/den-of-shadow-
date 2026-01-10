@@ -319,3 +319,95 @@ window.onresize(); draw();
 </script>
 </body>
 </html>
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Den of Shadow 💀 Fixed Doors</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&family=Special+Elite&display=swap');
+        
+        * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
+        body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; }
+        canvas { display: block; }
+
+        .ui-screen { 
+            position: absolute; inset: 0; 
+            background: radial-gradient(circle at center, #4a0404 0%, #000000 100%);
+            z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        }
+        
+        #start-screen h1 { font-family: 'Nosifer', cursive; font-size: clamp(30px, 8vw, 70px); color: #ff0000; text-shadow: 0 0 30px #ff0000; }
+        .btn-main { padding: 15px 50px; font-size: 20px; background: transparent; border: 2px solid #ff0000; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 10px; transition: 0.3s; }
+        .btn-main:hover { background: #ff0000; box-shadow: 0 0 40px #ff0000; }
+
+        .lang-select { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 4000; }
+        .lang-btn { background: rgba(255,0,0,0.2); border: 1px solid #ff0000; color: white; padding: 5px 15px; cursor: pointer; font-family: 'Orbitron'; }
+        .lang-btn.active { background: #ff0000; }
+
+        #cutscene-screen { background: #000; cursor: pointer; text-align: center; padding: 40px; }
+        #cutscene-text { font-family: 'Special Elite', cursive; font-size: clamp(16px, 4vw, 24px); color: #ccc; max-width: 800px; line-height: 1.6; }
+        
+        #hud { position: absolute; top: 20px; left: 20px; z-index: 1000; display: none; flex-direction: column; gap: 8px; }
+        .stat-container { background: rgba(0,0,0,0.8); padding: 6px; border-left: 3px solid #ff0000; width: 180px; }
+        .bar-bg { width: 100%; height: 6px; background: #222; margin-top: 4px; }
+        .bar-fill { height: 100%; transition: width 0.2s; }
+
+        #msg-popup { position: absolute; top: 25%; width: 100%; text-align: center; font-size: 30px; color: #ff0000; display: none; z-index: 2000; font-family: 'Nosifer'; pointer-events: none;}
+    </style>
+</head>
+<body>
+
+<div class="lang-select">
+    <button class="lang-btn active" onclick="changeLang('pt')">PT</button>
+    <button class="lang-btn" onclick="changeLang('en')">EN</button>
+</div>
+
+<div id="start-screen" class="ui-screen">
+    <h1>DEN OF SHADOW</h1>
+    <p id="subtitle" style="letter-spacing: 5px; color: #ff0000; margin-bottom: 30px;">LORD OF LIGHT</p>
+    <button class="btn-main" id="play-btn" onclick="initCutscene()">JOGAR</button>
+</div>
+
+<div id="cutscene-screen" class="ui-screen" style="display:none;" onclick="nextHistory()">
+    <div id="cutscene-text"></div>
+    <div style="margin-top:40px; color:#444; font-size:12px;">CLIQUE PARA CONTINUAR / CLICK TO CONTINUE</div>
+</div>
+
+<div id="hud">
+    <div class="stat-container"><div id="label-hp">VIDA</div><div class="bar-bg"><div id="hp-fill" class="bar-fill" style="width: 100%; background: #ff0000;"></div></div></div>
+    <div class="stat-container" style="border-color:#f1c40f;"><div id="label-ammo">MUNIÇÃO</div><div class="bar-bg"><div id="ammo-fill" class="bar-fill" style="width: 100%; background: #f1c40f;"></div></div></div>
+    <div style="font-weight: bold; color: #ff0000;"><span id="label-room">SALA</span>: <span id="room-txt">0</span></div>
+</div>
+
+<div id="msg-popup"></div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const ROOM = { w: 1200, h: 800, wallSize: 60 };
+const G = { 
+    play: false, room: 0, hp: 100, ammo: 25, maxAmmo: 25, 
+    reloading: false, enemiesDefeated: false, lang: 'pt',
+    hasFireWpn: false, lastShot: 0
+};
+
+const texts = {
+    pt: {
+        sub: "LORDE DA LUZ", hp: "VIDA", ammo: "MUNIÇÃO", room: "SALA", boss: "GUARDIÃO!", weapon: "PODER DO FOGO!",
+        history: [
+            "No início, o Lorde da Luz governava tudo com sabedoria.",
+            "Mas sua própria sombra o traiu, mergulhando o reino no caos.",
+            "Banido para o Den of Shadow, ele perdeu sua essência divina.",
+            "Agora, ele deve subir cada sala para enfrentar seus pecados.",
+            "Derrote o Guardião a cada 10 salas para recuperar seus poderes.",
+            "Tutorial: WASD move, SETAS atiram. Encoste na porta vermelha no topo para avançar!"
+        ]
+    },
+    en: {
+        sub: "LORD OF
