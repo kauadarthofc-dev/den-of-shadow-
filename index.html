@@ -24,12 +24,10 @@
         #shoot-ctrl { position: absolute; bottom: 15%; right: 8%; display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; pointer-events: auto; }
         .atk-btn { width: 70px; height: 70px; background: rgba(52,152,219,0.1); border: 2px solid #3498db; border-radius: 50%; color: #3498db; display: flex; justify-content: center; align-items: center; font-size: 24px; }
         #swap-btn { position: absolute; bottom: 45%; right: 8%; width: 70px; height: 60px; background: rgba(241, 196, 15, 0.2); border: 2px solid #f1c40f; border-radius: 12px; color: #f1c40f; display: flex; justify-content: center; align-items: center; font-size: 14px; font-weight: bold; pointer-events: auto; }
-        #fs-btn { position: absolute; top: 10px; right: 10px; padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid #fff; color: #fff; z-index: 100; pointer-events: auto; display: none; border-radius: 5px; font-size: 10px; }
     </style>
 </head>
 <body>
 
-<div id="fs-btn">TELA CHEIA</div>
 <div id="start-screen" class="overlay">
     <div class="logo">FOX OF ISAAC</div>
     <div class="subtitle">DEN OF SHADOWS</div>
@@ -75,7 +73,7 @@ forestGroundImg.src = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTnR
 let forestGroundLoaded = false;
 forestGroundImg.onload = () => { forestGroundLoaded = true; };
 
-let audioCtx;
+let audioCtx = null;
 function playSfx(f, type, dur, vol=0.1) {
     if(!audioCtx) return;
     try {
@@ -83,7 +81,6 @@ function playSfx(f, type, dur, vol=0.1) {
         const g = audioCtx.createGain();
         osc.type = type;
         osc.frequency.setValueAtTime(f, audioCtx.currentTime);
-        if(type==='sawtooth') osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + dur);
         g.gain.setValueAtTime(vol, audioCtx.currentTime);
         g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + dur);
         osc.connect(g); g.connect(audioCtx.destination);
@@ -102,10 +99,7 @@ function handleGamepad() {
     attack.down = gp.buttons[13]?.pressed || gp.buttons[0]?.pressed;
     attack.left = gp.buttons[14]?.pressed || gp.buttons[2]?.pressed;
     attack.right = gp.buttons[15]?.pressed || gp.buttons[1]?.pressed;
-    
-    if((gp.buttons[4]?.pressed || gp.buttons[8]?.pressed) && p.timer % 20 === 0) {
-        cycleWeapon();
-    }
+    if((gp.buttons[4]?.pressed || gp.buttons[8]?.pressed) && p.timer % 20 === 0) cycleWeapon();
     return gpIn;
 }
 
@@ -141,7 +135,7 @@ function updateInput() {
 }
 
 if(isMobile) {
-    document.getElementById('swap-btn').onclick = (e) => { e.preventDefault(); cycleWeapon(); };
+    document.getElementById('swap-btn').addEventListener('touchstart', (e) => { e.preventDefault(); cycleWeapon(); });
     const jb = document.getElementById('joy-bound');
     jb.addEventListener('touchstart', e => { e.preventDefault(); joyId = e.changedTouches[0].identifier; }, {passive:false});
     window.addEventListener('touchmove', e => {
@@ -163,7 +157,7 @@ function resize() { canvas.width = window.innerWidth / 2; canvas.height = window
 window.onresize = resize; resize();
 
 document.getElementById('btn-start').onclick = () => {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     Game.started = true;
     document.getElementById('start-screen').style.display = 'none';
     if(isMobile) document.getElementById('mobile-ui').style.display = 'block';
@@ -173,25 +167,23 @@ document.getElementById('btn-start').onclick = () => {
 function initRoom() {
     enemies = []; projectiles = []; pedestal = null;
     p.x = Game.roomW/2; p.y = Game.roomH - 100;
-    p.iframe = 30; p.crossTimer = 30;
-    
+    p.iframe = 40; p.crossTimer = 40;
     if (Game.room === 0) return;
-    
-    // ARMAS NAS SALAS 5 E 15
     if (Game.room === 5 && !Game.hasFire) pedestal = { type: 'fire', x: Game.roomW/2-15, y: Game.roomH/2-15, w: 30, h: 30 };
     if (Game.room === 15 && !Game.hasAcid) pedestal = { type: 'acid', x: Game.roomW/2-15, y: Game.roomH/2-15, w: 30, h: 30 };
-
     if (Game.room % 10 === 0) {
-        enemies.push({ type: 'boss', shooter: Game.room % 20 === 0, x: Game.roomW/2-40, y: 150, hp: 400 + (Game.room*10), w: 80, h: 80, timer: 0, hit: 0, dying: 0 });
+        enemies.push({ type: 'boss', x: Game.roomW/2-40, y: 150, hp: 400 + (Game.room*20), maxHp: 400 + (Game.room*20), w: 80, h: 80, timer: 0, hit: 0, dying: 0 });
     } else {
         let count = 2 + Math.floor(Game.room/2);
         for(let i=0; i<count; i++) {
             let r = Math.random();
             let type = r < 0.3 ? 'kamikaze' : r < 0.6 ? 'assassino' : 'perseguidor';
-            enemies.push({ type, x: 100+Math.random()*600, y: 100+Math.random()*300, hp: 40, w: 25, h: 25, hit: 0 });
+            enemies.push({ type, x: 100+Math.random()*600, y: 100+Math.random()*300, hp: 40, w: 25, h: 25, hit: 0, dying: 0 });
         }
     }
 }
+
+function explode(x,y,c,ct,s=3){for(let i=0;i<ct;i++)particles.push({x,y,vx:(Math.random()-0.5)*8,vy:(Math.random()-0.5)*8,life:1,color:c,size:s});}
 
 function loop() {
     if(!Game.started || Game.paused) return requestAnimationFrame(loop);
@@ -224,7 +216,6 @@ function loop() {
     if(pedestal) {
         ctx.fillStyle = pedestal.type === 'fire' ? "#ff4500" : "#32cd32";
         ctx.fillRect(pedestal.x, pedestal.y, pedestal.w, pedestal.h);
-        ctx.strokeStyle = "#fff"; ctx.strokeRect(pedestal.x-5, pedestal.y-5, pedestal.w+10, pedestal.h+10);
         if(Math.hypot(p.x-pedestal.x, p.y-pedestal.y) < 30) {
             if(pedestal.type === 'fire') Game.hasFire = true;
             if(pedestal.type === 'acid') Game.hasAcid = true;
@@ -233,8 +224,7 @@ function loop() {
     }
 
     if(enemies.length===0 && !pedestal) {
-        let isB = Game.room > 0 && Game.room % 10 === 0;
-        ctx.fillStyle = isB ? "#f00" : "#f1c40f"; ctx.fillRect(Game.roomW/2-40, -10, 80, 20);
+        ctx.fillStyle = (Game.room > 0 && Game.room % 10 === 0) ? "#f00" : "#f1c40f"; ctx.fillRect(Game.roomW/2-40, -10, 80, 20);
         if(!p.dead && p.y < 20 && Math.abs(p.x - Game.roomW/2) < 40) { Game.room++; initRoom(); }
     }
 
@@ -272,7 +262,10 @@ function loop() {
         e.x += Math.cos(ang)*s; e.y += Math.sin(ang)*s;
         ctx.fillStyle = e.hit > 0 ? "#fff" : (e.type==='boss'?"#c0392b":e.type==='kamikaze'?"#f1c40f":"#3498db");
         if(e.hit > 0) e.hit--; ctx.fillRect(e.x, e.y, e.w, e.h);
-        if(!p.dead && p.iframe<=0 && Math.hypot(p.x-e.x, p.y-e.y)<25) { Game.lives-=(e.type==='kamikaze'?3:1); p.iframe=60; if(e.type==='kamikaze') e.hp=0; }
+        if(!p.dead && p.iframe<=0 && Math.hypot(p.x-e.x, p.y-e.y)<25) { 
+            Game.lives-=(e.type==='kamikaze'?3:1); p.iframe=60; 
+            if(e.type==='kamikaze') { explode(e.x, e.y, "#f1c40f", 30, 5); e.hp=0; }
+        }
         if(e.hp<=0) { if(e.type==='boss') e.dying=90; else { explode(e.x+e.w/2, e.y+e.h/2, ctx.fillStyle, 20); enemies.splice(i,1); }}
     });
 
@@ -281,13 +274,15 @@ function loop() {
         ctx.fillStyle = pr.type==='fire'?"#ff4500":(pr.type==='acid'?"#32cd32":"#0ff");
         ctx.fillRect(pr.x, pr.y, 8, 8);
         enemies.forEach(e => {
-            if(!e.dying && pr.x > e.x && pr.x < e.x+e.w && pr.y > e.y && pr.y < e.y+e.h) {
-                let dmg = pr.type==='acid'?Stats.damage*1.5:Stats.damage;
-                e.hp -= dmg; e.hit = 5; projectiles.splice(i,1);
+            if(e.dying<=0 && pr.x > e.x && pr.x < e.x+e.w && pr.y > e.y && pr.y < e.y+e.h) {
+                e.hp -= (pr.type==='acid'?Stats.damage*1.5:Stats.damage); e.hit = 5; projectiles.splice(i,1);
             }
         });
         if(pr.x<0||pr.x>Game.roomW||pr.y<0||pr.y>Game.roomH) projectiles.splice(i,1);
     });
+
+    particles.forEach((pt, i) => { pt.x+=pt.vx; pt.y+=pt.vy; pt.life-=0.02; ctx.globalAlpha=pt.life; ctx.fillStyle=pt.color; ctx.fillRect(pt.x,pt.y,pt.size,pt.size); if(pt.life<=0) particles.splice(i,1); });
+    ctx.globalAlpha=1.0; ctx.restore();
 
     for(let i=0; i<Game.maxLives; i++) { ctx.fillStyle = i<Game.lives?"#ff4d6d":"#222"; ctx.fillRect(20+i*25, 20, 15, 15); }
     requestAnimationFrame(loop);
@@ -303,8 +298,6 @@ function showUpgrade() {
         container.appendChild(d);
     });
 }
-
-function explode(x,y,c,ct,s=3){for(let i=0;i<ct;i++)particles.push({x,y,vx:(Math.random()-0.5)*8,vy:(Math.random()-0.5)*8,life:1,color:c,size:s});}
 </script>
 </body>
 </html>
