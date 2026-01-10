@@ -23,7 +23,7 @@
         #joy-stick { position: absolute; left: 35px; top: 35px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.4; }
         #shoot-ctrl { position: absolute; bottom: 15%; right: 8%; display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; pointer-events: auto; }
         .atk-btn { width: 70px; height: 70px; background: rgba(52,152,219,0.1); border: 2px solid #3498db; border-radius: 50%; color: #3498db; display: flex; justify-content: center; align-items: center; font-size: 24px; }
-        #swap-btn { position: absolute; bottom: 45%; right: 8%; width: 60px; height: 60px; background: rgba(241, 196, 15, 0.2); border: 2px solid #f1c40f; border-radius: 12px; color: #f1c40f; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; pointer-events: auto; }
+        #swap-btn { position: absolute; bottom: 45%; right: 8%; width: 70px; height: 60px; background: rgba(241, 196, 15, 0.2); border: 2px solid #f1c40f; border-radius: 12px; color: #f1c40f; display: flex; justify-content: center; align-items: center; font-size: 14px; font-weight: bold; pointer-events: auto; }
         #fs-btn { position: absolute; top: 10px; right: 10px; padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid #fff; color: #fff; z-index: 100; pointer-events: auto; display: none; border-radius: 5px; font-size: 10px; }
     </style>
 </head>
@@ -59,7 +59,11 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-const Game = { started: false, paused: false, room: 0, roomW: 800, roomH: 600, camX: 0, camY: 0, lives: 6, maxLives: 6, weapon: 'normal', hasFire: false };
+const Game = { 
+    started: false, paused: false, room: 0, roomW: 800, roomH: 600, 
+    camX: 0, camY: 0, lives: 6, maxLives: 6, weapon: 'normal', 
+    hasFire: false, hasAcid: false 
+};
 const Stats = { moveSpd: 4.5, atkSpd: 18, damage: 10 };
 const keys = new Set();
 const attack = { up: false, down: false, left: false, right: false };
@@ -87,12 +91,6 @@ function playSfx(f, type, dur, vol=0.1) {
     } catch(e){}
 }
 
-function explode(x, y, color, count = 15, size = 3) {
-    for(let i=0; i<count; i++) {
-        particles.push({ x, y, vx: (Math.random()-0.5)*8, vy: (Math.random()-0.5)*8, life: 1.0, color, size });
-    }
-}
-
 function handleGamepad() {
     const gps = navigator.getGamepads();
     if(!gps[0]) return null;
@@ -104,12 +102,26 @@ function handleGamepad() {
     attack.down = gp.buttons[13]?.pressed || gp.buttons[0]?.pressed;
     attack.left = gp.buttons[14]?.pressed || gp.buttons[2]?.pressed;
     attack.right = gp.buttons[15]?.pressed || gp.buttons[1]?.pressed;
-    if((gp.buttons[4]?.pressed || gp.buttons[8]?.pressed) && Game.hasFire && p.timer % 20 === 0) {
-        Game.weapon = Game.weapon === 'normal' ? 'fire' : 'normal';
-        Stats.atkSpd = Game.weapon === 'fire' ? 10 : 18;
-        playSfx(400, 'sine', 0.1);
+    
+    if((gp.buttons[4]?.pressed || gp.buttons[8]?.pressed) && p.timer % 20 === 0) {
+        cycleWeapon();
     }
     return gpIn;
+}
+
+function cycleWeapon() {
+    if(!Game.hasFire && !Game.hasAcid) return;
+    if(Game.weapon === 'normal') {
+        if(Game.hasFire) Game.weapon = 'fire';
+        else if(Game.hasAcid) Game.weapon = 'acid';
+    } else if(Game.weapon === 'fire') {
+        if(Game.hasAcid) Game.weapon = 'acid';
+        else Game.weapon = 'normal';
+    } else {
+        Game.weapon = 'normal';
+    }
+    Stats.atkSpd = Game.weapon === 'fire' ? 10 : (Game.weapon === 'acid' ? 25 : 18);
+    playSfx(400, 'sine', 0.1);
 }
 
 window.addEventListener('keydown', e => keys.add(e.key.toLowerCase()));
@@ -124,14 +136,12 @@ function updateInput() {
         attack.up = keys.has('arrowup'); attack.down = keys.has('arrowdown');
         attack.left = keys.has('arrowleft'); attack.right = keys.has('arrowright');
     }
-    if(keys.has('q') && Game.hasFire && p.timer % 20 === 0) {
-        Game.weapon = Game.weapon === 'normal' ? 'fire' : 'normal';
-        Stats.atkSpd = Game.weapon === 'fire' ? 10 : 18;
-    }
+    if(keys.has('q') && p.timer % 20 === 0) cycleWeapon();
     return gpInput || {x: inputX, y: inputY};
 }
 
 if(isMobile) {
+    document.getElementById('swap-btn').onclick = (e) => { e.preventDefault(); cycleWeapon(); };
     const jb = document.getElementById('joy-bound');
     jb.addEventListener('touchstart', e => { e.preventDefault(); joyId = e.changedTouches[0].identifier; }, {passive:false});
     window.addEventListener('touchmove', e => {
@@ -164,8 +174,13 @@ function initRoom() {
     enemies = []; projectiles = []; pedestal = null;
     p.x = Game.roomW/2; p.y = Game.roomH - 100;
     p.iframe = 30; p.crossTimer = 30;
-    if (Game.room === 0) return; 
-    if (Game.room === 5 && !Game.hasFire) pedestal = { x: Game.roomW/2-15, y: Game.roomH/2-15, w: 30, h: 30 };
+    
+    if (Game.room === 0) return;
+    
+    // ARMAS NAS SALAS 5 E 15
+    if (Game.room === 5 && !Game.hasFire) pedestal = { type: 'fire', x: Game.roomW/2-15, y: Game.roomH/2-15, w: 30, h: 30 };
+    if (Game.room === 15 && !Game.hasAcid) pedestal = { type: 'acid', x: Game.roomW/2-15, y: Game.roomH/2-15, w: 30, h: 30 };
+
     if (Game.room % 10 === 0) {
         enemies.push({ type: 'boss', shooter: Game.room % 20 === 0, x: Game.roomW/2-40, y: 150, hp: 400 + (Game.room*10), w: 80, h: 80, timer: 0, hit: 0, dying: 0 });
     } else {
@@ -198,7 +213,6 @@ function loop() {
         }
     }
 
-    // TEXTO DO TUTORIAL NO CHÃO (SALA 0)
     if(Game.room === 0) {
         ctx.fillStyle = "rgba(255,255,255,0.2)"; ctx.textAlign = "center";
         ctx.font = "20px Arial"; ctx.fillText("SALA SEGURA", Game.roomW/2, Game.roomH/2 - 80);
@@ -207,7 +221,18 @@ function loop() {
         tut.forEach((t, i) => ctx.fillText(t, Game.roomW/2, Game.roomH/2 - 20 + i*30));
     }
 
-    if(enemies.length===0) {
+    if(pedestal) {
+        ctx.fillStyle = pedestal.type === 'fire' ? "#ff4500" : "#32cd32";
+        ctx.fillRect(pedestal.x, pedestal.y, pedestal.w, pedestal.h);
+        ctx.strokeStyle = "#fff"; ctx.strokeRect(pedestal.x-5, pedestal.y-5, pedestal.w+10, pedestal.h+10);
+        if(Math.hypot(p.x-pedestal.x, p.y-pedestal.y) < 30) {
+            if(pedestal.type === 'fire') Game.hasFire = true;
+            if(pedestal.type === 'acid') Game.hasAcid = true;
+            pedestal = null; playSfx(600, 'sine', 0.5);
+        }
+    }
+
+    if(enemies.length===0 && !pedestal) {
         let isB = Game.room > 0 && Game.room % 10 === 0;
         ctx.fillStyle = isB ? "#f00" : "#f1c40f"; ctx.fillRect(Game.roomW/2-40, -10, 80, 20);
         if(!p.dead && p.y < 20 && Math.abs(p.x - Game.roomW/2) < 40) { Game.room++; initRoom(); }
@@ -215,84 +240,56 @@ function loop() {
 
     if(!p.dead) {
         let move = updateInput();
-        let finalX = isMobile && keys.joyX ? keys.joyX : move.x;
-        let finalY = isMobile && keys.joyY ? keys.joyY : move.y;
-        p.x = Math.max(10, Math.min(Game.roomW-35, p.x + finalX * Stats.moveSpd));
-        p.y = Math.max(10, Math.min(Game.roomH-35, p.y + finalY * Stats.moveSpd));
+        let fX = isMobile && keys.joyX ? keys.joyX : move.x;
+        let fY = isMobile && keys.joyY ? keys.joyY : move.y;
+        p.x = Math.max(10, Math.min(Game.roomW-35, p.x + fX * Stats.moveSpd));
+        p.y = Math.max(10, Math.min(Game.roomH-35, p.y + fY * Stats.moveSpd));
         if(p.iframe > 0) p.iframe--;
         ctx.fillStyle = p.iframe%4<2?"#fff":"#ff4d6d"; ctx.fillRect(p.x, p.y, 25, 25);
         if(p.crossTimer > 0) {
             p.crossTimer--; ctx.strokeStyle = "white"; ctx.lineWidth = 4; ctx.beginPath();
-            ctx.moveTo(p.x + 12.5, p.y - 10); ctx.lineTo(p.x + 12.5, p.y + 35);
-            ctx.moveTo(p.x - 10, p.y + 12.5); ctx.lineTo(p.x + 35, p.y + 12.5); ctx.stroke();
+            ctx.moveTo(p.x+12, p.y-10); ctx.lineTo(p.x+12, p.y+35);
+            ctx.moveTo(p.x-10, p.y+12); ctx.lineTo(p.x+35, p.y+12); ctx.stroke();
         }
         p.timer++;
         if(p.timer % Stats.atkSpd === 0) {
             let dx=0, dy=0;
             if(attack.up) dy=-1; else if(attack.down) dy=1; else if(attack.left) dx=-1; else if(attack.right) dx=1;
-            if(dx||dy) { projectiles.push({x:p.x+8, y:p.y+8, dx, dy, enemy:false, type:Game.weapon}); playSfx(150, 'square', 0.05); }
+            if(dx||dy) projectiles.push({x:p.x+8, y:p.y+8, dx, dy, enemy:false, type:Game.weapon});
         }
     }
 
     enemies.forEach((e, i) => {
         if(e.dying > 0) {
-            e.dying--; 
-            ctx.fillStyle = e.dying % 4 < 2 ? "#fff" : "#f00"; ctx.fillRect(e.x + (Math.random()-0.5)*15, e.y + (Math.random()-0.5)*15, e.w, e.h);
-            if(e.dying % 10 === 0) { explode(e.x+e.w/2, e.y+e.h/2, "#ff4500", 10, 5); playSfx(100, 'sawtooth', 0.1); }
-            if(e.dying === 0) { enemies.splice(i, 1); showUpgrade(); }
-            return;
+            e.dying--; ctx.fillStyle = e.dying % 4 < 2 ? "#fff" : "#f00";
+            ctx.fillRect(e.x + (Math.random()-0.5)*10, e.y + (Math.random()-0.5)*10, e.w, e.h);
+            if(e.dying === 0) { enemies.splice(i, 1); showUpgrade(); } return;
         }
-
-        // LÓGICA DE REPULSÃO (NÃO FICAR UM DENTRO DO OUTRO)
-        enemies.forEach(other => {
-            if(e !== other) {
-                let dx = e.x - other.x, dy = e.y - other.y, dist = Math.hypot(dx, dy);
-                if(dist < 25) { e.x += dx/dist * 2; e.y += dy/dist * 2; }
-            }
-        });
-
+        enemies.forEach(o => { if(e!==o){ let dX=e.x-o.x, dY=e.y-o.y, dist=Math.hypot(dX,dY); if(dist<25){e.x+=dX/dist; e.y+=dY/dist;}}});
         let ang = Math.atan2(p.y-e.y, p.x-e.x);
         let s = e.type==='kamikaze'?3.2: e.type==='assassino'?2.4:1.8;
         if(e.type==='boss') { e.timer++; s = (e.timer%180<50)?5:1.2; }
-        if(!p.dead) { e.x += Math.cos(ang)*s; e.y += Math.sin(ang)*s; }
-        
-        ctx.fillStyle = e.hit > 0 ? "#fff" : (e.type==='boss'?(e.shooter?"#8e44ad":"#c0392b"):e.type==='kamikaze'?"#f1c40f":e.type==='assassino'?"#9b59b6":"#3498db");
-        if(e.hit > 0) e.hit--;
-        ctx.fillRect(e.x, e.y, e.w, e.h);
-
-        if(!p.dead && p.iframe<=0 && Math.hypot(p.x-e.x, p.y-e.y)<25) { 
-            Game.lives -= (e.type==='kamikaze'?3:1); p.iframe=60; playSfx(100, 'sawtooth', 0.3);
-            if(e.type==='kamikaze') { explode(e.x, e.y, "#f1c40f", 40, 6); e.hp=0; }
-        }
-        if(e.hp<=0) {
-            if(e.type==='boss') { e.dying = 90; playSfx(60, 'sawtooth', 1.0, 0.5); } 
-            else { explode(e.x+e.w/2, e.y+e.h/2, ctx.fillStyle, 20); enemies.splice(i,1); }
-        }
+        e.x += Math.cos(ang)*s; e.y += Math.sin(ang)*s;
+        ctx.fillStyle = e.hit > 0 ? "#fff" : (e.type==='boss'?"#c0392b":e.type==='kamikaze'?"#f1c40f":"#3498db");
+        if(e.hit > 0) e.hit--; ctx.fillRect(e.x, e.y, e.w, e.h);
+        if(!p.dead && p.iframe<=0 && Math.hypot(p.x-e.x, p.y-e.y)<25) { Game.lives-=(e.type==='kamikaze'?3:1); p.iframe=60; if(e.type==='kamikaze') e.hp=0; }
+        if(e.hp<=0) { if(e.type==='boss') e.dying=90; else { explode(e.x+e.w/2, e.y+e.h/2, ctx.fillStyle, 20); enemies.splice(i,1); }}
     });
 
     projectiles.forEach((pr, i) => {
-        pr.x += pr.dx*(pr.enemy?4:9); pr.y += pr.dy*(pr.enemy?4:9);
-        ctx.fillStyle = pr.enemy?"#f0f":(pr.type==='fire'?"#ff4500":"#0ff"); ctx.fillRect(pr.x, pr.y, 8, 8);
-        if(!pr.enemy) {
-            enemies.forEach(e => {
-                if(!e.dying && pr.x > e.x && pr.x < e.x + e.w && pr.y > e.y && pr.y < e.y + e.h) {
-                    e.hp -= Stats.damage; e.hit = 5; projectiles.splice(i,1);
-                }
-            });
-        } else if(!p.dead && p.iframe<=0 && Math.hypot(pr.x-p.x-12, pr.y-p.y-12)<15) { 
-            Game.lives--; p.iframe=60; projectiles.splice(i,1); playSfx(100, 'sawtooth', 0.3); 
-        }
+        pr.x += pr.dx*9; pr.y += pr.dy*9;
+        ctx.fillStyle = pr.type==='fire'?"#ff4500":(pr.type==='acid'?"#32cd32":"#0ff");
+        ctx.fillRect(pr.x, pr.y, 8, 8);
+        enemies.forEach(e => {
+            if(!e.dying && pr.x > e.x && pr.x < e.x+e.w && pr.y > e.y && pr.y < e.y+e.h) {
+                let dmg = pr.type==='acid'?Stats.damage*1.5:Stats.damage;
+                e.hp -= dmg; e.hit = 5; projectiles.splice(i,1);
+            }
+        });
         if(pr.x<0||pr.x>Game.roomW||pr.y<0||pr.y>Game.roomH) projectiles.splice(i,1);
     });
 
-    particles.forEach((pt, i) => {
-        pt.x += pt.vx; pt.y += pt.vy; pt.life -= 0.02; ctx.globalAlpha = pt.life; ctx.fillStyle = pt.color; ctx.fillRect(pt.x, pt.y, pt.size||3, pt.size||3);
-        if(pt.life <= 0) particles.splice(i, 1);
-    });
-    ctx.globalAlpha = 1.0; ctx.restore();
-
     for(let i=0; i<Game.maxLives; i++) { ctx.fillStyle = i<Game.lives?"#ff4d6d":"#222"; ctx.fillRect(20+i*25, 20, 15, 15); }
-    ctx.fillStyle="#fff"; ctx.fillText("SALA: "+Game.room, canvas.width - 70, 30);
     requestAnimationFrame(loop);
 }
 
@@ -302,10 +299,12 @@ function showUpgrade() {
     const pool = [{t:"DANO+", f:()=>Stats.damage+=10}, {t:"VELÔ+", f:()=>Stats.moveSpd+=1}, {t:"VIDA+", f:()=> {Game.maxLives++; Game.lives++;}}];
     pool.forEach(u => {
         let d = document.createElement('div'); d.className='card'; d.innerHTML=`<b>${u.t}</b>`;
-        d.onclick = () => { u.f(); playSfx(600, 'sine', 0.3); Game.paused=false; document.getElementById('card-screen').style.display='none'; };
+        d.onclick = () => { u.f(); Game.paused=false; document.getElementById('card-screen').style.display='none'; };
         container.appendChild(d);
     });
 }
+
+function explode(x,y,c,ct,s=3){for(let i=0;i<ct;i++)particles.push({x,y,vx:(Math.random()-0.5)*8,vy:(Math.random()-0.5)*8,life:1,color:c,size:s});}
 </script>
 </body>
 </html>
