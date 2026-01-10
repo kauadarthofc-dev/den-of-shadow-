@@ -7,20 +7,16 @@
     <style>
         * { touch-action: none !important; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
         html, body { background: #000; margin: 0; padding: 0; overflow: hidden; height: 100%; width: 100%; position: fixed; font-family: 'Courier New', monospace; color: #fff; }
-        .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .btn-ui { padding: 20px 40px; border: 4px solid #ff4d6d; background: #111; color: #fff; font-size: 20px; font-weight: bold; border-radius: 12px; cursor: pointer; }
-        #game-container { position: relative; width: 100vw; height: 100vh; }
+        #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
         canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
-        .mobile-ctrl { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 50; }
+        .mobile-ctrl { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 1500; }
         #joy-bound { position: absolute; bottom: 15%; left: 8%; width: 120px; height: 120px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; pointer-events: auto; }
         #joy-stick { position: absolute; left: 35px; top: 35px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.4; }
         #shoot-ctrl { position: absolute; bottom: 15%; right: 8%; display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; pointer-events: auto; }
         .atk-btn { width: 70px; height: 70px; background: rgba(52,152,219,0.1); border: 2px solid #3498db; border-radius: 50%; color: #3498db; display: flex; justify-content: center; align-items: center; font-size: 24px; }
         #swap-btn { position: absolute; bottom: 45%; right: 8%; width: 80px; height: 70px; background: rgba(241, 196, 15, 0.2); border: 3px solid #f1c40f; border-radius: 15px; color: #f1c40f; display: flex; justify-content: center; align-items: center; font-size: 16px; font-weight: bold; pointer-events: auto; }
-        /* UI de Munição */
-        #ammo-ui { position: absolute; top: 20px; right: 20px; text-align: right; pointer-events: none; }
-        .ammo-bar { height: 10px; background: #333; width: 100px; border: 1px solid #fff; margin-top: 5px; }
-        #ammo-fill { height: 100%; background: #0ff; width: 100%; transition: 0.2s; }
     </style>
 </head>
 <body>
@@ -33,12 +29,6 @@
 <div id="death-screen" class="overlay" style="display:none;">
     <h1 style="color:red;">FIM DA JORNADA</h1>
     <div class="btn-ui" onclick="location.reload()">RECOMEÇAR</div>
-</div>
-
-<div id="ammo-ui">
-    <div id="weapon-name">NORMAL</div>
-    <div class="ammo-bar"><div id="ammo-fill"></div></div>
-    <div id="ammo-text">5 / 5</div>
 </div>
 
 <div id="game-container">
@@ -58,28 +48,24 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-// Assets
-const heartImg = new Image();
-heartImg.src = 'data:image/png;base64,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';
-
 const Game = { 
-    started: false, paused: false, room: 0, roomW: 800, roomH: 600, 
+    started: false, paused: false, room: 0, roomW: 1000, roomH: 800, 
     camX: 0, camY: 0, lives: 6, maxLives: 6, weapon: 'normal', 
-    hasFire: false, hasAcid: false, version: "v1.3.0",
-    ammo: 5, maxAmmo: 5, reloading: false
+    hasFire: false, hasAcid: false, version: "v1.5.0",
+    ammo: 5, maxAmmo: 5, reloading: false, reloadTimer: 0,
+    doorPos: { x: 0, y: 0, side: 'top', open: false }
 };
 
 const Weapons = {
-    normal: { dmg: 10, max: 5, color: "#0ff", name: "NORMAL" },
+    normal: { dmg: 10, max: 5, color: "#0ff", name: "MAGNUM" },
     fire: { dmg: 15, max: 15, color: "#ff4500", name: "FOGO" },
-    acid: { dmg: 20, max: 10, color: "#32cd32", name: "ÁCIDO" }
+    acid: { dmg: 20, max: 20, color: "#32cd32", name: "ÁCIDO" }
 };
 
-const Stats = { moveSpd: 4.5, atkSpd: 18 };
+const Stats = { moveSpd: 4.8, atkSpd: 15 };
 const keys = new Set();
-const attack = { up: false, down: false, left: false, right: false };
 let enemies = [], projectiles = [], particles = [], pools = [], pedestal = null;
-let p = { x: 400, y: 300, iframe: 0, timer: 0, dead: false };
+let p = { x: 500, y: 400, iframe: 0, timer: 0, dead: false };
 
 let audioCtx = null;
 function playSfx(f, type, dur, vol=0.1) {
@@ -98,13 +84,18 @@ function playSfx(f, type, dur, vol=0.1) {
 
 function explode(x, y, color, count=15) {
     for(let i=0; i<count; i++) {
-        particles.push({
-            x, y, 
-            vx: (Math.random()-0.5)*10, 
-            vy: (Math.random()-0.5)*10, 
-            life: 1, color
-        });
+        particles.push({ x, y, vx:(Math.random()-0.5)*12, vy:(Math.random()-0.5)*12, life:1, color, size:Math.random()*4+2 });
     }
+}
+
+function randomizeDoor() {
+    const sides = ['top', 'bottom', 'left', 'right'];
+    Game.doorPos.side = sides[Math.floor(Math.random() * sides.length)];
+    Game.doorPos.open = false;
+    if(Game.doorPos.side === 'top') { Game.doorPos.x = Game.roomW/2 - 50; Game.doorPos.y = 0; }
+    else if(Game.doorPos.side === 'bottom') { Game.doorPos.x = Game.roomW/2 - 50; Game.doorPos.y = Game.roomH - 15; }
+    else if(Game.doorPos.side === 'left') { Game.doorPos.x = 0; Game.doorPos.y = Game.roomH/2 - 50; }
+    else if(Game.doorPos.side === 'right') { Game.doorPos.x = Game.roomW - 15; Game.doorPos.y = Game.roomH/2 - 50; }
 }
 
 function cycleWeapon() {
@@ -112,63 +103,68 @@ function cycleWeapon() {
     if(Game.weapon === 'normal') Game.weapon = Game.hasFire ? 'fire' : 'acid';
     else if(Game.weapon === 'fire') Game.weapon = Game.hasAcid ? 'acid' : 'normal';
     else Game.weapon = 'normal';
-    
     Game.maxAmmo = Weapons[Game.weapon].max;
     Game.ammo = Game.maxAmmo;
     Game.reloading = false;
-    updateAmmoUI();
+    playSfx(400, 'triangle', 0.1);
 }
 
-function updateAmmoUI() {
-    const w = Weapons[Game.weapon];
-    document.getElementById('weapon-name').innerText = w.name;
-    document.getElementById('ammo-text').innerText = `${Game.ammo} / ${Game.maxAmmo}`;
-    const fill = document.getElementById('ammo-fill');
-    fill.style.width = (Game.ammo / Game.maxAmmo * 100) + "%";
-    fill.style.background = w.color;
-}
-
-window.addEventListener('keydown', e => {
-    keys.add(e.key.toLowerCase());
-    if(e.key.toLowerCase() === 'q') cycleWeapon();
-});
-window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
-
-if(isMobile) {
-    document.getElementById('swap-btn').addEventListener('touchstart', (e) => { e.preventDefault(); cycleWeapon(); });
-    // Joystick e Botões simplificados por espaço
-}
-
-document.getElementById('btn-start').onclick = () => {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    Game.started = true;
-    document.getElementById('start-screen').style.display = 'none';
-    if(isMobile) document.getElementById('mobile-ui').style.display = 'block';
-    initRoom(); loop();
-};
-
-function initRoom() {
-    enemies = []; projectiles = []; pools = []; pedestal = null;
-    p.x = Game.roomW/2; p.y = Game.roomH - 100;
-    p.iframe = 30;
-    
-    if(Game.room === 5 && !Game.hasFire) pedestal = { type: 'fire', x: Game.roomW/2, y: Game.roomH/2 };
-    if(Game.room === 15 && !Game.hasAcid) pedestal = { type: 'acid', x: Game.roomW/2, y: Game.roomH/2 };
-
-    if(Game.room > 0) {
-        let count = 3 + Math.floor(Game.room/2);
-        for(let i=0; i<count; i++) {
-            let r = Math.random();
-            let type = r < 0.25 ? 'kamikaze' : r < 0.5 ? 'shooter' : r < 0.75 ? 'stalker' : 'assassin';
-            enemies.push({
-                type, x: Math.random()*Game.roomW, y: Math.random()*(Game.roomH-200),
-                hp: 40 + Game.room*5, maxHp: 40 + Game.room*5,
-                w: 25, h: 25, hit: 0, burn: 0, shootTimer: 0
-            });
-        }
+function drawUI() {
+    // 1. Barra de Vida (Hexágonos) - Canto Superior Esquerdo
+    for(let i=0; i<Game.maxLives; i++) {
+        let x = 35 + i * 42;
+        let y = 35;
+        ctx.fillStyle = i < Game.lives ? "#ff4d6d" : "#222";
+        ctx.beginPath();
+        for(let a=0; a<6; a++) ctx.lineTo(x + 16 * Math.cos(a * Math.PI/3), y + 16 * Math.sin(a * Math.PI/3));
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
     }
+
+    // 2. Munição (ABAIXO DA VIDA)
+    const wInfo = Weapons[Game.weapon];
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 14px Courier New";
+    ctx.fillText(wInfo.name, 20, 75);
+    
+    ctx.fillStyle = "#333";
+    ctx.fillRect(20, 85, 120, 10);
+    ctx.fillStyle = Game.reloading ? "#f1c40f" : wInfo.color;
+    ctx.fillRect(20, 85, (Game.ammo / Game.maxAmmo) * 120, 10);
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 1; ctx.strokeRect(20, 85, 120, 10);
+    
+    // 3. Minimapa (Canto Superior Direito)
+    const mapS = 100;
+    const mapX = canvas.width - mapS - 20;
+    const mapY = 20;
+    ctx.fillStyle = "rgba(0,0,0,0.7)";
+    ctx.fillRect(mapX, mapY, mapS, mapS);
+    ctx.strokeStyle = "rgba(255,255,255,0.3)";
+    ctx.strokeRect(mapX, mapY, mapS, mapS);
+    
+    // Porta no mapa
+    if(!Game.doorPos.open) ctx.fillStyle = "rgba(241,196,15,0.5)";
+    else ctx.fillStyle = "#f1c40f";
+    ctx.fillRect(mapX + (Game.doorPos.x/Game.roomW)*mapS, mapY + (Game.doorPos.y/Game.roomH)*mapS, 8, 8);
+
+    // Jogador no mapa
+    ctx.fillStyle = "#fff";
+    ctx.beginPath();
+    ctx.arc(mapX + (p.x/Game.roomW)*mapS, mapY + (p.y/Game.roomH)*mapS, 3, 0, Math.PI*2);
+    ctx.fill();
+
+    // 4. Sala e Versão
+    ctx.textAlign = "center";
+    ctx.font = "bold 20px Courier New";
+    ctx.fillStyle = "#fff";
+    ctx.fillText(`SALA ${Game.room}`, canvas.width/2, 35);
+    
+    ctx.font = "10px Arial"; ctx.textAlign = "right";
+    ctx.fillText(Game.version, canvas.width - 10, canvas.height - 10);
 }
 
+// Loop Principal e Lógica de Jogo
 function loop() {
     if(!Game.started || Game.paused) return requestAnimationFrame(loop);
     ctx.clearRect(0,0, canvas.width, canvas.height);
@@ -178,145 +174,130 @@ function loop() {
     Game.camY += (p.y - canvas.height/2 - Game.camY) * 0.1;
     ctx.translate(-Game.camX, -Game.camY);
 
-    // Chão e Poças
-    ctx.fillStyle = "#111"; ctx.fillRect(0,0,Game.roomW, Game.roomH);
+    // Chão
+    ctx.fillStyle = "#0a0a0a"; ctx.fillRect(-500,-500,Game.roomW+1000,Game.roomH+1000);
+    ctx.strokeStyle = "#222"; ctx.lineWidth = 2;
+    for(let x=0; x<Game.roomW; x+=100) for(let y=0; y<Game.roomH; y+=100) ctx.strokeRect(x,y,100,100);
+
+    // Poças de Ácido (Dano nos Inimigos)
     pools.forEach((po, i) => {
-        ctx.fillStyle = "rgba(50, 205, 50, 0.4)";
+        ctx.fillStyle = "rgba(50, 205, 50, 0.3)";
         ctx.beginPath(); ctx.arc(po.x, po.y, po.r, 0, Math.PI*2); ctx.fill();
+        enemies.forEach(e => {
+            if(Math.hypot(e.x-po.x, e.y-po.y) < po.r && p.timer % 20 === 0) { e.hp -= 3; e.hit = 3; }
+        });
         po.life--; if(po.life <= 0) pools.splice(i,1);
     });
+
+    // Porta
+    if(enemies.length === 0 && !pedestal) {
+        Game.doorPos.open = true;
+        ctx.fillStyle = "#f1c40f";
+        ctx.fillRect(Game.doorPos.x, Game.doorPos.y, 
+            (Game.doorPos.side==='top'||Game.doorPos.side==='bottom'?100:15), 
+            (Game.doorPos.side==='left'||Game.doorPos.side==='right'?100:15));
+        
+        let inDoor = false;
+        if(Game.doorPos.side==='top' && p.y < 20 && Math.abs(p.x - Game.roomW/2) < 50) inDoor = true;
+        if(Game.doorPos.side==='bottom' && p.y > Game.roomH-40 && Math.abs(p.x - Game.roomW/2) < 50) inDoor = true;
+        if(Game.doorPos.side==='left' && p.x < 20 && Math.abs(p.y - Game.roomH/2) < 50) inDoor = true;
+        if(Game.doorPos.side==='right' && p.x > Game.roomW-40 && Math.abs(p.y - Game.roomH/2) < 50) inDoor = true;
+        if(inDoor) { Game.room++; initRoom(); }
+    }
 
     // Player
     if(!p.dead) {
         let moveX = (keys.has('a')?-1:keys.has('d')?1:0);
         let moveY = (keys.has('w')?-1:keys.has('s')?1:0);
-        p.x = Math.max(0, Math.min(Game.roomW-25, p.x + moveX * Stats.moveSpd));
-        p.y = Math.max(0, Math.min(Game.roomH-25, p.y + moveY * Stats.moveSpd));
+        p.x = Math.max(10, Math.min(Game.roomW-35, p.x + moveX * Stats.moveSpd));
+        p.y = Math.max(10, Math.min(Game.roomH-35, p.y + moveY * Stats.moveSpd));
         if(p.iframe > 0) p.iframe--;
         ctx.fillStyle = p.iframe%4<2?"#fff":"#ff4d6d"; ctx.fillRect(p.x, p.y, 25, 25);
         
-        // Tiro e Reload
         p.timer++;
-        if(Game.reloading && p.timer % 60 === 0) { Game.ammo = Game.maxAmmo; Game.reloading = false; updateAmmoUI(); }
-        
+        if(Game.reloading) {
+            Game.reloadTimer++;
+            if(Game.reloadTimer > 50) { Game.ammo = Game.maxAmmo; Game.reloading = false; Game.reloadTimer = 0; }
+        }
         let sX = (keys.has('arrowleft')?-1:keys.has('arrowright')?1:0);
         let sY = (keys.has('arrowup')?-1:keys.has('arrowdown')?1:0);
         if((sX || sY) && p.timer % Stats.atkSpd === 0 && !Game.reloading) {
             projectiles.push({x:p.x+10, y:p.y+10, dx:sX, dy:sY, type:Game.weapon, owner:'player'});
-            Game.ammo--;
-            if(Game.ammo <= 0) Game.reloading = true;
-            updateAmmoUI();
+            Game.ammo--; if(Game.ammo <= 0) Game.reloading = true;
             playSfx(200, 'square', 0.05);
         }
     }
 
-    // Inimigos
+    // Inimigos (Atirador, Kamikaze, Perseguidor, Assassino)
     enemies.forEach((e, i) => {
         let ang = Math.atan2(p.y-e.y, p.x-e.x);
-        let dist = Math.hypot(p.y-e.y, p.x-e.x);
+        let d = Math.hypot(p.y-e.y, p.x-e.x);
+        let spd = e.type==='kamikaze'?2.8:e.type==='assassin'?3.2:2;
+        e.x += Math.cos(ang)*spd; e.y += Math.sin(ang)*spd;
 
-        // Movimentação por tipo
-        if(e.type === 'shooter') { if(dist > 200) { e.x+=Math.cos(ang)*2; e.y+=Math.sin(ang)*2; } }
-        else { e.x+=Math.cos(ang)*2.2; e.y+=Math.sin(ang)*2.2; }
-
-        // Atirador disparando
-        if(e.type === 'shooter') {
-            e.shootTimer++;
-            if(e.shootTimer % 100 === 0) projectiles.push({x:e.x+10, y:e.y+10, dx:Math.cos(ang), dy:Math.sin(ang), type:'normal', owner:'enemy'});
-        }
-
-        // Dano de Fogo (Burn)
-        if(e.burn > 0 && p.timer % 60 === 0) { e.hp -= 1; e.burn--; e.hit = 5; }
-
-        // Render e Dano
+        if(e.type === 'shooter' && d < 300) { e.shootTimer++; if(e.shootTimer%80===0) projectiles.push({x:e.x+15, y:e.y+15, dx:Math.cos(ang), dy:Math.sin(ang), type:'normal', owner:'enemy'}); }
+        
         ctx.fillStyle = e.hit > 0 ? "#fff" : (e.type==='kamikaze'?"#f1c40f":e.type==='assassin'?"#8e44ad":"#3498db");
-        if(e.hit>0) e.hit--;
-        ctx.fillRect(e.x, e.y, e.w, e.h);
-        if(e.type === 'assassin') { // Adaga
-            ctx.fillStyle = "#ccc"; ctx.fillRect(e.x+Math.cos(ang)*15, e.y+Math.sin(ang)*15, 10, 2);
-        }
+        if(e.hit>0) e.hit--; ctx.fillRect(e.x, e.y, e.w, e.h);
 
-        // Colisão Player
-        if(p.iframe <= 0 && dist < 25) {
-            if(e.type === 'kamikaze') {
-                Game.lives -= 2; explode(e.x, e.y, "#f1c40f", 30); enemies.splice(i,1);
-            } else {
-                Game.lives -= 1;
-            }
-            p.iframe = 60; playSfx(100, 'sawtooth', 0.2);
+        if(p.iframe <= 0 && d < 28) {
+            if(e.type === 'kamikaze') { Game.lives -= 2; explode(e.x, e.y, "#f1c40f", 30); enemies.splice(i,1); }
+            else { Game.lives -= 1; } p.iframe = 60;
         }
-
-        if(e.hp <= 0) {
-            explode(e.x, e.y, ctx.fillStyle);
-            enemies.splice(i,1);
-        }
+        if(e.hp <= 0) { explode(e.x, e.y, ctx.fillStyle, 20); enemies.splice(i,1); }
     });
 
     // Projéteis
     projectiles.forEach((pr, i) => {
-        pr.x += pr.dx*7; pr.y += pr.dy*7;
-        ctx.fillStyle = Weapons[pr.type]?.color || "#f00";
-        ctx.fillRect(pr.x, pr.y, 8, 8);
-
+        pr.x += pr.dx*9; pr.y += pr.dy*9;
+        ctx.fillStyle = Weapons[pr.type]?.color || "#f00"; ctx.fillRect(pr.x, pr.y, 10, 10);
         if(pr.owner === 'player') {
             enemies.forEach(e => {
                 if(pr.x > e.x && pr.x < e.x+e.w && pr.y > e.y && pr.y < e.y+e.h) {
                     e.hp -= Weapons[pr.type].dmg;
-                    if(pr.type === 'fire') e.burn = 5;
-                    if(pr.type === 'acid') pools.push({x: pr.x, y: pr.y, r: 40, life: 180});
+                    if(pr.type === 'acid') pools.push({x: pr.x, y: pr.y, r: 45, life: 200});
                     e.hit = 5; projectiles.splice(i,1);
                 }
             });
-        } else if(Math.hypot(pr.x-p.x, pr.y-p.y) < 20 && p.iframe <= 0) {
-            Game.lives--; p.iframe = 60; projectiles.splice(i,1);
-        }
+        } else if(Math.hypot(pr.x-p.x, pr.y-p.y) < 22 && p.iframe <= 0) { Game.lives--; p.iframe = 60; projectiles.splice(i,1); }
         if(pr.x<0||pr.x>Game.roomW||pr.y<0||pr.y>Game.roomH) projectiles.splice(i,1);
     });
 
     // Partículas
-    particles.forEach((pt, i) => {
-        pt.x += pt.vx; pt.y += pt.vy; pt.life -= 0.02;
-        ctx.globalAlpha = pt.life; ctx.fillStyle = pt.color; ctx.fillRect(pt.x, pt.y, 4, 4);
-        if(pt.life <= 0) particles.splice(i,1);
-    });
+    particles.forEach((pt, i) => { pt.x += pt.vx; pt.y += pt.vy; pt.life -= 0.03; ctx.globalAlpha = pt.life; ctx.fillStyle = pt.color; ctx.fillRect(pt.x, pt.y, 4, 4); if(pt.life <= 0) particles.splice(i,1); });
     ctx.globalAlpha = 1;
 
-    // Pedestal Visual
+    // Pedestais
     if(pedestal) {
         ctx.fillStyle = pedestal.type==='fire'?"#ff4500":"#32cd32";
-        ctx.fillRect(pedestal.x, pedestal.y, 30, 30);
-        if(Math.hypot(p.x-pedestal.x, p.y-pedestal.y) < 30) {
-            if(pedestal.type==='fire') Game.hasFire=true; else Game.hasAcid=true;
-            pedestal=null;
-        }
-    }
-
-    // Porta
-    if(enemies.length === 0 && !pedestal) {
-        ctx.fillStyle = "#f1c40f"; ctx.fillRect(Game.roomW/2-40, 0, 80, 10);
-        if(p.y < 10) { Game.room++; initRoom(); }
+        ctx.fillRect(pedestal.x-15, pedestal.y-15, 30, 30);
+        if(Math.hypot(p.x-pedestal.x, p.y-pedestal.y) < 35) { if(pedestal.type==='fire') Game.hasFire=true; else Game.hasAcid=true; pedestal=null; }
     }
 
     ctx.restore();
-
-    // UI FIXA
-    // Vidas
-    for(let i=0; i<Game.maxLives; i++) {
-        ctx.globalAlpha = i < Game.lives ? 1 : 0.2;
-        ctx.drawImage(heartImg, 20 + i*35, 20, 30, 30);
-    }
-    ctx.globalAlpha = 1;
-
-    // Contador de Salas
-    ctx.fillStyle = "#fff"; ctx.font = "20px Courier"; ctx.textAlign = "center";
-    ctx.fillText("SALA " + Game.room, canvas.width/2, 40);
-
-    // Versão
-    ctx.font = "10px Arial"; ctx.textAlign = "right";
-    ctx.fillText(Game.version, canvas.width - 10, canvas.height - 10);
+    drawUI(); // Renderiza UI por cima de tudo
 
     if(Game.lives <= 0) { Game.started = false; document.getElementById('death-screen').style.display='flex'; }
     requestAnimationFrame(loop);
+}
+
+// Controles e Inicialização
+window.addEventListener('keydown', e => keys.add(e.key.toLowerCase()));
+window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
+document.getElementById('btn-start').onclick = () => { audioCtx = new AudioContext(); Game.started = true; document.getElementById('start-screen').style.display = 'none'; if(isMobile) document.getElementById('mobile-ui').style.display = 'block'; initRoom(); loop(); };
+
+function initRoom() {
+    enemies = []; projectiles = []; pools = []; pedestal = null;
+    randomizeDoor();
+    p.x = Game.roomW/2; p.y = Game.roomH/2;
+    if(Game.room === 5 && !Game.hasFire) pedestal = { type: 'fire', x: Game.roomW/2, y: Game.roomH/2 };
+    if(Game.room === 15 && !Game.hasAcid) pedestal = { type: 'acid', x: Game.roomW/2, y: Game.roomH/2 };
+    if(Game.room > 0) {
+        for(let i=0; i<4+Math.floor(Game.room/2); i++) {
+            let r = Math.random();
+            enemies.push({ type: r<0.2?'kamikaze':r<0.4?'shooter':r<0.7?'stalker':'assassin', x:Math.random()*Game.roomW, y:Math.random()*Game.roomH, hp:40+Game.room*5, w:30, h:30, hit:0, shootTimer:0 });
+        }
+    }
 }
 
 function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
