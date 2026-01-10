@@ -5,94 +5,174 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Den of Shadow 💀 Lord of Light</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&family=Special+Elite&display=swap');
         
         * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
         body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; }
         canvas { display: block; }
 
-        /* TELA INICIAL INSPIRADA NO LINK */
+        /* TELA INICIAL */
         .ui-screen { 
             position: absolute; inset: 0; 
             background: radial-gradient(circle at center, #4a0404 0%, #000000 100%);
             z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            transition: opacity 1s ease;
         }
         
         #start-screen h1 { 
-            font-family: 'Nosifer', cursive; font-size: clamp(40px, 10vw, 80px); 
-            color: #ff0000; text-shadow: 0 0 30px #ff0000; margin-bottom: 10px;
+            font-family: 'Nosifer', cursive; font-size: clamp(30px, 8vw, 70px); 
+            color: #ff0000; text-shadow: 0 0 30px #ff0000; margin-bottom: 5px;
         }
 
         .btn-main { 
-            padding: 20px 60px; font-size: 22px; background: transparent; 
+            padding: 15px 50px; font-size: 20px; background: transparent; 
             border: 2px solid #ff0000; color: #fff; border-radius: 5px; cursor: pointer;
             box-shadow: 0 0 15px #ff0000; transition: 0.3s; font-family: 'Orbitron', sans-serif;
+            margin: 10px;
         }
-        .btn-main:hover { background: #ff0000; box-shadow: 0 0 40px #ff0000; transform: scale(1.1); }
+        .btn-main:hover { background: #ff0000; box-shadow: 0 0 40px #ff0000; transform: scale(1.05); }
 
-        /* CRÉDITOS E REDES SOCIAIS */
-        .social-footer { position: absolute; bottom: 30px; text-align: center; color: rgba(255,255,255,0.7); font-size: 14px; }
-        .social-item { margin: 5px 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .yt-icon { color: #ff0000; font-weight: bold; border: 1px solid #ff0000; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+        /* CONFIGURAÇÕES DE IDIOMA */
+        .settings-bar { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; }
+        .lang-btn { background: rgba(255,0,0,0.2); border: 1px solid #ff0000; color: white; padding: 5px 10px; cursor: pointer; font-size: 12px; }
+        .lang-btn.active { background: #ff0000; }
+
+        /* CUTSCENE */
+        #cutscene-screen { 
+            background: #000; display: none; z-index: 4000; padding: 40px; text-align: center;
+        }
+        #cutscene-text { 
+            font-family: 'Special Elite', cursive; font-size: 24px; color: #ccc; 
+            max-width: 800px; line-height: 1.6;
+        }
+
+        /* LINKS */
+        .social-footer { position: absolute; bottom: 30px; text-align: center; }
+        .social-link { color: #ff0000; text-decoration: none; display: block; margin: 5px; font-size: 14px; transition: 0.3s; }
+        .social-link:hover { text-shadow: 0 0 10px #ff0000; color: #fff; }
 
         /* HUD */
-        #hud { position: absolute; top: 20px; left: 20px; z-index: 1000; display: none; flex-direction: column; gap: 10px; }
-        .stat-container { background: rgba(0,0,0,0.8); padding: 8px; border-left: 4px solid #ff0000; width: 220px; }
-        .bar-bg { width: 100%; height: 8px; background: #222; margin-top: 5px; }
+        #hud { position: absolute; top: 20px; left: 20px; z-index: 1000; display: none; flex-direction: column; gap: 8px; }
+        .stat-container { background: rgba(0,0,0,0.8); padding: 6px; border-left: 3px solid #ff0000; width: 180px; }
+        .bar-bg { width: 100%; height: 6px; background: #222; margin-top: 4px; }
         .bar-fill { height: 100%; transition: width 0.3s; }
-        #hp-fill { background: #ff0000; box-shadow: 0 0 10px #ff0000; }
-        #ammo-fill { background: #f1c40f; box-shadow: 0 0 10px #f1c40f; }
 
         /* MOBILE */
         #mobile-controls { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 2000; }
-        .joy-area { position: absolute; bottom: 50px; left: 50px; width: 120px; height: 120px; background: rgba(255,0,0,0.1); border: 1px solid #ff0000; border-radius: 50%; pointer-events: auto; }
-        .atk-area { position: absolute; bottom: 40px; right: 40px; display: grid; grid-template-columns: repeat(3, 75px); gap: 10px; pointer-events: auto; }
-        .btn-atk { width: 75px; height: 75px; background: rgba(0,0,0,0.5); border: 2px solid #ff0000; border-radius: 50%; color: #ff0000; display: flex; justify-content: center; align-items: center; font-size: 25px; }
     </style>
 </head>
 <body>
 
 <div id="start-screen" class="ui-screen">
-    <h1>DEN OF SHADOW</h1>
-    <p style="letter-spacing: 5px; color: #ff0000; margin-bottom: 40px;">LORD OF LIGHT</p>
-    <button class="btn-main" id="btn-play">INICIAR</button>
+    <div class="settings-bar">
+        <button class="lang-btn active" onclick="setLang('pt')">PT</button>
+        <button class="lang-btn" onclick="setLang('en')">EN</button>
+    </div>
+    <h1 id="title">DEN OF SHADOW</h1>
+    <p id="subtitle" style="letter-spacing: 5px; color: #ff0000; margin-bottom: 30px;">LORD OF LIGHT</p>
+    <button class="btn-main" id="btn-play" onclick="startCutscene()">JOGAR / PLAY</button>
     
     <div class="social-footer">
-        <div class="social-item">kauaderthofc@gmail.com</div>
-        <div class="social-item"><span class="yt-icon">YouTube</span> @kaua_darth</div>
+        <a href="mailto:kauaderthofc@gmail.com" class="social-link">kauaderthofc@gmail.com</a>
+        <a href="https://youtube.com/@kaua_darth" target="_blank" class="social-link">YouTube: @kaua_darth</a>
     </div>
 </div>
 
+<div id="cutscene-screen" class="ui-screen">
+    <div id="cutscene-text"></div>
+    <p style="margin-top: 50px; font-size: 12px; color: #444;" id="skip-text">Aguarde... / Wait...</p>
+</div>
+
 <div id="hud">
-    <div class="stat-container"><div>HEALTH</div><div class="bar-bg"><div id="hp-fill" class="bar-fill" style="width: 100%;"></div></div></div>
-    <div class="stat-container" style="border-color:#f1c40f;"><div>AMMO</div><div class="bar-bg"><div id="ammo-fill" class="bar-fill" style="width: 100%;"></div></div></div>
-    <div style="font-weight: bold; color: #ff0000;">FLOOR: <span id="room-txt">0</span></div>
+    <div class="stat-container"><div id="h-health">VIDA</div><div class="bar-bg"><div id="hp-fill" class="bar-fill" style="width: 100%; background: #ff0000;"></div></div></div>
+    <div class="stat-container" style="border-color:#f1c40f;"><div id="h-ammo">MUNIÇÃO</div><div class="bar-bg"><div id="ammo-fill" class="bar-fill" style="width: 100%; background: #f1c40f;"></div></div></div>
+    <div style="font-weight: bold; color: #ff0000;"><span id="h-floor">SALA</span>: <span id="room-txt">0</span></div>
 </div>
 
 <canvas id="gameCanvas"></canvas>
 
-<div id="mobile-controls">
-    <div id="joy-base" class="joy-area"><div id="joy-stick" style="width:50px; height:50px; background:#ff0000; border-radius:50%; position:absolute; left:35px; top:35px;"></div></div>
-    <div class="atk-area">
-        <div></div><div class="btn-atk" id="atk-up">▲</div><div></div>
-        <div class="btn-atk" id="atk-left">◀</div><div class="btn-atk" id="atk-down">▼</div><div class="btn-atk" id="atk-right">▶</div>
-    </div>
-</div>
-
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
 
-const ROOM = { w: 1200, h: 800, wallSize: 50 };
-const G = { 
-    play: false, room: 0, hp: 100, ammo: 100, 
-    enemiesDefeated: false, lastShot: 0 
+// SISTEMA DE IDIOMAS
+let lang = 'pt';
+const translations = {
+    pt: {
+        subtitle: "LORDE DA LUZ",
+        play: "INICIAR JORNADA",
+        health: "VIDA", ammo: "MUNIÇÃO", floor: "SALA",
+        tutorial_move: "WASD PARA MOVER",
+        tutorial_shoot: "SETAS PARA ATIRAR",
+        history: [
+            "No início, havia apenas o Vazio...",
+            "Então, o Lorde da Luz foi traído por sua própria sombra.",
+            "Agora, preso no Den of Shadow, ele deve lutar...",
+            "Ou ser consumido pela escuridão eterna."
+        ]
+    },
+    en: {
+        subtitle: "LORD OF LIGHT",
+        play: "START JOURNEY",
+        health: "HEALTH", ammo: "AMMO", floor: "FLOOR",
+        tutorial_move: "WASD TO MOVE",
+        tutorial_shoot: "ARROWS TO SHOOT",
+        history: [
+            "In the beginning, there was only the Void...",
+            "Then, the Lord of Light was betrayed by his own shadow.",
+            "Now, trapped in the Den of Shadow, he must fight...",
+            "Or be consumed by eternal darkness."
+        ]
+    }
 };
 
-let player = { x: 600, y: 400, r: 25, spd: 6 };
+function setLang(l) {
+    lang = l;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('subtitle').innerText = translations[lang].subtitle;
+    document.getElementById('btn-play').innerText = translations[lang].play;
+    document.getElementById('h-health').innerText = translations[lang].health;
+    document.getElementById('h-ammo').innerText = translations[lang].ammo;
+    document.getElementById('h-floor').innerText = translations[lang].floor;
+}
+
+// LÓGICA DA CUTSCENE
+async function startCutscene() {
+    document.getElementById('start-screen').style.opacity = '0';
+    setTimeout(() => {
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('cutscene-screen').style.display = 'flex';
+        runText();
+    }, 1000);
+}
+
+async function runText() {
+    const box = document.getElementById('cutscene-text');
+    const sentences = translations[lang].history;
+    for (let s of sentences) {
+        box.style.opacity = '0';
+        await new Promise(r => setTimeout(r, 500));
+        box.innerText = s;
+        box.style.opacity = '1';
+        await new Promise(r => setTimeout(r, 3000));
+    }
+    startGame();
+}
+
+// JOGO
+const ROOM = { w: 1200, h: 800, wallSize: 50 };
+const G = { play: false, room: 0, hp: 100, ammo: 100, lastShot: 0, enemiesDefeated: false };
+let player = { x: 600, y: 400, r: 25, spd: 7 };
 let enemies = [], projectiles = [], doors = [];
 const keys = {};
+
+function startGame() {
+    document.getElementById('cutscene-screen').style.display = 'none';
+    document.getElementById('hud').style.display = 'flex';
+    G.play = true;
+    initRoom();
+}
 
 function initRoom() {
     enemies = []; projectiles = []; doors = [];
@@ -104,94 +184,67 @@ function initRoom() {
 
 function spawnEnemies() {
     for(let i=0; i < 3 + G.room; i++) {
-        enemies.push({
-            x: 200 + Math.random()*(ROOM.w-400),
-            y: 200 + Math.random()*(ROOM.h-400),
-            hp: 50 + G.room*10, r: 30, spd: 2
-        });
+        enemies.push({ x: 200 + Math.random()*(ROOM.w-400), y: 200 + Math.random()*(ROOM.h-400), hp: 50 + G.room*10, r: 30 });
     }
 }
 
-function spawnDoors() {
-    doors.push({ x: ROOM.w/2-60, y: 0, w: 120, h: 50 }); // Norte
-}
+function spawnDoors() { doors.push({ x: ROOM.w/2-60, y: 0, w: 120, h: 50 }); }
 
 function update() {
     if(!G.play) return;
-
-    // MOVIMENTAÇÃO WASD
     let mx = 0, my = 0;
-    if(keys['w']) my = -1; if(keys['s']) my = 1;
-    if(keys['a']) mx = -1; if(keys['d']) mx = 1;
+    if(keys['w']) my = -1; if(keys['s']) my = 1; if(keys['a']) mx = -1; if(keys['d']) mx = 1;
     player.x = Math.max(ROOM.wallSize+25, Math.min(ROOM.w-ROOM.wallSize-25, player.x + mx*player.spd));
     player.y = Math.max(ROOM.wallSize+25, Math.min(ROOM.h-ROOM.wallSize-25, player.y + my*player.spd));
 
-    // ATAQUE SETAS
     let ax = 0, ay = 0;
-    if(keys['arrowup']) ay = -1; if(keys['arrowdown']) ay = 1;
-    if(keys['arrowleft']) ax = -1; if(keys['arrowright']) ax = 1;
-
+    if(keys['arrowup']) ay = -1; if(keys['arrowdown']) ay = 1; if(keys['arrowleft']) ax = -1; if(keys['arrowright']) ax = 1;
     if((ax || ay) && Date.now() - G.lastShot > 200 && G.ammo > 0) {
-        projectiles.push({ x: player.x, y: player.y, vx: ax*12, vy: ay*12, r: 8 });
-        G.lastShot = Date.now();
-        G.ammo -= 1;
+        projectiles.push({ x: player.x, y: player.y, vx: ax*14, vy: ay*14, r: 8 });
+        G.lastShot = Date.now(); G.ammo -= 1;
     }
 
-    // Colisões e Lógica de Jogo
     projectiles.forEach((p, pi) => {
         p.x += p.vx; p.y += p.vy;
         enemies.forEach((en, ei) => {
             if(Math.hypot(p.x-en.x, p.y-en.y) < en.r) {
-                en.hp -= 25; projectiles.splice(pi, 1);
+                en.hp -= 30; projectiles.splice(pi, 1);
                 if(en.hp <= 0) enemies.splice(ei, 1);
             }
         });
     });
 
-    if(enemies.length === 0 && !G.enemiesDefeated) {
-        G.enemiesDefeated = true;
-        spawnDoors();
-    }
-
-    doors.forEach(d => {
-        if(player.x > d.x && player.x < d.x+d.w && player.y < d.y+d.h+20) {
-            G.room++; initRoom();
-        }
-    });
+    if(enemies.length === 0 && !G.enemiesDefeated) { G.enemiesDefeated = true; spawnDoors(); }
+    doors.forEach(d => { if(player.x > d.x && player.x < d.x+d.w && player.y < d.y+d.h+20) { G.room++; initRoom(); } });
 }
 
 function draw() {
     ctx.fillStyle = "#000"; ctx.fillRect(0,0,canvas.width, canvas.height);
     if(!G.play) { requestAnimationFrame(draw); return; }
     update();
-
     ctx.save();
-    let s = Math.min(canvas.width/ROOM.w, canvas.height/ROOM.h)*0.9;
+    let s = Math.min(canvas.width/ROOM.w, canvas.height/ROOM.h)*0.95;
     ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(s,s); ctx.translate(-ROOM.w/2, -ROOM.h/2);
-
-    // Piso e Tutorial
-    ctx.fillStyle = "#0a0000"; ctx.fillRect(0,0,ROOM.w,ROOM.h);
+    
+    // Piso
+    ctx.fillStyle = "#080000"; ctx.fillRect(0,0,ROOM.w,ROOM.h);
     if(G.room === 0) {
-        ctx.fillStyle = "rgba(255,0,0,0.3)"; ctx.textAlign = "center"; ctx.font = "bold 25px Orbitron";
-        ctx.fillText("WASD PARA MOVER", ROOM.w/2, ROOM.h/2 - 80);
-        ctx.fillText("SETAS PARA ATIRAR", ROOM.w/2, ROOM.h/2 + 80);
+        ctx.fillStyle = "rgba(255,0,0,0.2)"; ctx.textAlign = "center"; ctx.font = "20px Orbitron";
+        ctx.fillText(translations[lang].tutorial_move, ROOM.w/2, ROOM.h/2 - 60);
+        ctx.fillText(translations[lang].tutorial_shoot, ROOM.w/2, ROOM.h/2 + 60);
     }
 
     // Paredes e Portas
-    ctx.fillStyle = "#1a0000";
+    ctx.fillStyle = "#150000";
     ctx.fillRect(0,0,ROOM.w,ROOM.wallSize); ctx.fillRect(0,ROOM.h-ROOM.wallSize,ROOM.w,ROOM.wallSize);
     if(G.enemiesDefeated) {
-        ctx.fillStyle = "#ff0000"; ctx.shadowBlur = 20; ctx.shadowColor = "#ff0000";
-        doors.forEach(d => ctx.fillRect(d.x, d.y, d.w, d.h));
+        ctx.fillStyle = "#ff0000"; ctx.shadowBlur = 15; ctx.fillRect(ROOM.w/2-60, 0, 120, 50);
     }
 
-    // Entidades
+    // Player e Inimigos
     ctx.shadowBlur = 10; ctx.shadowColor = "#ff0000"; ctx.fillStyle = "#ff0000";
     enemies.forEach(en => { ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill(); });
-    
-    ctx.fillStyle = "#fff"; ctx.shadowColor = "#fff";
-    ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
-    
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
     projectiles.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); });
     ctx.restore();
 
@@ -203,12 +256,6 @@ function draw() {
 
 window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
 window.addEventListener('keyup', e => delete keys[e.key.toLowerCase()]);
-document.getElementById('btn-play').onclick = () => {
-    document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('hud').style.display = 'flex';
-    if(isMobile) document.getElementById('mobile-controls').style.display = 'block';
-    G.play = true; initRoom();
-};
 window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
 window.onresize(); draw();
 </script>
