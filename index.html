@@ -6,53 +6,59 @@
     <title>Den of Shadow</title>
     <style>
         * { touch-action: none !important; user-select: none; outline: none; -webkit-tap-highlight-color: transparent; }
-        html, body { background: #000; margin: 0; padding: 0; overflow: hidden; height: 100%; width: 100%; position: fixed; font-family: 'Courier New', monospace; color: #fff; }
+        html, body { background: #050505; margin: 0; padding: 0; overflow: hidden; height: 100%; width: 100%; position: fixed; font-family: 'Courier New', monospace; color: #fff; }
         canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
 
         .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-        .btn-ui { padding: 20px 60px; border: 4px solid #ff4d6d; background: #111; color: #fff; font-size: 24px; font-weight: bold; border-radius: 15px; cursor: pointer; transition: 0.3s; }
+        .btn-ui { padding: 20px 60px; border: 4px solid #ff4d6d; background: #111; color: #fff; font-size: 24px; font-weight: bold; border-radius: 15px; cursor: pointer; }
         
-        #card-screen { display: none; z-index: 3000; }
-        .card-container { display: flex; gap: 20px; margin-top: 30px; }
-        .card { width: 150px; height: 220px; background: #1a1a1a; border: 3px solid #f1c40f; border-radius: 12px; cursor: pointer; padding: 15px; text-align: center; }
-
+        /* Mobile UI - Hitboxes Gigantes para evitar erros */
         #mobile-ui { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 1000; }
-        #joy-bound { position: absolute; bottom: 12%; left: 8%; width: 140px; height: 140px; background: rgba(255,255,255,0.1); border: 2px solid #fff; border-radius: 50%; pointer-events: auto; }
-        #joy-stick { position: absolute; left: 45px; top: 45px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.5; }
-        #shoot-ctrl { position: absolute; bottom: 10%; right: 5%; display: grid; grid-template-columns: repeat(3, 90px); gap: 15px; pointer-events: auto; }
-        .atk-btn { width: 90px; height: 90px; background: rgba(255,255,255,0.1); border: 3px solid #3498db; border-radius: 50%; color: #3498db; display: flex; justify-content: center; align-items: center; font-size: 35px; }
-        #swap-btn { position: absolute; bottom: 10%; right: 40%; width: 110px; height: 110px; background: rgba(241,196,15,0.2); border: 4px solid #f1c40f; border-radius: 20px; color: #fff; display: flex; justify-content: center; align-items: center; font-size: 14px; font-weight: bold; pointer-events: auto; }
-        #fs-btn { position: absolute; top: 15px; right: 15px; padding: 12px; background: #222; border: 1px solid #fff; z-index: 2500; cursor: pointer; display: none; }
+        #joy-area { position: absolute; bottom: 0; left: 0; width: 50%; height: 60%; pointer-events: auto; }
+        #joy-bound { position: absolute; bottom: 15%; left: 10%; width: 160px; height: 160px; background: rgba(255,255,255,0.1); border: 2px solid #fff; border-radius: 50%; }
+        #joy-stick { position: absolute; left: 55px; top: 55px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.5; }
+        
+        #atk-area { position: absolute; bottom: 0; right: 0; width: 50%; height: 60%; pointer-events: auto; display: grid; grid-template-columns: repeat(3, 1fr); align-content: center; justify-items: center; }
+        .atk-btn { width: 110px; height: 110px; background: rgba(52,152,219,0.15); border: 4px solid #3498db; border-radius: 50%; color: #3498db; display: flex; justify-content: center; align-items: center; font-size: 45px; }
+        
+        #swap-btn { position: absolute; bottom: 40%; right: 42%; width: 120px; height: 120px; background: rgba(241,196,15,0.2); border: 4px solid #f1c40f; border-radius: 25px; color: #fff; display: flex; justify-content: center; align-items: center; font-size: 16px; font-weight: bold; pointer-events: auto; }
+        
+        #fs-btn { position: absolute; top: 10px; right: 40%; padding: 10px; background: #222; border: 1px solid #fff; z-index: 2500; cursor: pointer; display: none; border-radius: 5px; font-size: 12px; }
+        #card-screen { display: none; z-index: 3000; }
+        .card-container { display: flex; gap: 20px; }
+        .card { width: 160px; height: 240px; background: #1a1a1a; border: 3px solid #f1c40f; border-radius: 12px; cursor: pointer; padding: 15px; text-align: center; }
+        .mythic { border-color: #ff00ff; box-shadow: 0 0 20px #ff00ff; color: #ff00ff; }
     </style>
 </head>
 <body>
 
-<div id="fs-btn" onclick="toggleFS()">TELA CHEIA</div>
+<div id="fs-btn" onclick="toggleFS()">⛶ TELA CHEIA</div>
 
 <div id="start-screen" class="overlay">
-    <h1 style="color:#ff4d6d; font-size:50px; text-shadow: 0 0 20px red;">DEN OF SHADOW</h1>
+    <h1 style="color:#ff4d6d; font-size:60px; text-shadow: 0 0 30px red;">DEN OF SHADOW</h1>
     <p id="platform-tip" style="color:#aaa; font-size:18px;"></p>
     <div class="btn-ui" id="btn-start">INICIAR</div>
 </div>
 
 <div id="card-screen" class="overlay">
-    <h2 style="color:#f1c40f">UPGRADE</h2>
+    <h2 id="upgrade-title" style="color:#f1c40f">ESCOLHA SEU DESTINO</h2>
     <div class="card-container" id="cards"></div>
 </div>
 
 <div id="death-screen" class="overlay" style="display:none;">
-    <h1 style="color:red; font-size: 60px;">MORTE</h1>
+    <h1 style="color:red; font-size: 70px;">VOCÊ CAIU</h1>
     <div class="btn-ui" onclick="location.reload()">REENTRAR</div>
 </div>
 
 <canvas id="game"></canvas>
+
 <div id="mobile-ui">
-    <div id="joy-bound"><div id="joy-stick"></div></div>
-    <div id="shoot-ctrl">
+    <div id="joy-area"><div id="joy-bound"><div id="joy-stick"></div></div></div>
+    <div id="atk-area">
         <div></div><div class="atk-btn" data-dir="up">▲</div><div></div>
         <div class="atk-btn" data-dir="left">◀</div><div class="atk-btn" data-dir="down">▼</div><div class="atk-btn" data-dir="right">▶</div>
     </div>
-    <div id="swap-btn">TROCAR</div>
+    <div id="swap-btn">TROCAR<br>ARMA</div>
 </div>
 
 <script>
@@ -61,75 +67,95 @@ const ctx = canvas.getContext('2d');
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 if(isMobile) {
-    document.getElementById('platform-tip').innerText = "DICA: Use o Joystick e botões para jogar.";
+    document.getElementById('platform-tip').innerText = "MOBILE: Lado Esquerdo p/ Mover | Lado Direito p/ Atirar";
     document.getElementById('mobile-ui').style.display = 'block';
     document.getElementById('fs-btn').style.display = 'block';
 } else {
-    document.getElementById('platform-tip').innerText = "DICA PC: WASD para mover, SETAS para atirar, Q troca arma.";
+    document.getElementById('platform-tip').innerText = "PC: WASD Mover | SETAS Atirar | Q Trocar Arma";
+    document.getElementById('mobile-ui').remove();
 }
 
 const Game = {
-    started: false, paused: false, room: 0, isHealRoom: false,
-    roomW: 1300, roomH: 1000, camX: 0, camY: 0,
+    started: false, paused: false, room: 1, isHealRoom: false,
+    roomW: 1500, roomH: 1100, camX: 0, camY: 0,
     lives: 6, maxLives: 6, weapon: 'normal',
-    dmgMult: 1, atkSpd: 16, moveSpd: 6,
-    hasFire: false, hasAcid: false,
+    dmgMult: 1, atkSpd: 15, moveSpd: 6,
+    hasFire: false, hasAcid: false, dualWield: false,
     weapons: {
-        normal: { ammo: 6, max: 6, dmg: 10, color: "#0ff", name: "MAGNUM" },
-        fire: { ammo: 12, max: 12, dmg: 6, burnDmg: 2, color: "#ff4500", name: "FOGO" }, // Dano de fogo reduzido para 6
-        acid: { ammo: 8, max: 8, dmg: 25, color: "#32cd32", name: "ÁCIDO" }
+        normal: { ammo: 8, max: 8, dmg: 10, color: "#0ff", name: "MAGNUM", type: "single" },
+        fire: { ammo: 20, max: 20, dmg: 6, burn: 2, color: "#ff4500", name: "BAFORADA", type: "breath" },
+        acid: { ammo: 6, max: 6, dmg: 17, color: "#32cd32", name: "SHOTGUN", type: "shotgun" }
     }
 };
 
 let enemies = [], projectiles = [], particles = [], pedestal = null;
-let p = { x: 650, y: 500, iframe: 0, timer: 0, dead: false, reloadTimer: 0, reloading: false };
+let p = { x: 750, y: 550, iframe: 0, timer: 0, dead: false, reloadTimer: 0, reloading: false };
 const keys = new Set();
 const attackDir = { up: false, down: false, left: false, right: false };
 const joy = { active: false, x: 0, y: 0, startX: 0, startY: 0 };
-let audioCtx = null;
 
-function playSfx(f, type, dur, vol=0.1) {
-    if(!audioCtx) return;
-    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-    o.type = type; o.frequency.setValueAtTime(f, audioCtx.currentTime);
-    g.gain.setValueAtTime(vol, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
-    o.connect(g); g.connect(audioCtx.destination);
-    o.start(); o.stop(audioCtx.currentTime + dur);
-}
-
-function spawnParticles(x, y, color, count=12) {
-    for(let i=0; i<count; i++) particles.push({ x, y, vx:(Math.random()-0.5)*15, vy:(Math.random()-0.5)*15, life:1.0, color, size:Math.random()*6+2 });
+function spawnParticles(x, y, color, count=10, size=4) {
+    for(let i=0; i<count; i++) particles.push({ x, y, vx:(Math.random()-0.5)*12, vy:(Math.random()-0.5)*12, life:1.0, color, size:Math.random()*size+1 });
 }
 
 function initRoom() {
     enemies = []; projectiles = []; pedestal = null;
-    p.x = Game.roomW/2; p.y = Game.roomH/2; p.iframe = 45;
-    if(Game.isHealRoom) { pedestal = { type: 'heart', x: Game.roomW/2, y: Game.roomH/2 }; } 
-    else {
-        if(Game.room > 0 && Game.room % 10 === 0) {
-            enemies.push({ type:'boss', x:Game.roomW/2-75, y:200, hp:600+Game.room*20, maxHp:600+Game.room*20, w:150, h:150, hit:0, timer:0, fireTicks:0 });
-        } else if(Game.room > 0) {
-            let n = 2 + Math.floor(Game.room/2.5);
-            for(let i=0; i<n; i++) enemies.push({ type: Math.random()<0.3?'kamikaze':'stalker', x:Math.random()*Game.roomW, y:Math.random()*Game.roomH, hp:50+Game.room*5, w:45, h:45, hit:0, fireTicks:0 });
+    p.x = Game.roomW/2; p.y = Game.roomH/2; p.iframe = 40;
+
+    if(Game.isHealRoom) {
+        pedestal = { type: 'heart', x: Game.roomW/2, y: Game.roomH/2 };
+    } else {
+        if(Game.room % 10 === 0) {
+            enemies.push({ type:'boss', x:Game.roomW/2-80, y:200, hp:600+Game.room*30, maxHp:600+Game.room*30, w:160, h:160, hit:0, fireTicks:0 });
+        } else {
+            let n = 4 + Math.floor(Game.room/2);
+            for(let i=0; i<n; i++) {
+                enemies.push({ 
+                    type: Math.random() < 0.25 ? 'kamikaze' : 'stalker', 
+                    x: Math.random()*Game.roomW, y: Math.random()*Game.roomH, 
+                    hp: 50+Game.room*6, w:45, h:45, hit:0, fireTicks:0 
+                });
+            }
         }
         if(Game.room === 5 && !Game.hasFire) pedestal = { type:'fire', x:Game.roomW/2, y:300 };
         if(Game.room === 15 && !Game.hasAcid) pedestal = { type:'acid', x:Game.roomW/2, y:300 };
     }
 }
 
-function cycleWeapon() {
-    const list = ['normal']; if(Game.hasFire) list.push('fire'); if(Game.hasAcid) list.push('acid');
-    Game.weapon = list[(list.indexOf(Game.weapon) + 1) % list.length];
-    p.reloading = false;
+function fireWeapon(sx, sy) {
+    const w = Game.weapons[Game.weapon];
+    if(p.reloading || w.ammo <= 0) return;
+
+    const count = Game.dualWield ? 2 : 1;
+    for(let i=0; i<count; i++){
+        let offset = i * 20;
+        if(w.type === "single") {
+            projectiles.push({x:p.x+17+offset, y:p.y+17, dx:sx, dy:sy, type:Game.weapon, range:100});
+        } else if(w.type === "breath") {
+            for(let j=0; j<3; j++) {
+                projectiles.push({
+                    x:p.x+17+offset, y:p.y+17, 
+                    dx:sx + (Math.random()-0.5)*0.4, 
+                    dy:sy + (Math.random()-0.5)*0.4, 
+                    type:Game.weapon, range:25 + Math.random()*15
+                });
+            }
+        } else if(w.type === "shotgun") {
+            for(let j=-2; j<=2; j++) {
+                let ang = Math.atan2(sy, sx) + j*0.2;
+                projectiles.push({x:p.x+17+offset, y:p.y+17, dx:Math.cos(ang), dy:Math.sin(ang), type:Game.weapon, range:30});
+            }
+        }
+    }
+    w.ammo--; if(w.ammo <= 0) p.reloading = true;
 }
 
 function drawMinimap() {
-    const size = 150, x = canvas.width - size - 20, y = 20;
-    ctx.fillStyle = "rgba(0,0,0,0.7)"; ctx.fillRect(x, y, size, size);
-    ctx.strokeStyle = "#fff"; ctx.strokeRect(x, y, size, size);
-    ctx.fillStyle = "#fff"; ctx.fillRect(x + (p.x/Game.roomW)*size, y + (p.y/Game.roomH)*size, 4, 4);
-    ctx.fillStyle = "red"; enemies.forEach(e => ctx.fillRect(x + (e.x/Game.roomW)*size, y + (e.y/Game.roomH)*size, 3, 3));
+    const s = 150, x = canvas.width - s - 25, y = 25;
+    ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(x,y,s,s);
+    ctx.strokeStyle = "#fff"; ctx.strokeRect(x,y,s,s);
+    ctx.fillStyle = "#fff"; ctx.fillRect(x + (p.x/Game.roomW)*s, y + (p.y/Game.roomH)*s, 4, 4);
+    ctx.fillStyle = "red"; enemies.forEach(e => ctx.fillRect(x + (e.x/Game.roomW)*s, y + (e.y/Game.roomH)*s, 3, 3));
 }
 
 function loop() {
@@ -141,75 +167,72 @@ function loop() {
     Game.camY += (p.y - canvas.height/2 - Game.camY) * 0.1;
     ctx.translate(-Game.camX, -Game.camY);
 
-    // Fundo por Boss
-    let bgColor = "#0a0a0a";
-    if(Game.room % 10 === 0 && Game.room > 0) bgColor = "#1a0000";
-    ctx.fillStyle = bgColor; ctx.fillRect(0,0, Game.roomW, Game.roomH);
+    // Cenários específicos
+    let grid = "#1a1a1a";
+    if(Game.isHealRoom) ctx.fillStyle = "#0a1a0a";
+    else if(Game.room % 10 === 0) { ctx.fillStyle = "#1a0505"; grid = "#300"; }
+    else ctx.fillStyle = "#0a0a0f";
+    
+    ctx.fillRect(0,0, Game.roomW, Game.roomH);
+    ctx.strokeStyle = grid;
+    for(let i=0; i<Game.roomW; i+=100) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i, Game.roomH); ctx.stroke(); }
 
     if(!p.dead) {
         let mx = joy.active ? joy.x : (keys.has('a')?-1:keys.has('d')?1:0);
         let my = joy.active ? joy.y : (keys.has('w')?-1:keys.has('s')?1:0);
-        p.x = Math.max(20, Math.min(Game.roomW-50, p.x + mx * Game.moveSpd));
-        p.y = Math.max(20, Math.min(Game.roomH-50, p.y + my * Game.moveSpd));
+        p.x = Math.max(20, Math.min(Game.roomW-55, p.x + mx * Game.moveSpd));
+        p.y = Math.max(20, Math.min(Game.roomH-55, p.y + my * Game.moveSpd));
         if(p.iframe > 0) p.iframe--;
-        ctx.fillStyle = p.iframe%4<2?"#fff":"#ff4d6d"; ctx.fillRect(p.x, p.y, 35, 35);
 
-        const curW = Game.weapons[Game.weapon];
-        if(p.reloading) { p.reloadTimer++; if(p.reloadTimer > 50){ curW.ammo=curW.max; p.reloading=false; p.reloadTimer=0; }}
+        ctx.fillStyle = p.iframe%4<2?"#fff":"#ff4d6d"; ctx.fillRect(p.x, p.y, 35, 35);
+        
+        if(p.reloading) { p.reloadTimer++; if(p.reloadTimer > 50){ Game.weapons[Game.weapon].ammo = Game.weapons[Game.weapon].max; p.reloading = false; p.reloadTimer = 0; }}
+        
         let sx = (keys.has('arrowleft')?-1:keys.has('arrowright')?1:0);
         let sy = (keys.has('arrowup')?-1:keys.has('arrowdown')?1:0);
         if(attackDir.up) sy=-1; if(attackDir.down) sy=1; if(attackDir.left) sx=-1; if(attackDir.right) sx=1;
-        if((sx||sy) && p.timer % Game.atkSpd === 0 && !p.reloading && curW.ammo > 0) {
-            projectiles.push({x:p.x+17, y:p.y+17, dx:sx, dy:sy, type:Game.weapon, owner:'player'});
-            curW.ammo--; if(curW.ammo<=0) p.reloading=true;
-        }
+        if((sx||sy) && p.timer % Game.atkSpd === 0) fireWeapon(sx, sy);
     }
 
     enemies.forEach((e, i) => {
         let ang = Math.atan2(p.y-e.y, p.x-e.x);
+        if(e.fireTicks > 0 && p.timer % 30 === 0) { e.hp -= 2; e.fireTicks--; e.hit = 4; }
         
-        // NOVO DANO DE QUEIMAÇÃO: 2 de dano por tick
-        if(e.fireTicks > 0 && p.timer % 30 === 0) { 
-            e.hp -= 2; // Dano de queimação
-            e.fireTicks--; 
-            e.hit = 4; 
-            spawnParticles(e.x+e.w/2, e.y+e.h/2, "#ff4500", 2);
-        }
+        let spd = e.type==='kamikaze'?4.6:2.6;
+        e.x += Math.cos(ang)*spd; e.y += Math.sin(ang)*spd;
         
-        let s = e.type==='kamikaze'?4.2:2.5;
-        e.x += Math.cos(ang)*s; e.y += Math.sin(ang)*s;
-        ctx.fillStyle = e.fireTicks > 0 ? "#ff8c00" : (e.hit > 0 ? "#fff" : (e.type==='kamikaze'?"#f1c40f":"#3498db"));
+        ctx.fillStyle = e.fireTicks > 0 ? "#ff4500" : (e.hit > 0 ? "#fff" : (e.type==='kamikaze'?"#f1c40f":"#3498db"));
         ctx.fillRect(e.x, e.y, e.w, e.h);
 
-        if(e.hp <= 0) { 
-            spawnParticles(e.x+e.w/2, e.y+e.h/2, ctx.fillStyle, 20); 
+        if(e.hp <= 0) {
+            spawnParticles(e.x+e.w/2, e.y+e.h/2, ctx.fillStyle, 15);
             if(e.type==='boss') showUpgrade();
-            enemies.splice(i,1); 
+            enemies.splice(i,1);
         }
 
         if(p.iframe <= 0 && Math.hypot(p.x-e.x, p.y-e.y) < 45) {
             if(e.type==='kamikaze') {
-                Game.lives -= 2; spawnParticles(e.x, e.y, "#f1c40f", 30);
-                enemies.forEach(other => { if(other!==e && Math.hypot(e.x-other.x, e.y-other.y) < 180) other.hp -= 100; });
+                Game.lives -= 2; spawnParticles(e.x, e.y, "#ff0", 30);
+                enemies.forEach(o => { if(o!==e && Math.hypot(e.x-o.x, e.y-o.y) < 200) o.hp -= 150; });
                 enemies.splice(i,1);
-            } else { Game.lives--; }
+            } else Game.lives--;
             p.iframe = 60;
         }
     });
 
     projectiles.forEach((pr, i) => {
-        pr.x += pr.dx*13; pr.y += pr.dy*13;
-        ctx.fillStyle = Game.weapons[pr.type].color; ctx.fillRect(pr.x, pr.y, 10, 10);
-        if(pr.owner==='player') {
-            enemies.forEach(e => {
-                if(pr.x > e.x && pr.x < e.x+e.w && pr.y > e.y && pr.y < e.y+e.h) {
-                    e.hp -= Game.weapons[pr.type].dmg * Game.dmgMult;
-                    if(pr.type==='fire') e.fireTicks = 5; // Aplica queimadura
-                    e.hit = 5; projectiles.splice(i,1);
-                }
-            });
-        }
-        if(pr.x<0||pr.x>Game.roomW||pr.y<0||pr.y>Game.roomH) projectiles.splice(i,1);
+        pr.x += pr.dx*14; pr.y += pr.dy*14; pr.range--;
+        ctx.fillStyle = Game.weapons[pr.type].color; 
+        ctx.fillRect(pr.x, pr.y, pr.type==='fire'?15:10, pr.type==='fire'?15:10);
+        
+        enemies.forEach(e => {
+            if(pr.x > e.x && pr.x < e.x+e.w && pr.y > e.y && pr.y < e.y+e.h) {
+                e.hp -= Game.weapons[pr.type].dmg * Game.dmgMult;
+                if(pr.type==='fire') e.fireTicks = 5;
+                e.hit = 5; projectiles.splice(i,1);
+            }
+        });
+        if(pr.range <= 0) projectiles.splice(i,1);
     });
 
     particles.forEach((pt, i) => { pt.x += pt.vx; pt.y += pt.vy; pt.life -= 0.02; ctx.globalAlpha = pt.life; ctx.fillStyle = pt.color; ctx.fillRect(pt.x, pt.y, pt.size, pt.size); if(pt.life <= 0) particles.splice(i,1); });
@@ -218,6 +241,10 @@ function loop() {
     if(enemies.length === 0 && !pedestal) {
         ctx.fillStyle = "#f1c40f"; ctx.fillRect(Game.roomW/2-60, 0, 120, 20);
         if(Math.hypot(p.x-Game.roomW/2, p.y) < 60) { Game.room++; Game.isHealRoom=false; initRoom(); }
+        if(Game.room % 10 === 0) {
+            ctx.fillStyle = "#2ecc71"; ctx.fillRect(0, Game.roomH/2-60, 20, 120);
+            if(Math.hypot(p.x, p.y-Game.roomH/2) < 60) { Game.isHealRoom=true; initRoom(); }
+        }
     }
     if(pedestal) {
         ctx.fillStyle = pedestal.type==='heart'?"#ff4d6d":Game.weapons[pedestal.type].color;
@@ -232,35 +259,52 @@ function loop() {
     ctx.restore();
     
     // HUD
-    ctx.fillStyle="#fff"; ctx.font="bold 20px Courier"; ctx.fillText(`SALA: ${Game.room}`, 20, 35);
-    ctx.fillText(`${Game.weapons[Game.weapon].name}: ${Game.weapons[Game.weapon].ammo}`, 20, 110);
-    for(let i=0; i<Game.maxLives; i++) { ctx.fillStyle=i<Game.lives?"#ff4d6d":"#333"; ctx.beginPath(); ctx.arc(35+i*28, 65, 10, 0, Math.PI*2); ctx.fill(); }
+    ctx.fillStyle="#fff"; ctx.font="bold 20px Courier";
+    ctx.fillText(`SALA: ${Game.room}`, 25, 40);
+    ctx.fillText(`${Game.weapons[Game.weapon].name}: ${Game.weapons[Game.weapon].ammo}`, 25, 110);
+    for(let i=0; i<Game.maxLives; i++) { ctx.fillStyle=i<Game.lives?"#ff4d6d":"#333"; ctx.beginPath(); ctx.arc(40+i*30, 70, 12, 0, Math.PI*2); ctx.fill(); }
     drawMinimap();
     if(Game.lives <= 0) { p.dead = true; document.getElementById('death-screen').style.display='flex'; }
     p.timer++;
     requestAnimationFrame(loop);
 }
 
-// Handlers
-const jb = document.getElementById('joy-bound'), js = document.getElementById('joy-stick');
-jb.ontouchstart = (e) => { joy.active=true; const r=jb.getBoundingClientRect(); joy.startX=r.left+r.width/2; joy.startY=r.top+r.height/2; };
-jb.ontouchmove = (e) => {
+// Mobile Input Fixo
+const jArea = document.getElementById('joy-area'), jb = document.getElementById('joy-bound'), js = document.getElementById('joy-stick');
+jArea.addEventListener('touchstart', (e) => { joy.active=true; const r=jb.getBoundingClientRect(); joy.startX=r.left+r.width/2; joy.startY=r.top+r.height/2; }, {passive:false});
+jArea.addEventListener('touchmove', (e) => {
     if(!joy.active) return; const t=e.touches[0]; let dx=t.clientX-joy.startX, dy=t.clientY-joy.startY;
-    let d=Math.min(Math.hypot(dx,dy),45); let a=Math.atan2(dy,dx); joy.x=(Math.cos(a)*d)/45; joy.y=(Math.sin(a)*d)/45;
+    let d=Math.min(Math.hypot(dx,dy),60); let a=Math.atan2(dy,dx); joy.x=(Math.cos(a)*d)/60; joy.y=(Math.sin(a)*d)/60;
     js.style.transform=`translate(${Math.cos(a)*d}px, ${Math.sin(a)*d}px)`;
-};
-jb.ontouchend = () => { joy.active=false; joy.x=0; joy.y=0; js.style.transform='translate(0,0)'; };
+}, {passive:false});
+jArea.addEventListener('touchend', () => { joy.active=false; joy.x=0; joy.y=0; js.style.transform='translate(0,0)'; });
+
 document.querySelectorAll('.atk-btn').forEach(b => {
     b.ontouchstart=(e)=>{ e.preventDefault(); attackDir[b.dataset.dir]=true; };
     b.ontouchend=(e)=>{ e.preventDefault(); attackDir[b.dataset.dir]=false; };
 });
-document.getElementById('swap-btn').ontouchstart=(e)=>{ e.preventDefault(); cycleWeapon(); };
+if(isMobile) document.getElementById('swap-btn').ontouchstart=(e)=>{ e.preventDefault(); cycleWeapon(); };
+
+function cycleWeapon() {
+    const list = ['normal']; if(Game.hasFire) list.push('fire'); if(Game.hasAcid) list.push('acid');
+    Game.weapon = list[(list.indexOf(Game.weapon) + 1) % list.length];
+    p.reloading = false;
+}
 
 function showUpgrade() {
     Game.paused = true; document.getElementById('card-screen').style.display='flex';
     const c = document.getElementById('cards'); c.innerHTML='';
-    [{n:"VIDA", d:"+2 HP", a:()=>{Game.maxLives+=2; Game.lives+=2;}}, {n:"DANO", d:"+30%", a:()=>{Game.dmgMult+=0.3;}}, {n:"VELOZ", d:"+1.5 Spd", a:()=>{Game.moveSpd+=1.5;}}].forEach(u => {
-        let d=document.createElement('div'); d.className='card'; d.innerHTML=`<h3>${u.n}</h3><p>${u.d}</p>`;
+    let pool = [
+        {n:"VIDA", d:"+2 HP Máx", a:()=>{Game.maxLives+=2; Game.lives+=2;}},
+        {n:"DANO", d:"+40%", a:()=>{Game.dmgMult+=0.4;}},
+        {n:"VELOZ", d:"+1.5 Spd", a:()=>{Game.moveSpd+=1.5;}}
+    ];
+    if(Game.room >= 20 && Math.random() < 0.01) {
+        pool.push({n:"MÍTICO", d:"DUAL WIELD", mythic:true, a:()=>{Game.dualWield=true;}});
+    }
+    pool.forEach(u => {
+        let d=document.createElement('div'); d.className='card' + (u.mythic?' mythic':'');
+        d.innerHTML=`<h3>${u.n}</h3><p>${u.d}</p>`;
         d.onclick=()=>{ u.a(); Game.paused=false; document.getElementById('card-screen').style.display='none'; };
         c.appendChild(d);
     });
@@ -268,7 +312,7 @@ function showUpgrade() {
 
 window.addEventListener('keydown', e => { keys.add(e.key.toLowerCase()); if(e.key==='q') cycleWeapon(); });
 window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
-document.getElementById('btn-start').onclick=()=>{ audioCtx=new AudioContext(); Game.started=true; document.getElementById('start-screen').style.display='none'; initRoom(); loop(); };
+document.getElementById('btn-start').onclick=()=>{ Game.started=true; document.getElementById('start-screen').style.display='none'; initRoom(); loop(); };
 function toggleFS() { if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
 window.onresize=()=>{ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }; window.onresize();
 </script>
