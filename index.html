@@ -2,40 +2,68 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Fox of Isaac: Den of Shadows</title>
     <style>
-        * { touch-action: none !important; -webkit-touch-callout: none; user-select: none; }
-        body { background: #000; color: #fff; margin: 0; font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 200; text-align: center; }
-        .btn-ui { padding: 25px 50px; border: 4px solid #ff4d6d; background: #222; color: #fff; cursor: pointer; font-size: 24px; font-weight: bold; border-radius: 10px; }
-        #upgrade-container { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
-        .upgrade-card { background: #111; border: 2px solid #f1c40f; padding: 20px; width: 130px; cursor: pointer; border-radius: 8px; }
-        #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; }
-        canvas { background: #0a0a0a; width: 100%; height: 100%; object-fit: contain; }
+        /* Bloqueia gestos nativos do navegador que atrapalham o jogo */
+        * { touch-action: none !important; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; outline: none; }
+        html, body { background: #000; color: #fff; margin: 0; padding: 0; overflow: hidden; height: 100%; width: 100%; position: fixed; }
+        
+        .overlay { 
+            position: absolute; inset: 0; background: rgba(0,0,0,0.95); 
+            display: flex; flex-direction: column; justify-content: center; 
+            align-items: center; z-index: 1000; text-align: center;
+        }
+
+        #start-screen { cursor: pointer; } /* Indica que a tela toda é clicável */
+
+        .btn-ui { 
+            padding: 25px 50px; border: 4px solid #ff4d6d; background: #222; 
+            color: #fff; font-size: 24px; font-weight: bold; border-radius: 12px;
+            pointer-events: none; /* O clique será detectado pela overlay */
+        }
+
+        #game-container { position: relative; width: 100vw; height: 100vh; }
+        canvas { background: #0a0a0a; width: 100%; height: 100%; display: block; }
+
+        /* Controles Mobile */
         .mobile-ctrl { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 50; }
-        #joy-bound { position: absolute; bottom: 12%; left: 8%; width: 140px; height: 140px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; pointer-events: auto; }
-        #joy-stick { position: absolute; left: 45px; top: 45px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.4; }
-        #shoot-ctrl { position: absolute; bottom: 12%; right: 8%; display: grid; grid-template-columns: repeat(3, 75px); gap: 12px; pointer-events: auto; }
-        .atk-btn { width: 75px; height: 75px; background: rgba(52,152,219,0.2); border: 2px solid #3498db; border-radius: 50%; color: #3498db; display: flex; justify-content: center; align-items: center; font-size: 26px; }
+        #joy-bound { 
+            position: absolute; bottom: 15%; left: 10%; width: 130px; height: 130px; 
+            background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); 
+            border-radius: 50%; pointer-events: auto; 
+        }
+        #joy-stick { position: absolute; left: 40px; top: 40px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.5; }
+        
+        #shoot-ctrl { 
+            position: absolute; bottom: 15%; right: 10%; display: grid; 
+            grid-template-columns: repeat(3, 70px); gap: 10px; pointer-events: auto; 
+        }
+        .atk-btn { 
+            width: 70px; height: 70px; background: rgba(52,152,219,0.2); 
+            border: 2px solid #3498db; border-radius: 50%; color: #3498db; 
+            display: flex; justify-content: center; align-items: center; font-size: 24px;
+        }
+
+        .upgrade-card { background: #111; border: 2px solid #f1c40f; padding: 15px; margin: 5px; width: 120px; cursor: pointer; pointer-events: auto; }
     </style>
 </head>
 <body>
 
 <div id="start-screen" class="overlay">
-    <h1 style="color:#ff4d6d; font-size: 48px; margin-bottom: 30px;">COVIL DAS SOMBRAS</h1>
-    <div class="btn-ui" id="start-btn">JOGAR AGORA</div>
-    <p style="margin-top: 20px; color: #888;">Use o analógico para mover e botões para atirar</p>
+    <h1 style="color:#ff4d6d; font-size: 40px; pointer-events: none;">COVIL DAS SOMBRAS</h1>
+    <div class="btn-ui">TOQUE PARA INICIAR</div>
+    <p style="margin-top: 20px; color: #888; pointer-events: none;">(Versão Mobile Corrigida)</p>
 </div>
 
 <div id="upgrade-screen" class="overlay" style="display:none">
-    <h1 style="color:#f1c40f">BOSS DERROTADO!<br>ESCOLHA SEU PODER</h1>
-    <div id="upgrade-container"></div>
+    <h1 style="color:#f1c40f">BOSS DERROTADO!</h1>
+    <div id="upgrade-container" style="display:flex; flex-wrap:wrap; justify-content:center;"></div>
 </div>
 
 <div id="death-screen" class="overlay" style="display:none">
-    <h1 style="color:#ff4d6d; font-size: 40px;">VOCÊ CAIU</h1>
-    <div class="btn-ui" onclick="location.reload()">TENTAR NOVAMENTE</div>
+    <h1 style="color:#ff4d6d">VOCÊ CAIU</h1>
+    <button class="btn-ui" style="pointer-events: auto;" onclick="location.reload()">RECOMECAR</button>
 </div>
 
 <div id="game-container">
@@ -54,7 +82,10 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-function resize() { canvas.width = window.innerWidth / 2; canvas.height = window.innerHeight / 2; }
+function resize() {
+    canvas.width = window.innerWidth / 2;
+    canvas.height = window.innerHeight / 2;
+}
 window.addEventListener('resize', resize);
 resize();
 
@@ -65,67 +96,62 @@ const attack = { up: false, down: false, left: false, right: false };
 let particles = [], enemies = [], projectiles = [];
 let p = { x: 500, y: 400, iframe: 0, atkTicks: 0 };
 
-// FIX MOBILE: Suporte para clique e toque no botão de start
-const startBtn = document.getElementById('start-btn');
-const startEvent = (e) => {
-    e.preventDefault();
-    if(Game.started) return;
-    document.getElementById('start-screen').style.display = 'none';
-    if(isMobile) document.getElementById('mobile-ui').style.display = 'block';
+// --- LÓGICA DE ENTRADA CORRIGIDA ---
+function startGame() {
+    if (Game.started) return;
     Game.started = true;
+    document.getElementById('start-screen').style.display = 'none';
+    if (isMobile) {
+        document.getElementById('mobile-ui').style.display = 'block';
+        // Tenta forçar o fullscreen em Android
+        if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+    }
     initRoom();
     loop();
-};
-startBtn.addEventListener('click', startEvent);
-startBtn.addEventListener('touchstart', startEvent);
+}
 
+// Escuta toque em qualquer lugar da tela inicial
+document.getElementById('start-screen').addEventListener('mousedown', startGame);
+document.getElementById('start-screen').addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    startGame();
+}, { passive: false });
+
+// --- SISTEMA DE PARTÍCULAS E EXPLOSÃO ---
 function createExplosion(x, y, color, count = 12) {
     for(let i=0; i<count; i++) {
-        particles.push({ x, y, vx: (Math.random()-0.5)*8, vy: (Math.random()-0.5)*8, life: 25, color: color, size: Math.random()*3+2 });
+        particles.push({ x, y, vx: (Math.random()-0.5)*8, vy: (Math.random()-0.5)*8, life: 25, color, size: Math.random()*3+2 });
     }
 }
 
 function triggerKamikazeExplosion(kami) {
-    Game.shake = 12;
+    Game.shake = 15;
     createExplosion(kami.x, kami.y, "#f1c40f", 20);
-    createExplosion(kami.x, kami.y, "#e67e22", 10);
     enemies.forEach(e => {
         if(e.alive && e !== kami) {
             let d = Math.hypot(e.x - kami.x, e.y - kami.y);
-            if(d < 130) { e.hp -= 80; if(e.hp <= 0) e.alive = false; createExplosion(e.x, e.y, "#fff", 5); }
+            if(d < 130) { e.hp -= 80; if(e.hp <= 0) e.alive = false; }
         }
     });
 }
 
-function showUpgradeMenu() {
-    Game.paused = true;
-    const container = document.getElementById('upgrade-container');
-    container.innerHTML = '';
-    const pool = [
-        { n: "VELOCIDADE", e: () => Stats.moveSpeed += 1.5 },
-        { n: "DISPARO", e: () => Stats.atkSpeed = Math.max(6, Stats.atkSpeed - 3) },
-        { n: "VIDA MAX", e: () => { Game.maxLives += 2; Game.lives = Game.maxLives; } },
-        { n: "DANO+", e: () => Stats.damage += 15 }
-    ];
-    pool.sort(() => Math.random() - 0.5).slice(0, 3).forEach(opt => {
-        const card = document.createElement('div');
-        card.className = 'upgrade-card';
-        card.innerHTML = `<strong>${opt.n}</strong>`;
-        card.onclick = () => { opt.e(); Game.paused = false; document.getElementById('upgrade-screen').style.display = 'none'; };
-        container.appendChild(card);
-    });
-    document.getElementById('upgrade-screen').style.display = 'flex';
-}
-
-// --- CONTROLES MOBILE ---
+// --- CONTROLES MOBILE (REESCRITOS) ---
 let joyId = null;
 if(isMobile) {
+    canvas.addEventListener('touchstart', (e) => e.preventDefault(), {passive: false});
+
     window.addEventListener('touchstart', (e) => {
         const r = document.getElementById('joy-bound').getBoundingClientRect();
         for(let t of e.touches) {
-            if(t.clientX > r.left && t.clientX < r.right && t.clientY > r.top && t.clientY < r.bottom) joyId = t.identifier;
+            if(t.clientX > r.left && t.clientX < r.right && t.clientY > r.top && t.clientY < r.bottom) {
+                joyId = t.identifier;
+            }
+            // Botões de ataque
+            const el = document.elementFromPoint(t.clientX, t.clientY);
+            if(el && el.dataset.dir) attack[el.dataset.dir] = true;
         }
-    });
+    }, {passive: false});
+
     window.addEventListener('touchmove', (e) => {
         e.preventDefault();
         const r = document.getElementById('joy-bound').getBoundingClientRect();
@@ -136,57 +162,36 @@ if(isMobile) {
                 let d = Math.min(1, Math.hypot(dx, dy));
                 let a = Math.atan2(dy, dx);
                 input.x = Math.cos(a) * d; input.y = Math.sin(a) * d;
-                document.getElementById('joy-stick').style.left = (45 + input.x * 35) + 'px';
-                document.getElementById('joy-stick').style.top = (45 + input.y * 35) + 'px';
+                document.getElementById('joy-stick').style.left = (40 + input.x * 35) + 'px';
+                document.getElementById('joy-stick').style.top = (40 + input.y * 35) + 'px';
             }
-            const el = document.elementFromPoint(t.clientX, t.clientY);
-            if(el && el.dataset.dir) attack[el.dataset.dir] = true;
         }
     }, {passive: false});
+
     window.addEventListener('touchend', (e) => {
         for(let t of e.changedTouches) {
-            if(t.identifier === joyId) { joyId = null; input.x = 0; input.y = 0; document.getElementById('joy-stick').style.left='45px'; document.getElementById('joy-stick').style.top='45px'; }
+            if(t.identifier === joyId) { 
+                joyId = null; input.x = 0; input.y = 0; 
+                document.getElementById('joy-stick').style.left='40px'; document.getElementById('joy-stick').style.top='40px'; 
+            }
+            const el = document.elementFromPoint(t.clientX, t.clientY);
+            attack.up = attack.down = attack.left = attack.right = false;
         }
-        attack.up = attack.down = attack.left = attack.right = false;
     });
 }
 
-// --- KEYBOARD ---
-window.onkeydown = (e) => {
-    let k = e.key.toLowerCase();
-    if(k=='w') input.y=-1; if(k=='s') input.y=1; if(k=='a') input.x=-1; if(k=='d') input.x=1;
-    if(k=='i'||e.key=='ArrowUp') attack.up=true; if(k=='k'||e.key=='ArrowDown') attack.down=true;
-    if(k=='j'||e.key=='ArrowLeft') attack.left=true; if(k=='l'||e.key=='ArrowRight') attack.right=true;
-};
-window.onkeyup = (e) => {
-    let k = e.key.toLowerCase();
-    if(k=='w'||k=='s') input.y=0; if(k=='a'||k=='d') input.x=0;
-    attack.up = attack.down = attack.left = attack.right = false;
-};
-
-class Enemy {
-    constructor(type) {
-        this.type = type; this.x = Math.random()*700+150; this.y = Math.random()*500+150;
-        this.hp = type==='bossT'?600:40; this.alive=true; this.timer=0;
-        this.color = type==='bossT'?'#8e44ad':type==='kamikaze'?'#f1c40f':'#3498db';
-    }
-    update() {
-        let d = Math.hypot(p.x - this.x, p.y - this.y);
-        let a = Math.atan2(p.y - this.y, p.x - this.x);
-        let spd = this.type==='kamikaze'?3.6:2;
-        this.x += Math.cos(a)*spd; this.y += Math.sin(a)*spd;
-        if(this.type==='bossT' && --this.timer <= 0) {
-            for(let i=0; i<8; i++) projectiles.push({x:this.x+40, y:this.y+40, dx:Math.cos(i), dy:Math.sin(i), enemy:true, active:true});
-            this.timer = 100;
+// --- LÓGICA DO JOGO ---
+function initRoom() {
+    projectiles = []; enemies = []; p.x = 500; p.y = 600;
+    if(Game.room === 0) return;
+    if(Game.room === 20) {
+        let b = { type:'bossT', x:460, y:200, hp:600, alive:true, timer:0, color:'#8e44ad' };
+        enemies.push(b);
+    } else {
+        for(let i=0; i<(2+Math.floor(Game.room/4)); i++) {
+            enemies.push({ type: Math.random()<0.3?'kamikaze':'stalker', x:Math.random()*700+150, y:Math.random()*500+150, hp:40, alive:true, color:'' });
         }
     }
-}
-
-function initRoom() {
-    projectiles = []; enemies = []; p.x = 500; p.y = 650;
-    if(Game.room === 0) return;
-    if(Game.room === 20) enemies.push(new Enemy('bossT'));
-    else { for(let i=0; i<(2+Math.floor(Game.room/4)); i++) enemies.push(new Enemy(Math.random()<0.3?'kamikaze':'stalker')); }
 }
 
 function loop() {
@@ -201,13 +206,13 @@ function loop() {
     // Parede
     ctx.strokeStyle="#444"; ctx.lineWidth=20; ctx.strokeRect(0,0, Game.roomW, Game.roomH);
 
-    // Player
-    p.x = Math.max(30, Math.min(Game.roomW-60, p.x + input.x*Stats.moveSpeed));
-    p.y = Math.max(30, Math.min(Game.roomH-60, p.y + input.y*Stats.moveSpeed));
+    // Movimento
+    p.x = Math.max(40, Math.min(Game.roomW-60, p.x + input.x*Stats.moveSpeed));
+    p.y = Math.max(40, Math.min(Game.roomH-60, p.y + input.y*Stats.moveSpeed));
     if(p.iframe > 0) p.iframe--;
     ctx.fillStyle = (p.iframe%4<2)?"#e67e22":"#fff"; ctx.fillRect(p.x, p.y, 25, 25);
 
-    // Atirar
+    // Tiro
     if(--p.atkTicks <= 0) {
         let dx=0, dy=0;
         if(attack.up) dy=-1; else if(attack.down) dy=1; else if(attack.left) dx=-1; else if(attack.right) dx=1;
@@ -216,47 +221,44 @@ function loop() {
 
     // Inimigos
     for(let i=enemies.length-1; i>=0; i--) {
-        let e = enemies[i]; e.update();
-        ctx.fillStyle = e.color;
-        if(e.type==='bossT') { ctx.fillRect(e.x, e.y, 80, 25); ctx.fillRect(e.x+27, e.y+25, 26, 60); }
-        else ctx.fillRect(e.x, e.y, 30, 30);
+        let e = enemies[i];
+        let d = Math.hypot(p.x - e.x, p.y - e.y);
+        let a = Math.atan2(p.y - e.y, p.x - e.x);
+        e.x += Math.cos(a)*(e.type==='kamikaze'?3.5:2);
+        e.y += Math.sin(a)*(e.type==='kamikaze'?3.5:2);
 
-        if(p.iframe <= 0 && Math.hypot(e.x-p.x, e.y-p.y) < 30) {
-            Game.lives -= (e.type==='kamikaze'?2:1); p.iframe=60; e.alive=false;
-        }
-        if(!e.alive) {
+        ctx.fillStyle = e.type==='bossT'?'#8e44ad':e.type==='kamikaze'?'#f1c40f':'#3498db';
+        if(e.type==='bossT') ctx.fillRect(e.x, e.y, 80, 80); else ctx.fillRect(e.x, e.y, 30, 30);
+
+        if(p.iframe <= 0 && d < 30) { Game.lives -= (e.type==='kamikaze'?2:1); p.iframe=60; e.alive=false; }
+        if(!e.alive || e.hp <= 0) {
             if(e.type==='kamikaze') triggerKamikazeExplosion(e);
-            else createExplosion(e.x, e.y, e.color);
-            if(e.type==='bossT') showUpgradeMenu();
+            else createExplosion(e.x, e.y, '#3498db');
+            if(e.type==='bossT') { Game.paused=true; document.getElementById('upgrade-screen').style.display='flex'; }
             enemies.splice(i, 1);
         }
     }
 
     // Projéteis
     projectiles.forEach((pr, i) => {
-        pr.x += pr.dx*(pr.enemy?3:8); pr.y += pr.dy*(pr.enemy?3:8);
-        ctx.fillStyle = pr.enemy?"#f0f":"#0ff"; ctx.beginPath(); ctx.arc(pr.x, pr.y, 4, 0, 7); ctx.fill();
-        if(pr.enemy) { if(p.iframe<=0 && Math.hypot(pr.x-p.x-12, pr.y-p.y-12)<15) { Game.lives--; p.iframe=60; pr.active=false; } }
-        else { enemies.forEach(e => { if(Math.hypot(pr.x-e.x-15, pr.y-e.y-15)<30) { e.hp-=Stats.damage; pr.active=false; if(e.hp<=0) e.alive=false; } }); }
+        pr.x += pr.dx*8; pr.y += pr.dy*8;
+        ctx.fillStyle = "#0ff"; ctx.fillRect(pr.x, pr.y, 6, 6);
+        enemies.forEach(e => { if(Math.hypot(pr.x-e.x-15, pr.y-e.y-15)<30) { e.hp-=Stats.damage; pr.active=false; if(e.hp<=0) e.alive=false; } });
         if(pr.x<0||pr.x>Game.roomW||pr.y<0||pr.y>Game.roomH) pr.active=false;
         if(!pr.active) projectiles.splice(i, 1);
     });
 
-    // Partículas
-    particles.forEach((pt, i) => {
-        pt.x+=pt.vx; pt.y+=pt.vy; pt.life--; ctx.fillStyle=pt.color; ctx.globalAlpha=pt.life/25;
-        ctx.fillRect(pt.x, pt.y, pt.size, pt.size); if(pt.life<=0) particles.splice(i, 1);
-    }); ctx.globalAlpha=1;
-
     // Saída
     if(enemies.length === 0) {
         ctx.fillStyle="#f1c40f"; ctx.fillRect(Game.roomW/2-60, 0, 120, 30);
-        if(p.y < 45 && Math.abs(p.x - Game.roomW/2 + 30) < 60) { Game.room++; initRoom(); }
+        if(p.y < 50 && Math.abs(p.x - Game.roomW/2) < 60) { Game.room++; initRoom(); }
     }
 
     ctx.restore();
+    // HUD
     for(let i=0; i<Game.maxLives; i++) {
-        ctx.fillStyle = (i < Game.lives) ? "#ff4d6d" : "#222"; ctx.fillRect(20 + (i*24), 20, 18, 18);
+        ctx.fillStyle = (i < Game.lives) ? "#ff4d6d" : "#222";
+        ctx.fillRect(20 + (i*24), 20, 18, 18);
     }
     Game.camX += ((p.x-canvas.width/2)-Game.camX)*0.1; Game.camY += ((p.y-canvas.height/2)-Game.camY)*0.1;
     requestAnimationFrame(loop);
