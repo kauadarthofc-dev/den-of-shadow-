@@ -6,323 +6,520 @@
     <title>Den of Shadow 💀</title>
     <style>
         :root {
-            --c-comum: #3498db; --c-incomum: #2ecc71; --c-raro: #f1c40f; 
-            --c-epico: #9b59b6; --c-lendario: linear-gradient(45deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff);
+            --comum: #3498db; --incomum: #2ecc71; --raro: #f1c40f; 
+            --epico: #9b59b6; --lendario: linear-gradient(45deg, #ff00ff, #00ffff);
         }
         * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
-        body { margin: 0; background: #05050a; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        body { margin: 0; background: #0f172a; color: white; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
         canvas { display: block; image-rendering: pixelated; }
 
-        /* UI Screens */
-        .ui-screen { position: absolute; inset: 0; background: rgba(5, 5, 15, 0.98); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-        .title-box { border: 4px solid #fff; padding: 20px; border-radius: 15px; background: rgba(231, 76, 60, 0.1); margin-bottom: 20px; }
-        .title-text { font-size: clamp(30px, 8vw, 60px); color: #e74c3c; margin: 0; text-transform: uppercase; letter-spacing: 5px; }
-        .btn-main { padding: 15px 50px; background: #2ecc71; border: none; color: white; font-size: 22px; font-weight: bold; border-radius: 50px; cursor: pointer; transition: 0.2s; box-shadow: 0 5px #1c8d4c; }
+        /* --- UI DE TELA INICIAL (MANTENDO O QUE VOCÊ GOSTA) --- */
+        .screen { position: absolute; inset: 0; background: radial-gradient(circle, #1e293b, #0f172a); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .title-box { border: 4px solid #fff; padding: 25px; background: rgba(0, 0, 0, 0.6); box-shadow: 0 0 40px #e74c3c; border-radius: 20px; position: relative; }
+        .title-box::before { content: '💀'; position: absolute; top: -30px; left: 45%; font-size: 40px; }
+        
+        .save-container { display: flex; gap: 15px; margin: 30px 0; }
+        .slot { width: 120px; height: 120px; border: 3px solid #444; background: #1e293b; border-radius: 15px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.3s; }
+        .slot.active { border-color: #2ecc71; transform: scale(1.1); box-shadow: 0 0 20px #2ecc71; }
 
         /* HUD */
-        #hud-top { position: absolute; top: 15px; left: 15px; pointer-events: none; z-index: 1000; }
-        .hp-bar-container { width: 180px; height: 14px; background: rgba(255,255,255,0.1); border: 2px solid #fff; border-radius: 7px; overflow: hidden; }
-        #hp-fill { height: 100%; width: 100%; background: #ff4d6d; transition: 0.2s; }
-        #ammo-hud { margin-top: 5px; font-weight: bold; font-size: 16px; color: #00eaff; text-shadow: 0 0 5px #000; }
+        #hud { position: absolute; top: 15px; left: 15px; z-index: 1000; pointer-events: none; }
+        .hp-bar { width: 250px; height: 30px; background: #334155; border: 3px solid #fff; border-radius: 15px; overflow: hidden; position: relative; }
+        .hp-fill { height: 100%; background: linear-gradient(90deg, #ef4444, #b91c1c); width: 100%; transition: 0.3s; }
+        #boss-hud { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); width: 70%; display: none; text-align: center; }
+        .boss-hp-bg { width: 100%; height: 25px; background: #000; border: 3px solid #f00; border-radius: 5px; }
 
-        #minimap-container { position: absolute; top: 15px; right: 15px; width: 100px; height: 100px; background: rgba(0,0,0,0.8); border: 2px solid rgba(255,255,255,0.2); border-radius: 8px; overflow: hidden; }
+        /* MOBILE UI (LAYOUT LIMPO) */
+        #mobile-ui { position: absolute; inset: 0; pointer-events: none; display: none; }
+        #joy-base { position: absolute; bottom: 50px; left: 50px; width: 180px; height: 180px; background: rgba(255,255,255,0.1); border: 3px solid #fff; border-radius: 50%; pointer-events: auto; }
+        #joy-stick { position: absolute; width: 80px; height: 80px; background: #fff; border-radius: 50%; left: 50px; top: 50px; box-shadow: 0 0 15px #000; }
+        #btn-grid { position: absolute; bottom: 50px; right: 50px; display: grid; grid-template-columns: repeat(3, 100px); gap: 15px; pointer-events: auto; }
+        .btn-m { width: 100px; height: 100px; background: rgba(255,255,255,0.15); border: 4px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 45px; }
+        #swap-mob { position: absolute; bottom: 50px; right: 420px; width: 110px; height: 110px; background: #f1c40f; border: 4px solid #fff; border-radius: 20px; pointer-events: auto; color: #000; font-weight: bold; font-size: 20px; }
+        #fs-mob { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); padding: 12px 35px; background: #1e293b; border: 3px solid #fff; border-radius: 25px; pointer-events: auto; z-index: 6000; font-weight: bold; }
 
-        /* Mobile Controls */
-        #mobile-hud { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 1000; }
-        #joy-base { position: absolute; bottom: 40px; left: 40px; width: 110px; height: 110px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; pointer-events: auto; }
-        #joy-stick { position: absolute; width: 45px; height: 45px; background: #00eaff; border-radius: 50%; left: 32px; top: 32px; box-shadow: 0 0 15px #00eaff; }
-        #atk-grid { position: absolute; bottom: 40px; right: 40px; display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; pointer-events: auto; }
-        .btn-atk { width: 70px; height: 70px; background: rgba(255,255,255,0.05); border: 2px solid #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; }
-        #swap-mob { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 100px; height: 45px; background: #f1c40f; border: 2px solid #fff; border-radius: 20px; pointer-events: auto; color: #000; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+        /* UPGRADES (VISUAL MELHORADO COM CAVEIRA) */
+        .card-screen { position: absolute; inset: 0; background: rgba(15, 23, 42, 0.95); z-index: 4500; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        .card { width: 240px; height: 350px; background: #1e293b; border: 5px solid #fff; margin: 15px; border-radius: 20px; cursor: pointer; position: relative; padding: 20px; overflow: hidden; transition: 0.3s; }
+        .card:hover { transform: translateY(-10px); }
+        .card::before { content: '💀'; position: absolute; font-size: 150px; opacity: 0.05; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .card-rarity { font-weight: bold; font-size: 12px; margin-bottom: 10px; text-transform: uppercase; }
+        .card-desc { font-size: 14px; margin-top: 20px; line-height: 1.4; color: #cbd5e1; }
 
-        #weapon-tag { position: absolute; bottom: 200px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 2px solid #f1c40f; padding: 10px; border-radius: 8px; display: none; text-align: center; width: 200px; font-size: 13px; }
+        /* TEXTO DE INTERAÇÃO */
+        #interact-text { position: absolute; bottom: 20%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 10px 20px; border-radius: 10px; display: none; border: 2px solid #fff; }
     </style>
 </head>
 <body>
 
-<div id="hud-top">
-    <div class="hp-bar-container"><div id="hp-fill"></div></div>
-    <div id="ammo-hud">Iniciando...</div>
+<div id="fs-mob" onclick="toggleFS()">TELA CHEIA</div>
+
+<div id="start-screen" class="screen">
+    <div class="title-box">
+        <h1 style="color:#e74c3c; margin:0; font-size: 60px; text-shadow: 4px 4px #000;">DEN OF SHADOW</h1>
+        <p id="platform-hint" style="color:#f1c40f; font-weight:bold; letter-spacing: 2px;"></p>
+    </div>
+
+    <div class="save-container">
+        <div class="slot active" onclick="selSlot(0)" id="slot-0">SAVE 1<br><small id="info-0">Vazio</small></div>
+        <div class="slot" onclick="selSlot(1)" id="slot-1">SAVE 2<br><small id="info-1">Vazio</small></div>
+        <div class="slot" onclick="selSlot(2)" id="slot-2">SAVE 3<br><small id="info-2">Vazio</small></div>
+    </div>
+
+    <button onclick="startGame()" style="padding:20px 70px; background:#2ecc71; border:none; border-radius:40px; color:#fff; font-weight:bold; font-size:24px; cursor:pointer; box-shadow: 0 5px 0 #27ae60;">INICIAR JORNADA</button>
+    
+    <div style="margin-top:30px; font-size: 14px;">
+        <a href="mailto:kauadarthofc@gmail.com" style="color:#94a3b8; text-decoration:none;">📧 kauadarthofc@gmail.com</a><br><br>
+        <a href="https://youtube.com/@kaua_darth" target="_blank" style="color:#ff0000; text-decoration:none; font-weight:bold; background: white; padding: 5px 10px; border-radius: 5px;">🎬 @kaua_darth</a>
+    </div>
 </div>
 
-<div id="minimap-container">
-    <canvas id="minimapCanvas" width="100" height="100"></canvas>
+<div id="hud">
+    <div class="hp-bar"><div id="hp-fill" class="hp-fill"></div></div>
+    <div id="room-info" style="font-weight:bold; margin-top:8px; font-size: 18px;">ANDAR: 0 (Tutorial)</div>
+    <div id="weapon-ui" style="color:#00eaff; font-weight:bold; font-size: 16px;">Magnum: 20/20</div>
+    <div id="coins-ui" style="color:#f1c40f; font-size: 20px;">💰 0</div>
 </div>
 
-<div id="start-screen" class="ui-screen">
-    <div class="title-box"><h1 class="title-text">Den of Shadow 💀</h1></div>
-    <button class="btn-main" id="btn-play">ENTRAR NA MASMORRA</button>
+<div id="boss-hud">
+    <div id="boss-name" style="color:#f00; font-weight:bold; font-size: 22px; text-transform: uppercase;">CHEFE</div>
+    <div class="boss-hp-bg"><div id="boss-fill" class="hp-fill" style="background:#f00; width:100%;"></div></div>
 </div>
 
-<div id="upgrade-screen" class="ui-screen" style="display:none;">
-    <h2 style="color:#f1c40f;">PODER ADQUIRIDO</h2>
-    <div id="cards-container" style="display:flex; gap:15px;"></div>
-</div>
+<div id="interact-text">Pressione E para pegar</div>
 
-<div id="weapon-tag"></div>
 <canvas id="gameCanvas"></canvas>
 
-<div id="mobile-hud">
+<div id="mobile-ui">
     <div id="joy-base"><div id="joy-stick"></div></div>
-    <div id="atk-grid">
-        <div></div><div class="btn-atk" data-dir="up">▲</div><div></div>
-        <div class="btn-atk" data-dir="left">◀</div><div class="btn-atk" data-dir="down">▼</div><div class="btn-atk" data-dir="right">▶</div>
+    <div id="btn-grid">
+        <div></div><div class="btn-m" data-dir="up">▲</div><div></div>
+        <div class="btn-m" data-dir="left">◀</div><div class="btn-m" data-dir="down">▼</div><div class="btn-m" data-dir="right">▶</div>
     </div>
-    <div id="swap-mob">TROCAR 🔄</div>
+    <button id="swap-mob">SWAP 🔄</button>
+</div>
+
+<div id="upgrade-screen" class="card-screen">
+    <h1 style="color:#f1c40f; text-shadow: 2px 2px #000;">CARTAS DE PODER</h1>
+    <div id="cards-container" style="display:flex; flex-wrap: wrap; justify-content: center;"></div>
 </div>
 
 <script>
+/** @type {HTMLCanvasElement} */
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const mCanvas = document.getElementById('minimapCanvas');
-const mCtx = mCanvas.getContext('2d');
-const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+const isMob = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-const G = {
-    play: false, room: 0, w: 2400, h: 1800,
-    hp: 12, maxHp: 12, weapon: 'magnum',
+// --- CONFIGURAÇÃO GLOBAL ---
+let G = {
+    play: false, slot: 0, room: 0, coins: 0,
+    w: 2400, h: 2400, cx: 0, cy: 0,
+    hp: 12, maxHp: 12,
+    weapon: 'magnum',
+    owned: ['magnum', 'flamethrower', 'shotgun'],
     inv: {
-        magnum: { a: 20, m: 20, d: 15, c: "#00eaff", n: "Magnum", cd: 15, rld: 80 },
-        fire: { a: 50, m: 50, d: 5, c: "#ff6a00", n: "Lança-Chamas", cd: 3, rld: 120 },
-        shotgun: { a: 8, m: 8, d: 12, c: "#f1c40f", n: "Shotgun", cd: 45, rld: 100 },
-        staff: { a: 15, m: 15, d: 8, c: "#9b59b6", n: "Cajado", cd: 25, rld: 90 }
+        magnum: { n: "Magnum", a: 30, m: 30, d: 8, cd: 20, type: 'pistol', color: '#94a3b8' },
+        flamethrower: { n: "Lança-Chamas", a: 25, m: 25, d: 4, burn: 2, cd: 4, type: 'flame', color: '#f97316' },
+        shotgun: { n: "Shotgun", a: 8, m: 8, d: 12, cd: 50, type: 'shotgun', color: '#4b5563' },
+        staff: { n: "Cajado Mágico", a: 20, m: 20, d: 5, cd: 30, type: 'staff', color: '#a855f7' }
     },
-    owned: ['magnum']
+    up: { triple: 0, ric: 0, vamp: 0, kills: 0, pets: 0, dual: false, crit: 0 }
 };
 
-let p = { 
-    x: 1200, y: 900, r: 35, rot: 0, spd: 8, iframe: 0, t: 0, leg: 0,
-    reloading: false, relTime: 0, lastShot: 0 
-};
-let enemies = [], projectiles = [], drops = [], pedestals = [], warns = [];
+let p = { x: 1200, y: 1200, r: 60, spd: 8, rot: 0, leg: 0, iframe: 0, rel: false, relT: 0, alive: true, t: 0, scale: 1.2 };
+let enemies = [], projectiles = [], drops = [], doors = [], particles = [], chests = [], floatingTexts = [];
+
 const keys = new Set();
 const mobAtk = { up: false, down: false, left: false, right: false };
-const joy = { active: false, x: 0, y: 0, sx: 0, sy: 0 };
+const joy = { active: false, x: 0, y: 0 };
 
-function spawnRoom() {
-    enemies = []; projectiles = []; drops = []; pedestals = []; warns = [];
-    p.x = G.w/2; p.y = G.h/2;
-    if(G.room === 0) return;
-
-    if(G.room % 10 === 0) {
-        enemies.push({ 
-            type:'boss', x:G.w/2, y:400, hp:2500+G.room*150, max:2500+G.room*150, 
-            r:130, t:0, state: 'idle', stateT: 0 
-        });
-    } else {
-        let count = 6 + Math.floor(G.room/1.5);
-        for(let i=0; i<count; i++) {
-            let ex, ey;
-            do { ex = 200+Math.random()*(G.w-400); ey = 200+Math.random()*(G.h-400); } while(Math.hypot(ex-p.x, ey-p.y)<600);
-            enemies.push({ type: Math.random()<0.2?'kamikaze':'stalker', x:ex, y:ey, r:40, hp:100+G.room*20, hit:0 });
-        }
-    }
-    if(G.room === 5 && !G.owned.includes('fire')) pedestals.push({x:G.w/2, y:300, type:'fire'});
-    if(G.room === 12 && !G.owned.includes('shotgun')) pedestals.push({x:G.w/2, y:300, type:'shotgun'});
+// --- SISTEMA DE SALVAMENTO ---
+function saveGame() {
+    const data = { room: G.room, coins: G.coins, hp: G.hp, maxHp: G.maxHp, owned: G.owned, up: G.up, inv: G.inv };
+    localStorage.setItem(`den_shadow_save_${G.slot}`, JSON.stringify(data));
+    updateSaveSlots();
 }
 
-function update() {
-    if(!G.play) return;
+function updateSaveSlots() {
+    for(let i=0; i<3; i++) {
+        let d = localStorage.getItem(`den_shadow_save_${i}`);
+        document.getElementById(`info-${i}`).innerText = d ? `Andar: ${JSON.parse(d).room}` : "Vazio";
+    }
+}
+updateSaveSlots();
 
-    // Recarregamento Automático
-    let w = G.inv[G.weapon];
-    if(!p.reloading) {
-        if(w.a <= 0 || (p.t - p.lastShot > 120 && w.a < w.m)) {
-            p.reloading = true;
-            p.relTime = 0;
+function selSlot(i) {
+    G.slot = i;
+    document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
+    document.getElementById(`slot-${i}`).classList.add('active');
+}
+
+// --- GERADOR DE SALAS E CENÁRIOS ---
+function spawnRoom() {
+    enemies = []; projectiles = []; drops = []; doors = []; chests = [];
+    p.iframe = 60;
+    
+    // PORTAS ALEATÓRIAS (Nunca saem do mapa)
+    if (G.room > 0) {
+        let side = Math.floor(Math.random() * 4);
+        let dx, dy;
+        if(side === 0) { dx = G.w/2; dy = 150; } // Norte
+        else if(side === 1) { dx = G.w/2; dy = G.h-150; } // Sul
+        else if(side === 2) { dx = 150; dy = G.h/2; } // Oeste
+        else { dx = G.w-150; dy = G.h/2; } // Leste
+        doors.push({ x: dx, y: dy, type: 'next', r: 100 });
+
+        // SALA DE CURA APÓS BOSS
+        if (G.room % 10 === 0) {
+            doors.push({ x: 150, y: G.h/2, type: 'heal', r: 100 });
         }
+
+        // LOJA A CADA 11
+        if (G.room % 11 === 0) {
+            doors.push({ x: G.w-150, y: G.h/2, type: 'shop', r: 100 });
+        }
+    }
+
+    if (G.room === 0) return;
+
+    // SPAWN DE INIMIGOS LONGE DO PLAYER
+    if (G.room % 10 === 0) {
+        let hp = 2000 + (G.room * 150);
+        enemies.push({ type: 'boss', x: G.w/2, y: G.h/2, r: 200, hp, mhp: hp, t: 0, name: `Guardião do Andar ${G.room}` });
+        document.getElementById('boss-hud').style.display = 'block';
+        document.getElementById('boss-name').innerText = `Guardião do Andar ${G.room}`;
     } else {
-        p.relTime++;
-        if(p.relTime >= w.rld) {
-            w.a = w.m;
-            p.reloading = false;
+        let count = 5 + Math.floor(G.room/3);
+        for(let i=0; i<count; i++) {
+            let ex, ey;
+            do { ex = Math.random()*(G.w-400)+200; ey = Math.random()*(G.h-400)+200; } 
+            while(Math.hypot(ex-p.x, ey-p.y) < 700);
+            
+            let type = G.room < 2 ? 'stalker' : (Math.random() < 0.2 ? 'kamikaze' : (Math.random() < 0.15 ? 'dasher' : 'stalker'));
+            enemies.push({ 
+                type, x: ex, y: ey, r: 65, hp: 120 + G.room*25, 
+                spd: (type==='kamikaze'? 1.2 : (type==='dasher'? 3.5 : 2.2)),
+                face: Math.floor(Math.random()*3), dt: 0 
+            });
         }
     }
+}
 
-    // Movimento
-    let mx = joy.active ? joy.x : (keys.has('a')?-1:keys.has('d')?1:0);
-    let my = joy.active ? joy.y : (keys.has('w')?-1:keys.has('s')?1:0);
-    p.x = Math.max(80, Math.min(G.w-80, p.x + mx * p.spd));
-    p.y = Math.max(80, Math.min(G.h-80, p.y + my * p.spd));
+// --- LOGICA DE TIRO ---
+function shoot(dx, dy) {
+    const w = G.inv[G.weapon];
+    if (p.rel || w.a <= 0 || !p.alive) return;
 
-    // Tiro
-    let ax = (keys.has('arrowleft')?-1:keys.has('arrowright')?1:0);
-    let ay = (keys.has('arrowup')?-1:keys.has('arrowdown')?1:0);
-    if(isMobile) { if(mobAtk.up) ay=-1; if(mobAtk.down) ay=1; if(mobAtk.left) ax=-1; if(mobAtk.right) ax=1; }
+    if (p.t % w.cd === 0) {
+        p.rot = Math.atan2(dy, dx);
+        let triple = 1 + Math.min(G.up.triple, 4);
 
-    if((ax || ay) && !p.reloading) {
-        p.rot = Math.atan2(ay, ax);
-        if(p.t % w.cd === 0 && w.a > 0) shoot(ax, ay);
-    } else if(mx || my) {
-        p.rot = Math.atan2(my, mx);
+        for (let i = 0; i < triple; i++) {
+            let angle = p.rot + (i - (triple - 1) / 2) * 0.15;
+            let pr = { x: p.x, y: p.y, dx: Math.cos(angle), dy: Math.sin(angle), type: G.weapon, life: 100, dmg: w.d };
+
+            if (w.type === 'flame') {
+                pr.life = 12; pr.spd = 22; pr.isFlame = true;
+            } else if (w.type === 'shotgun') {
+                pr.life = 10; pr.spd = 28;
+                for(let j=-1; j<=1; j++) {
+                    let sa = angle + j*0.2;
+                    projectiles.push({...pr, dx: Math.cos(sa)*28, dy: Math.sin(sa)*28});
+                }
+                w.a--; continue;
+            } else if (w.type === 'staff') {
+                pr.home = true; pr.spd = 12;
+            } else {
+                pr.spd = 35;
+            }
+            pr.dx *= pr.spd; pr.dy *= pr.spd;
+            projectiles.push(pr);
+        }
+        w.a--;
+        if(w.a <= 0) { p.rel = true; p.relT = 0; }
+    }
+}
+
+// --- LOOP PRINCIPAL ---
+function update() {
+    if (!G.play || !p.alive) return;
+
+    // MOVIMENTAÇÃO PC/MOBILE
+    let mx=0, my=0;
+    if(keys.has('a')) mx=-1; if(keys.has('d')) mx=1;
+    if(keys.has('w')) my=-1; if(keys.has('s')) my=1;
+    if(joy.active) { mx=joy.x; my=joy.y; }
+    
+    p.x = Math.max(150, Math.min(G.w-150, p.x + mx * p.spd));
+    p.y = Math.max(150, Math.min(G.h-150, p.y + my * p.spd));
+    
+    // ANIMAÇÃO LORDE DA LUZ
+    if(mx !== 0 || my !== 0) {
         p.leg += 0.25;
+        if(!mobAtk.up && !mobAtk.down && !mobAtk.left && !mobAtk.right) p.rot = Math.atan2(my, mx);
     }
 
-    // IA Inimigos e Bosses Complexos
+    // ATAQUE
+    let ax=0, ay=0;
+    if(keys.has('arrowleft')) ax=-1; if(keys.has('arrowright')) ax=1;
+    if(keys.has('arrowup')) ay=-1; if(keys.has('arrowdown')) ay=1;
+    if(mobAtk.up) ay=-1; if(mobAtk.down) ay=1; if(mobAtk.left) ax=-1; if(mobAtk.right) ax=1;
+    if(ax!==0 || ay!==0) { shoot(ax, ay); }
+
+    // RECARGA
+    if(p.rel) { p.relT++; if(p.relT > 70) { G.inv[G.weapon].a = G.inv[G.weapon].m; p.rel=false; } }
+
+    // INIMIGOS
     enemies.forEach((e, i) => {
         let dist = Math.hypot(p.x-e.x, p.y-e.y);
         let ang = Math.atan2(p.y-e.y, p.x-e.x);
 
         if(e.type === 'boss') {
-            e.stateT++;
-            if(e.stateT > 150) { // Troca de fase a cada 2.5s
-                const states = ['chase', 'meteors', 'spiral'];
-                e.state = states[Math.floor(Math.random()*states.length)];
-                e.stateT = 0;
+            e.t++; e.x += Math.cos(e.t/40)*8;
+            if(e.t % 90 === 0) { // Ataque de pedras do boss
+                for(let k=0; k<3; k++) particles.push({ x: p.x + (Math.random()-0.5)*200, y: p.y + (Math.random()-0.5)*200, t: 90, bossRock: true });
             }
-
-            if(e.state === 'chase') {
-                e.x += Math.cos(ang) * 5; e.y += Math.sin(ang) * 5;
-            } else if(e.state === 'meteors' && e.stateT % 30 === 0) {
-                warns.push({x: p.x + (Math.random()-0.5)*200, y: p.y + (Math.random()-0.5)*200, t: 60});
-            } else if(e.state === 'spiral' && e.stateT % 10 === 0) {
-                let sAng = e.stateT * 0.2;
-                projectiles.push({x:e.x, y:e.y, dx:Math.cos(sAng)*12, dy:Math.sin(sAng)*12, dmg:1, life:100, enemy:true});
-            }
-            e.x = Math.max(e.r, Math.min(G.w-e.r, e.x));
-            e.y = Math.max(e.r, Math.min(G.h-e.r, e.y));
+            document.getElementById('boss-fill').style.width = (e.hp/e.mhp)*100 + "%";
         } else {
-            e.x += Math.cos(ang) * 3; e.y += Math.sin(ang) * 3;
+            let s = e.spd;
+            if(e.type === 'dasher') { e.dt++; if(e.dt>70){ s=15; if(e.dt>85) e.dt=0; } }
+            e.x += Math.cos(ang)*s; e.y += Math.sin(ang)*s;
+            
+            // Colisão entre inimigos
+            enemies.forEach(o => {
+                if(e !== o && Math.hypot(e.x-o.x, e.y-o.y) < 110) { e.x -= Math.cos(ang)*3; e.y -= Math.sin(ang)*3; }
+            });
         }
 
+        // Dano no Player
         if(dist < p.r + e.r && p.iframe <= 0) {
-            G.hp -= (e.type==='kamikaze'?2:1); p.iframe = 60;
+            G.hp -= (e.type==='kamikaze' ? 2 : 1);
+            p.iframe = 60;
             if(e.type==='kamikaze') e.hp = 0;
+            p.x -= Math.cos(ang)*100; p.y -= Math.sin(ang)*100; // Knockback
         }
-        if(e.hp <= 0) { if(e.type==='boss') showUpgrades(); enemies.splice(i, 1); }
+
+        if(e.hp <= 0) {
+            if(e.type === 'kamikaze') { // Explosão
+                enemies.forEach(o => { if(Math.hypot(e.x-o.x, e.y-o.y) < 350) o.hp -= 300; });
+            }
+            if(Math.random() < 0.35) drops.push({ x: e.x, y: e.y, type: (Math.random()<0.4?'heal':'ammo') });
+            if(Math.random() < 0.2) G.coins += Math.floor(Math.random()*5)+1;
+            
+            G.up.kills++;
+            if(G.up.vamp > 0 && G.up.kills % 10 === 0) G.hp = Math.min(G.maxHp, G.hp+1);
+            enemies.splice(i,1);
+            if(e.type === 'boss') { 
+                document.getElementById('boss-hud').style.display='none';
+                showUpgrade();
+            }
+        }
     });
 
-    // Projéteis e Avisos
+    // PROJÉTEIS
     projectiles.forEach((pr, i) => {
-        pr.x += pr.dx; pr.y += pr.dy; pr.life--;
-        if(!pr.enemy) {
-            enemies.forEach(e => {
-                if(Math.hypot(pr.x-e.x, pr.y-e.y) < e.r+10) { e.hp -= pr.dmg; projectiles.splice(i, 1); }
-            });
-        } else if(Math.hypot(pr.x-p.x, pr.y-p.y) < p.r && p.iframe <= 0) {
-            G.hp--; p.iframe = 60; projectiles.splice(i,1);
+        if(pr.home) {
+            let t = enemies[0];
+            if(t) { let ta = Math.atan2(t.y-pr.y, t.x-pr.x); pr.dx += Math.cos(ta)*2; pr.dy += Math.sin(ta)*2; }
         }
+        pr.x += pr.dx; pr.y += pr.dy; pr.life--;
+        enemies.forEach(e => {
+            if(Math.hypot(pr.x-e.x, pr.y-e.y) < e.r + 30) {
+                e.hp -= pr.dmg;
+                if(G.inv[pr.type].burn) e.hp -= 2; 
+                if(!pr.isFlame) projectiles.splice(i,1);
+            }
+        });
         if(pr.life <= 0) projectiles.splice(i, 1);
     });
 
-    warns.forEach((w, i) => {
-        w.t--;
-        if(w.t <= 0) {
-            if(Math.hypot(p.x-w.x, p.y-w.y) < 100 && p.iframe <= 0) { G.hp-=2; p.iframe=60; }
-            warns.splice(i, 1);
+    // AVANÇO DE SALA
+    if (enemies.length === 0) {
+        doors.forEach(d => {
+            if (Math.hypot(p.x - d.x, p.y - d.y) < d.r) {
+                if (d.type === 'next') { G.room++; spawnRoom(); p.x = G.w/2; p.y = G.h-300; saveGame(); }
+                else if (d.type === 'heal') { G.hp = G.maxHp; G.room++; spawnRoom(); }
+            }
+        });
+    }
+
+    drops.forEach((d, i) => {
+        if(Math.hypot(p.x-d.x, p.y-d.y) < 90) {
+            if(d.type==='heal') G.hp = Math.min(G.maxHp, G.hp+2);
+            else G.inv[G.weapon].a = G.inv[G.weapon].m;
+            drops.splice(i,1);
         }
     });
 
-    if(enemies.length === 0 && Math.hypot(p.x-G.w/2, p.y-50) < 120) { G.room++; spawnRoom(); }
     if(p.iframe > 0) p.iframe--;
-    p.t++;
-    updateUI();
-}
-
-function shoot(ax, ay) {
-    let w = G.inv[G.weapon];
-    w.a--; p.lastShot = p.t;
-    let ang = Math.atan2(ay, ax);
-    if(G.weapon === 'shotgun') {
-        for(let j=-1; j<=1; j++) projectiles.push({x:p.x, y:p.y, dx:Math.cos(ang+j*0.2)*20, dy:Math.sin(ang+j*0.2)*20, dmg:w.d, life:25});
-    } else {
-        projectiles.push({x:p.x, y:p.y, dx:Math.cos(ang)*22, dy:Math.sin(ang)*22, dmg:w.d, life:60});
-    }
-}
-
-function updateUI() {
-    document.getElementById('hp-fill').style.width = (G.hp/G.maxHp)*100 + "%";
-    document.getElementById('ammo-hud').innerText = p.reloading ? "RECARREGANDO..." : `${G.inv[G.weapon].n}: ${G.inv[G.weapon].a}/${G.inv[G.weapon].m}`;
+    if(G.hp <= 0 && p.alive) { p.alive = false; setTimeout(() => location.reload(), 2500); }
     
-    mCtx.fillStyle = "rgba(0,0,0,0.8)"; mCtx.fillRect(0,0,100,100);
-    let s = 100/G.w;
-    mCtx.fillStyle = "#00eaff"; mCtx.fillRect(p.x*s, p.y*s, 4, 4);
-    mCtx.fillStyle = "red"; enemies.forEach(e => mCtx.fillRect(e.x*s, e.y*s, 3, 3));
+    document.getElementById('hp-fill').style.width = (G.hp/G.maxHp)*100 + "%";
+    document.getElementById('weapon-ui').innerText = `${G.inv[G.weapon].n}: ${G.inv[G.weapon].a}/${G.inv[G.weapon].m}`;
+    document.getElementById('coins-ui').innerText = `💰 ${G.coins}`;
+    p.t++;
 }
 
+// --- RENDERIZAÇÃO ---
 function draw() {
-    ctx.fillStyle = "#05050a"; ctx.fillRect(0,0,canvas.width, canvas.height);
+    ctx.clearRect(0,0, canvas.width, canvas.height);
+    if (!G.play) return;
+
     ctx.save();
-    ctx.translate(-p.x + canvas.width/2, -p.y + canvas.height/2);
+    G.cx += (p.x - canvas.width/2 - G.cx) * 0.1;
+    G.cy += (p.y - canvas.height/2 - G.cy) * 0.1;
+    ctx.translate(-G.cx, -G.cy);
 
-    // Chão Profissional
-    ctx.fillStyle = "#0a0a15"; ctx.fillRect(0,0,G.w, G.h);
-    ctx.strokeStyle = "rgba(255,255,255,0.05)";
-    for(let i=0; i<G.w; i+=120) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,G.h); ctx.stroke(); }
-    for(let i=0; i<G.h; i+=120) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(G.w,i); ctx.stroke(); }
+    // CHÃO PROFISSIONAL (ARDÓSIA E AZUL)
+    ctx.fillStyle = "#1e293b"; ctx.fillRect(0,0, G.w, G.h);
+    ctx.strokeStyle = "#334155"; ctx.lineWidth = 4;
+    for(let x=0; x<G.w; x+=150) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,G.h); ctx.stroke(); }
+    for(let y=0; y<G.h; y+=150) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(G.w,y); ctx.stroke(); }
 
-    if(enemies.length === 0) { ctx.fillStyle = "#2ecc71"; ctx.fillRect(G.w/2-100, -10, 200, 30); }
-    warns.forEach(w => { ctx.fillStyle = "rgba(255,0,0,0.3)"; ctx.beginPath(); ctx.arc(w.x, w.y, 100, 0, 7); ctx.fill(); });
-
-    // Inimigos
-    enemies.forEach(e => {
-        ctx.fillStyle = e.type==='boss'?'#9b59b6':(e.type==='kamikaze'?'#e74c3c':'#34495e');
-        ctx.fillRect(e.x-e.r, e.y-e.r, e.r*2, e.r*2);
-        if(e.type==='boss') {
-            ctx.fillStyle = "red"; ctx.fillRect(e.x-100, e.y-e.r-30, (e.hp/e.max)*200, 15);
-        }
-    });
-
-    // LORD DA LUZ (Visual original)
-    ctx.save();
-    ctx.translate(p.x, p.y);
-    let ly = Math.sin(p.leg)*12;
-    ctx.fillStyle = "#fff"; ctx.fillRect(-22, 25+ly, 12, 18); ctx.fillRect(10, 25-ly, 12, 18);
-    ctx.shadowBlur = 25; ctx.shadowColor = "#00eaff";
-    ctx.fillStyle = (p.iframe>0 && p.t%4<2)?"#ff4d6d":"#fff";
-    ctx.fillRect(-35, -40, 70, 75);
-    ctx.shadowBlur = 0;
-    // Barra de Recarga Circular
-    if(p.reloading) {
-        ctx.strokeStyle = "#00eaff"; ctx.lineWidth = 5;
-        ctx.beginPath(); ctx.arc(0, 0, 50, 0, (p.relTime/G.inv[G.weapon].rld)*Math.PI*2); ctx.stroke();
+    // PORTAS (SINALIZAÇÃO NO MINIMAPA TAMBÉM)
+    if(enemies.length === 0) {
+        doors.forEach(d => {
+            ctx.fillStyle = d.type==='next' ? '#f1c40f' : '#2ecc71';
+            ctx.shadowBlur = 30; ctx.shadowColor = ctx.fillStyle;
+            ctx.fillRect(d.x-d.r, d.y-d.r, d.r*2, d.r*2);
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = "#000"; ctx.font = "bold 50px Arial"; ctx.textAlign="center";
+            ctx.fillText(d.type==='next'?'🚪':'♥', d.x, d.y+15);
+        });
     }
-    // Arma
-    ctx.rotate(p.rot); ctx.fillStyle = "#333"; ctx.fillRect(25, -8, 40, 16);
-    ctx.restore();
 
+    // PERSONAGEM (LORDE DA LUZ)
+    if(p.alive) {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.scale(p.scale, p.scale);
+        
+        // Pernas fofas
+        let ly = Math.sin(p.t*0.25)*12;
+        ctx.fillStyle = "#f8fafc";
+        ctx.fillRect(-25, 40+ly, 20, 25); ctx.fillRect(5, 40-ly, 20, 25);
+
+        // Corpo (Lorde da Luz)
+        ctx.shadowBlur = 40; ctx.shadowColor = "#00eaff";
+        ctx.fillStyle = (p.iframe>0 && p.t%4<2) ? "#f00" : "#fff";
+        ctx.beginPath();
+        ctx.moveTo(-50, 50); ctx.lineTo(0, -70); ctx.lineTo(50, 50);
+        ctx.fill();
+        
+        // Arma (Direção do Tiro ou Movimento)
+        ctx.rotate(p.rot);
+        ctx.fillStyle = "#475569"; ctx.fillRect(40, -12, 70, 24);
+        ctx.fillStyle = G.inv[G.weapon].color; ctx.fillRect(100, -15, 15, 30);
+        ctx.restore();
+    }
+
+    // INIMIGOS COM ROSTOS
+    enemies.forEach(e => {
+        ctx.save();
+        ctx.translate(e.x, e.y);
+        ctx.fillStyle = e.type==='kamikaze' ? '#ef4444' : (e.type==='dasher' ? '#8b5cf6' : '#64748b');
+        ctx.fillRect(-e.r, -e.r, e.r*2, e.r*2);
+        
+        // Rostos
+        ctx.fillStyle = "#fff"; ctx.font = "40px Arial"; ctx.textAlign="center";
+        let face = e.type==='kamikaze' ? 'ò_ó' : (e.type==='dasher' ? 'v_v' : 'o_o');
+        if(e.type==='dasher') { // Asas do dasher
+            ctx.fillStyle = "rgba(255,255,255,0.5)";
+            ctx.fillRect(-e.r-30, -20, 30, 40); ctx.fillRect(e.r, -20, 30, 40);
+        }
+        ctx.fillStyle = "#fff"; ctx.fillText(face, 0, 15);
+        ctx.restore();
+    });
+
+    // PROJÉTEIS (BAFORADA)
     projectiles.forEach(pr => {
-        ctx.fillStyle = pr.enemy ? "red" : G.inv[G.weapon].c;
-        ctx.beginPath(); ctx.arc(pr.x, pr.y, 12, 0, 7); ctx.fill();
+        ctx.fillStyle = G.inv[pr.type].type === 'flame' ? `rgba(255, ${100+Math.random()*155}, 0, 0.8)` : '#00eaff';
+        ctx.beginPath(); ctx.arc(pr.x, pr.y, pr.isFlame?50:18, 0, 7); ctx.fill();
+    });
+
+    // DROPS (BLOCOS ROSAS BRILHANTES)
+    drops.forEach(d => {
+        ctx.fillStyle = d.type==='heal'?'#ff79c6':'#f1c40f';
+        ctx.shadowBlur = 15; ctx.shadowColor = ctx.fillStyle;
+        ctx.fillRect(d.x-25, d.y-25, 50, 50);
+        ctx.shadowBlur = 0;
     });
 
     ctx.restore();
-    if(G.play) requestAnimationFrame(draw);
+
+    // --- MINIMAPA (ARRUMADO) ---
+    const ms = 220, mx = canvas.width - 240, my = 20;
+    ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.strokeStyle = "#fff"; ctx.lineWidth=3;
+    ctx.fillRect(mx, my, ms, ms); ctx.strokeRect(mx, my, ms, ms);
+    enemies.forEach(e => { ctx.fillStyle="red"; ctx.fillRect(mx+(e.x/G.w)*ms, my+(e.y/G.h)*ms, 6, 6); });
+    doors.forEach(d => { ctx.fillStyle="yellow"; ctx.fillRect(mx+(d.x/G.w)*ms, my+(d.y/G.h)*ms, 10, 10); });
+    ctx.fillStyle="#00eaff"; ctx.fillRect(mx+(p.x/G.w)*ms, my+(p.y/G.h)*ms, 8, 8);
+
+    requestAnimationFrame(draw);
 }
 
-// Upgrades, Inputs e Resize mantidos para suporte Mobile/Console
-function showUpgrades() {
-    G.play = false; document.getElementById('upgrade-screen').style.display = 'flex';
-    const cont = document.getElementById('cards-container'); cont.innerHTML = '';
-    const ups = [{n:"VIDA", d:"+4 HP Máximo", a:()=>{G.maxHp+=4; G.hp+=4;}}, {n:"DANO", d:"+5 Dano Global", a:()=>{for(let k in G.inv) G.inv[k].d+=5;}}];
-    ups.forEach(u => {
-        let d = document.createElement('div'); d.className = 'btn-main'; d.innerHTML = `<b>${u.n}</b><br>${u.d}`;
-        d.onclick = () => { u.a(); document.getElementById('upgrade-screen').style.display='none'; G.play=true; draw(); };
-        cont.appendChild(d);
-    });
+// --- SISTEMA DE CARTAS / UPGRADES ---
+function showUpgrade() {
+    G.play = false;
+    const screen = document.getElementById('upgrade-screen');
+    const container = document.getElementById('cards-container');
+    container.innerHTML = '';
+    screen.style.display = 'flex';
+
+    for(let i=0; i<3; i++) {
+        let r = Math.random();
+        let rarity = r < 0.5 ? 'comum' : (r < 0.75 ? 'incomum' : (r < 0.95 ? 'raro' : (r < 0.99 ? 'epico' : 'lendario')));
+        let up = { n: "Tiro Triplo", d: "Aumenta o número de projéteis disparados.", color: "var(--"+rarity+")" };
+        
+        let card = document.createElement('div');
+        card.className = 'card';
+        card.style.borderColor = up.color;
+        card.innerHTML = `<div class="card-rarity" style="color:${up.color}">${rarity}</div>
+                          <h3>${up.n}</h3>
+                          <div class="card-desc">${up.d}</div>`;
+        card.onclick = () => { G.up.triple++; screen.style.display='none'; G.play=true; };
+        container.appendChild(card);
+    }
 }
 
-function swap() { let idx = G.owned.indexOf(G.weapon); G.weapon = G.owned[(idx+1)%G.owned.length]; p.reloading = false; }
+// --- INICIALIZAÇÃO E CONTROLES ---
+function startGame() {
+    document.getElementById('start-screen').style.display = 'none';
+    if(isMob) document.getElementById('mobile-ui').style.display = 'block';
+    G.play = true; spawnRoom(); draw(); setInterval(update, 1000/60);
+}
+
+function swap() {
+    let idx = G.owned.indexOf(G.weapon);
+    G.weapon = G.owned[(idx + 1) % G.owned.length];
+    p.rel = false; // Cancela recarga ao trocar
+}
+
+// Mobile Joy
+const jBase = document.getElementById('joy-base'), jStick = document.getElementById('joy-stick');
+jBase.addEventListener('touchstart', (e) => { joy.active = true; });
+jBase.addEventListener('touchmove', e => {
+    let t = e.touches[0]; let r = jBase.getBoundingClientRect();
+    let dx = t.clientX - (r.left + 90), dy = t.clientY - (r.top + 90);
+    let d = Math.min(Math.hypot(dx,dy), 70); let a = Math.atan2(dy,dx);
+    joy.x = (Math.cos(a)*d)/70; joy.y = (Math.sin(a)*d)/70;
+    jStick.style.transform = `translate(${Math.cos(a)*d}px, ${Math.sin(a)*d}px)`;
+});
+jBase.addEventListener('touchend', () => { joy.active=false; joy.x=0; joy.y=0; jStick.style.transform='none'; });
+
+document.querySelectorAll('.btn-m').forEach(b => {
+    b.addEventListener('touchstart', (e) => { e.preventDefault(); mobAtk[b.dataset.dir] = true; });
+    b.addEventListener('touchend', (e) => { e.preventDefault(); mobAtk[b.dataset.dir] = false; });
+});
 document.getElementById('swap-mob').onclick = swap;
-window.onkeydown = e => { keys.add(e.key.toLowerCase()); if(e.key==='q') swap(); };
+
+window.onkeydown = e => { keys.add(e.key.toLowerCase()); if(e.key === 'q') swap(); };
 window.onkeyup = e => keys.delete(e.key.toLowerCase());
+window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }; window.onresize();
 
-if(isMobile) {
-    document.getElementById('mobile-hud').style.display = 'block';
-    const b = document.getElementById('joy-base'), s = document.getElementById('joy-stick');
-    b.ontouchstart = e => { joy.active=true; let r=b.getBoundingClientRect(); joy.sx=r.left+55; joy.sy=r.top+55; };
-    b.ontouchmove = e => {
-        if(!joy.active) return; let t=e.touches[0];
-        let dx=t.clientX-joy.sx, dy=t.clientY-joy.sy;
-        let d=Math.min(Math.hypot(dx,dy), 45); let a=Math.atan2(dy,dx);
-        joy.x=(Math.cos(a)*d)/45; joy.y=(Math.sin(a)*d)/45;
-        s.style.transform = `translate(${Math.cos(a)*d}px, ${Math.sin(a)*d}px)`;
-    };
-    b.ontouchend = () => { joy.active=false; joy.x=0; joy.y=0; s.style.transform='none'; };
-    document.querySelectorAll('.btn-atk').forEach(btn => {
-        btn.ontouchstart = () => mobAtk[btn.dataset.dir] = true;
-        btn.ontouchend = () => mobAtk[btn.dataset.dir] = false;
-    });
-}
+function toggleFS() { if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
 
-document.getElementById('btn-play').onclick = () => { G.play=true; document.getElementById('start-screen').
+document.getElementById('platform-hint').innerText = isMob ? "TOQUE PARA LUTAR" : "WASD: MOVER | SETAS: ATIRAR | Q: SWAP";
+</script>
+</body>
+ </html>
