@@ -29,12 +29,42 @@
             margin-bottom: 5px;
         }
 
-        /* JOYSTICKS */
-        .touch-zone { position: absolute; bottom: 0; width: 50%; height: 50%; pointer-events: auto; }
+        /* CONTROLES MOBILE VISUAIS */
+        .touch-zone { position: absolute; bottom: 0; width: 50%; height: 50%; pointer-events: auto; z-index: 2000; }
         #left-zone { left: 0; }
         #right-zone { right: 0; }
+        
+        /* Joystick Virtual */
+        .joystick-base {
+            position: absolute; width: 100px; height: 100px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%; display: none; pointer-events: none;
+            background: rgba(0,0,0,0.2);
+            transform: translate(-50%, -50%);
+        }
+        .joystick-stick {
+            position: absolute; width: 40px; height: 40px;
+            background: rgba(255, 0, 0, 0.5);
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(255,0,0,0.5);
+        }
 
-        /* TELAS E OUTROS */
+        /* Botão Trocar Arma (Mobile) */
+        #mobile-swap-btn {
+            position: absolute; bottom: 180px; right: 30px;
+            width: 60px; height: 60px;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid #ff4500; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: auto; z-index: 2100;
+            font-size: 30px; color: #ff4500;
+            display: none; /* Só aparece via JS se touch */
+        }
+        #mobile-swap-btn:active { background: #ff4500; color: #000; }
+
+        /* UI TELAS */
         .ui-screen { 
             position: absolute; inset: 0; 
             background: radial-gradient(circle at center, #4a0404 0%, #000000 100%);
@@ -45,6 +75,32 @@
         .social-links a { color: #ff0000; text-decoration: none; font-size: 12px; display: block; margin: 5px; }
         #cutscene-screen { background: #000; text-align: center; padding: 20px; display: none; }
         #msg-popup { position: absolute; top: 25%; width: 100%; text-align: center; font-size: 24px; color: #ff0000; display: none; z-index: 2000; font-family: 'Nosifer'; pointer-events: none; }
+
+        /* TELA DE UPGRADE */
+        #upgrade-screen {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.9);
+            z-index: 4000; display: none; flex-direction: column; 
+            align-items: center; justify-content: center;
+        }
+        .cards-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; padding: 20px; }
+        .upg-card {
+            width: 200px; height: 280px; background: #111;
+            border: 2px solid #444; border-radius: 10px;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            padding: 15px; cursor: pointer; text-align: center; transition: 0.2s;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+        .upg-card:hover { transform: scale(1.05); }
+        .upg-rarity { font-size: 12px; text-transform: uppercase; margin-bottom: 5px; }
+        .upg-name { font-size: 16px; font-weight: bold; margin-bottom: 10px; color: #fff; }
+        .upg-desc { font-size: 12px; color: #ccc; }
+        
+        /* Cores de Raridade */
+        .common { border-color: #999; box-shadow: 0 0 10px #999; } .common .upg-rarity { color: #999; }
+        .rare { border-color: #00aaff; box-shadow: 0 0 10px #00aaff; } .rare .upg-rarity { color: #00aaff; }
+        .epic { border-color: #a0f; box-shadow: 0 0 10px #a0f; } .epic .upg-rarity { color: #a0f; }
+        .legendary { border-color: #ffd700; box-shadow: 0 0 20px #ffd700; } .legendary .upg-rarity { color: #ffd700; }
+
     </style>
 </head>
 <body>
@@ -60,6 +116,7 @@
             <div class="bar-outer"><div id="ammo-bar" class="bar-inner" style="background:#f1c40f; width:100%;"></div></div>
         </div>
         <div style="font-size: 14px; color: #ff0000; margin-top:5px;">SALA: <span id="room-txt">0</span></div>
+        <div style="font-size: 12px; color: #aaa; margin-top:5px;">ARMA: <span id="weapon-txt">LUZ</span></div>
     </div>
 
     <div class="hud-right">
@@ -68,6 +125,18 @@
 
     <div id="left-zone" class="touch-zone"></div>
     <div id="right-zone" class="touch-zone"></div>
+    
+    <div id="joy-left" class="joystick-base"><div class="joystick-stick"></div></div>
+    <div id="joy-right" class="joystick-base"><div class="joystick-stick"></div></div>
+
+    <div id="mobile-swap-btn" onclick="swapWeapon()">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
+            <path d="M16 21h5v-5"></path>
+        </svg>
+    </div>
 </div>
 
 <div id="start-screen" class="ui-screen">
@@ -85,6 +154,11 @@
     <div style="position: absolute; bottom: 40px; font-size: 10px; opacity: 0.5;">TOQUE PARA CONTINUAR</div>
 </div>
 
+<div id="upgrade-screen">
+    <h2 style="color: #fff; font-family: 'Nosifer'; margin-bottom: 20px;">ESCOLHA UMA DÁDIVA</h2>
+    <div class="cards-container" id="upgrade-cards-area"></div>
+</div>
+
 <div id="msg-popup"></div>
 <canvas id="gameCanvas"></canvas>
 
@@ -95,20 +169,68 @@ const mCanvas = document.getElementById('minimap-canvas');
 const mCtx = mCanvas.getContext('2d');
 
 const ROOM = { w: 1600, h: 1000, wallSize: 70 };
+
+// --- BANCO DE DADOS DE UPGRADES (25 ITENS) ---
+const UPGRADES_DB = [
+    // COMUM (50%)
+    { id: 'hp1', name: 'Vitalidade Menor', desc: '+20 Max HP', rarity: 'common', apply: p => G.maxHp += 20 },
+    { id: 'dmg1', name: 'Força Bruta', desc: '+10% Dano', rarity: 'common', apply: p => p.dmgMult += 0.1 },
+    { id: 'spd1', name: 'Botas Leves', desc: '+5% Velocidade', rarity: 'common', apply: p => player.spd *= 1.05 },
+    { id: 'ammo1', name: 'Cartucheira', desc: '+5 Munição Max', rarity: 'common', apply: p => { G.maxAmmo += 5; G.ammo += 5; } },
+    { id: 'rl1', name: 'Mãos Ágeis', desc: '-10% Tempo Recarga', rarity: 'common', apply: p => G.reloadTime *= 0.9 },
+    { id: 'size1', name: 'Projétil Denso', desc: '+15% Tamanho do Tiro', rarity: 'common', apply: p => p.sizeMult += 0.15 },
+    { id: 'pspd1', name: 'Aerodinâmica', desc: '+10% Vel. Projétil', rarity: 'common', apply: p => p.projSpdMult += 0.1 },
+    { id: 'heal1', name: 'Curativo', desc: 'Recupera 50 HP Agora', rarity: 'common', apply: p => G.hp = Math.min(G.maxHp, G.hp + 50) },
+    
+    // RARO (34%)
+    { id: 'hp2', name: 'Coração de Pedra', desc: '+50 Max HP', rarity: 'rare', apply: p => G.maxHp += 50 },
+    { id: 'dmg2', name: 'Lâmina Sombria', desc: '+25% Dano', rarity: 'rare', apply: p => p.dmgMult += 0.25 },
+    { id: 'spd2', name: 'Passo Fantasma', desc: '+15% Velocidade', rarity: 'rare', apply: p => player.spd *= 1.15 },
+    { id: 'fr1', name: 'Gatilho Rápido', desc: '+20% Cadência de Tiro', rarity: 'rare', apply: p => p.fireRateMult *= 0.8 },
+    { id: 'ammo2', name: 'Caixa de Munição', desc: '+15 Munição Max', rarity: 'rare', apply: p => { G.maxAmmo += 15; G.ammo += 15; } },
+    { id: 'vamp1', name: 'Sede de Sangue', desc: '1% Chance de Cura ao matar', rarity: 'rare', apply: p => p.lifesteal += 0.01 },
+    { id: 'crt1', name: 'Olho Preciso', desc: '+10% Chance Crítico', rarity: 'rare', apply: p => p.critChance += 0.1 },
+
+    // ÉPICO (15%)
+    { id: 'dmg3', name: 'Poder do Lorde', desc: '+50% Dano', rarity: 'epic', apply: p => p.dmgMult += 0.5 },
+    { id: 'pierce', name: 'Balas Perfurantes', desc: 'Tiros atravessam 1 inimigo', rarity: 'epic', apply: p => p.pierce += 1 },
+    { id: 'regen', name: 'Regeneração', desc: 'Recupera 1 HP a cada 5s', rarity: 'epic', apply: p => p.regen = true },
+    { id: 'explode', name: 'Munição Explosiva', desc: 'Inimigos explodem ao morrer', rarity: 'epic', apply: p => p.explode = true },
+    { id: 'shield', name: 'Escudo Arcano', desc: 'Reduz dano recebido em 20%', rarity: 'epic', apply: p => p.dmgRed += 0.2 },
+    
+    // LENDÁRIO (1%)
+    { id: 'multi', name: 'Tiro Duplo', desc: 'Dispara +1 projétil extra', rarity: 'legendary', apply: p => p.multishot += 1 },
+    { id: 'god', name: 'Imortalidade Menor', desc: '+100 Max HP e +30% Dano', rarity: 'legendary', apply: p => { G.maxHp += 100; p.dmgMult += 0.3; G.hp = G.maxHp; } },
+    { id: 'minigun', name: 'Minigun', desc: 'Munição Infinita, Dano Reduzido', rarity: 'legendary', apply: p => { G.infiniteAmmo = true; p.dmgMult *= 0.6; } },
+    { id: 'sniper', name: 'Rifle de Elite', desc: 'Dano x3, Cadência lenta', rarity: 'legendary', apply: p => { p.dmgMult *= 3; p.fireRateMult *= 2; } },
+    { id: 'nuke', name: 'Toque da Morte', desc: 'Inimigos morrem com 1 tiro (Boss sofre dano massivo)', rarity: 'legendary', apply: p => p.instakill = true }
+];
+
 const G = { 
-    play: false, room: 0, hp: 100, ammo: 30, maxAmmo: 30, 
+    play: false, room: 0, hp: 100, maxHp: 100, ammo: 30, maxAmmo: 30, 
     reloading: false, enemiesDefeated: false, 
-    hasFireWpn: false, lastShot: 0,
-    clearedRooms: new Set() // Armazena IDs das salas limpas
+    lastShot: 0,
+    clearedRooms: new Set(),
+    reloadTime: 1000,
+    infiniteAmmo: false,
+    // Player Mods
+    mods: { dmgMult: 1, sizeMult: 1, projSpdMult: 1, fireRateMult: 1, lifesteal: 0, critChance: 0, pierce: 0, multishot: 0, dmgRed: 0, instakill: false },
+    // Weapons
+    weapons: [
+        { name: "LUZ", dmg: 40, spd: 20, rate: 200, color: "#fff", size: 10 },
+        { name: "FOGO", dmg: 90, spd: 25, rate: 400, color: "#ff4500", size: 18 } // Desbloqueia sala 5
+    ],
+    curWpn: 0,
+    hasFireWpn: false
 };
 
 // Controles Touch
-let touchMove = { x: 0, y: 0, active: false };
-let touchShoot = { x: 0, y: 0, active: false };
+let touchMove = { x: 0, y: 0, active: false, startX:0, startY:0 };
+let touchShoot = { x: 0, y: 0, active: false, startX:0, startY:0 };
 
 const texts = {
     pt: {
-        sub: "LORDE DA LUZ", boss: "GUARDIÃO!", weapon: "RELÍQUIA OBTIDA!",
+        sub: "LORDE DA LUZ", boss: "GUARDIÃO!", weapon: "RELÍQUIA OBTIDA!", upgrade: "PODER OBTIDO!",
         history: [
             "O Lorde da Luz foi traído por sua própria sombra...",
             "Agora ele rasteja no Den of Shadow para recuperar seu poder.",
@@ -119,13 +241,15 @@ const texts = {
 };
 
 let player = { x: 800, y: 800, r: 25, spd: 9 };
-let enemies = [], projectiles = [], drops = [], pedestal = null;
+let enemies = [], projectiles = [], drops = [], objects = [];
 const keys = {};
 
 function initCutscene() {
     document.getElementById('start-screen').style.display='none';
     document.getElementById('cutscene-screen').style.display='flex';
     nextHistory();
+    // Detecta mobile para mostrar botão de troca
+    if('ontouchstart' in window) document.getElementById('mobile-swap-btn').style.display = 'flex';
 }
 
 let hIdx = 0;
@@ -141,52 +265,45 @@ function startGame() {
     document.getElementById('cutscene-screen').style.display='none';
     document.getElementById('hud-container').style.display='block';
     G.play = true;
-    G.clearedRooms.add(0); // Sala 0 já conta como limpa
-    initRoom('bottom'); // Começa entrando por baixo
+    G.clearedRooms.add(0);
+    initRoom('bottom');
+    // Regeneração passiva
+    setInterval(() => { if(G.mods.regen && G.play && G.hp < G.maxHp) G.hp++; }, 5000);
 }
 
-// direction: 'bottom' (entra por baixo, indo pra cima) ou 'top' (entra por cima, voltando)
 function initRoom(entrySide) {
-    enemies = []; projectiles = []; drops = []; pedestal = null;
+    enemies = []; projectiles = []; drops = []; objects = [];
     
-    // Posicionamento do Jogador ao entrar
     if (entrySide === 'bottom') {
-        player.x = ROOM.w / 2;
-        player.y = ROOM.h - ROOM.wallSize - 60;
+        player.x = ROOM.w / 2; player.y = ROOM.h - ROOM.wallSize - 60;
     } else {
-        player.x = ROOM.w / 2;
-        player.y = ROOM.wallSize + 60;
+        player.x = ROOM.w / 2; player.y = ROOM.wallSize + 60;
     }
 
-    // Verifica se a sala já foi limpa
     if (G.clearedRooms.has(G.room)) {
         G.enemiesDefeated = true;
     } else {
         G.enemiesDefeated = false;
-        
-        // Spawn Inimigos apenas se sala não foi limpa
         if (G.room > 0) {
             let isBoss = G.room % 10 === 0;
             if (isBoss) {
-                enemies.push({ x: ROOM.w/2, y: 300, hp: 1000 + (G.room * 50), r: 90, spd: 2.8, isBoss: true, offset: 0 });
+                enemies.push({ x: ROOM.w/2, y: 300, hp: 1000 + (G.room * 100), maxHp: 1000+(G.room*100), r: 90, spd: 3, isBoss: true, offset: 0 });
                 showPopup(texts.pt.boss);
             } else {
-                let count = 4 + Math.floor(G.room * 0.7);
+                let count = 4 + Math.floor(G.room * 0.8);
                 for(let i=0; i<count; i++) {
                     enemies.push({ 
                         x: Math.random()*(ROOM.w-300)+150, y: Math.random()*(ROOM.h-500)+150, 
-                        hp: 70 + G.room*15, r: 32, spd: 2 + (G.room*0.12), offset: Math.random()*10
+                        hp: 70 + G.room*20, maxHp: 70+G.room*20, r: 32, spd: 2 + (G.room*0.15), offset: Math.random()*10
                     });
                 }
             }
-        } else {
-            G.enemiesDefeated = true; // Sala 0
-        }
+        } else { G.enemiesDefeated = true; }
     }
 
-    // Pedestal logic (permanece se arma não foi pega e sala é a correta)
-    if ((G.room === 5 || (G.room % 10 === 0 && G.room !== 0)) && !G.hasFireWpn && G.enemiesDefeated) {
-         pedestal = { x: ROOM.w/2, y: ROOM.h/2 };
+    // Arma Sala 5
+    if (G.room === 5 && !G.hasFireWpn && G.enemiesDefeated) {
+        objects.push({ type: 'weapon', x: ROOM.w/2, y: ROOM.h/2, r: 40 });
     }
 }
 
@@ -196,27 +313,136 @@ function showPopup(t) {
     setTimeout(() => p.style.display = 'none', 2000);
 }
 
-const setupTouch = (id, obj) => {
+// --- LÓGICA DE UPGRADE ---
+function spawnUpgradeCrystal() {
+    objects.push({ type: 'crystal', x: ROOM.w/2, y: ROOM.h/2, r: 40, angle: 0 });
+}
+
+function openUpgradeMenu() {
+    G.play = false;
+    const container = document.getElementById('upgrade-cards-area');
+    container.innerHTML = '';
+    
+    // Gerar 3 opções
+    let options = [];
+    for(let i=0; i<3; i++) options.push(getWeightedUpgrade());
+
+    options.forEach(upg => {
+        const div = document.createElement('div');
+        div.className = `upg-card ${upg.rarity}`;
+        div.innerHTML = `
+            <div class="upg-rarity">${upg.rarity}</div>
+            <div class="upg-name">${upg.name}</div>
+            <div style="font-size:30px; margin:10px;">🔮</div>
+            <div class="upg-desc">${upg.desc}</div>
+        `;
+        div.onclick = () => selectUpgrade(upg);
+        container.appendChild(div);
+    });
+
+    document.getElementById('upgrade-screen').style.display = 'flex';
+}
+
+function getWeightedUpgrade() {
+    const r = Math.random() * 100;
+    let pool = [];
+    let rarity = 'common';
+    
+    if (r <= 50) rarity = 'common';
+    else if (r <= 84) rarity = 'rare';
+    else if (r <= 99) rarity = 'epic';
+    else rarity = 'legendary';
+
+    pool = UPGRADES_DB.filter(u => u.rarity === rarity);
+    if(pool.length === 0) pool = UPGRADES_DB.filter(u => u.rarity === 'common'); // Fallback
+    return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function selectUpgrade(upg) {
+    upg.apply(G.mods);
+    document.getElementById('upgrade-screen').style.display = 'none';
+    G.play = true;
+    showPopup(texts.pt.upgrade);
+    requestAnimationFrame(draw); // Resume loop
+}
+
+function swapWeapon() {
+    if(!G.hasFireWpn) return;
+    G.curWpn = (G.curWpn === 0) ? 1 : 0;
+    const w = G.weapons[G.curWpn];
+    document.getElementById('weapon-txt').innerText = w.name;
+    document.getElementById('weapon-txt').style.color = w.color;
+}
+
+// --- INPUTS ---
+function updateJoystickVisual(id, obj, joyId) {
+    const base = document.getElementById(joyId);
+    const stick = base.querySelector('.joystick-stick');
+    
+    if (obj.active) {
+        base.style.display = 'block';
+        base.style.left = obj.startX + 'px';
+        base.style.top = obj.startY + 'px';
+        
+        // Limitar movimento visual do stick
+        let dx = obj.x; 
+        let dy = obj.y;
+        let dist = Math.hypot(dx, dy);
+        let maxDist = 50; // Raio da base
+        
+        if (dist > maxDist) {
+            dx = (dx / dist) * maxDist;
+            dy = (dy / dist) * maxDist;
+        }
+        
+        stick.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+    } else {
+        base.style.display = 'none';
+    }
+}
+
+const setupTouch = (id, obj, joyId) => {
     const el = document.getElementById(id);
     el.addEventListener('touchstart', e => { 
+        e.preventDefault();
         obj.active = true;
-        const t = e.touches[0];
+        const t = e.changedTouches[0];
         obj.startX = t.clientX; obj.startY = t.clientY;
+        obj.x = 0; obj.y = 0;
+        updateJoystickVisual(id, obj, joyId);
     });
     el.addEventListener('touchmove', e => {
-        const t = Array.from(e.touches).find(tt => id === 'left-zone' ? tt.clientX < window.innerWidth/2 : tt.clientX > window.innerWidth/2);
-        if(t) {
-            obj.x = (t.clientX - obj.startX);
-            obj.y = (t.clientY - obj.startY);
+        e.preventDefault();
+        // Encontrar o toque correto pelo ID se possível, ou area
+        for (let i=0; i<e.touches.length; i++) {
+            const t = e.touches[i];
+            // Lógica simples de zona
+            let inZone = (id === 'left-zone' && t.clientX < window.innerWidth/2) || 
+                         (id === 'right-zone' && t.clientX > window.innerWidth/2);
+            
+            if(inZone) {
+                obj.x = t.clientX - obj.startX;
+                obj.y = t.clientY - obj.startY;
+                updateJoystickVisual(id, obj, joyId);
+            }
         }
     });
-    el.addEventListener('touchend', () => { obj.active = false; obj.x = 0; obj.y = 0; });
+    el.addEventListener('touchend', (e) => { 
+        obj.active = false; obj.x = 0; obj.y = 0; 
+        updateJoystickVisual(id, obj, joyId);
+    });
 };
-setupTouch('left-zone', touchMove);
-setupTouch('right-zone', touchShoot);
+
+setupTouch('left-zone', touchMove, 'joy-left');
+setupTouch('right-zone', touchShoot, 'joy-right');
 
 function update() {
     if(!G.play) return;
+
+    // Tecla Q ou Space para trocar arma
+    if(keys['q'] || keys[' ']) {
+        if(!keys.blockSwap) { swapWeapon(); keys.blockSwap = true; }
+    } else { keys.blockSwap = false; }
 
     // Movimento
     let mx = 0, my = 0;
@@ -237,14 +463,34 @@ function update() {
     }
 
     if((ax || ay) && !G.reloading) {
-        if(G.ammo > 0) {
-            if(Date.now() - G.lastShot > 160) {
-                projectiles.push({ x: player.x, y: player.y, vx: ax*20, vy: ay*20, r: G.hasFireWpn ? 18 : 10, dmg: G.hasFireWpn ? 90 : 40, color: G.hasFireWpn ? "#ff4500" : "#fff" });
-                G.ammo--; G.lastShot = Date.now();
+        if(G.ammo > 0 || G.infiniteAmmo) {
+            const wpn = G.weapons[G.curWpn];
+            const fireDelay = wpn.rate * G.mods.fireRateMult;
+            
+            if(Date.now() - G.lastShot > fireDelay) {
+                const baseDmg = wpn.dmg * G.mods.dmgMult;
+                const baseSize = wpn.size * G.mods.sizeMult;
+                const baseSpd = wpn.spd * G.mods.projSpdMult;
+
+                const shoot = (vx, vy) => {
+                    projectiles.push({ 
+                        x: player.x, y: player.y, vx: vx, vy: vy, 
+                        r: baseSize, dmg: baseDmg, color: wpn.color,
+                        pierce: G.mods.pierce 
+                    });
+                };
+
+                shoot(ax*baseSpd, ay*baseSpd);
+                if(G.mods.multishot > 0) {
+                    shoot((ax*0.9 - ay*0.2)*baseSpd, (ay*0.9 + ax*0.2)*baseSpd); // +Tiro torto
+                }
+                
+                if(!G.infiniteAmmo) G.ammo--;
+                G.lastShot = Date.now();
             }
         } else {
             G.reloading = true;
-            setTimeout(() => { G.ammo = G.maxAmmo; G.reloading = false; }, 1000);
+            setTimeout(() => { G.ammo = G.maxAmmo; G.reloading = false; }, G.reloadTime);
         }
     }
 
@@ -254,46 +500,95 @@ function update() {
         let mX = dx/dist, mY = dy/dist;
         if(!en.isBoss) { mX += Math.cos(Date.now()*0.005 + en.offset)*0.25; mY += Math.sin(Date.now()*0.005 + en.offset)*0.25; }
         en.x += mX * en.spd; en.y += mY * en.spd;
-        if(dist < player.r + en.r) G.hp -= en.isBoss ? 0.9 : 0.6;
+        if(dist < player.r + en.r) {
+            let dmg = en.isBoss ? 0.9 : 0.6;
+            if(G.mods.dmgRed > 0) dmg *= (1 - G.mods.dmgRed);
+            G.hp -= dmg;
+        }
     });
 
-    // Colisões
+    // Colisões Projéteis
     projectiles.forEach((p, pi) => {
         p.x += p.vx; p.y += p.vy;
-        enemies.forEach((en, ei) => {
-            if(Math.hypot(p.x-en.x, p.y-en.y) < en.r) {
-                en.hp -= p.dmg; projectiles.splice(pi, 1);
+        
+        // Remove fora da tela
+        if(p.x < 0 || p.x > ROOM.w || p.y < 0 || p.y > ROOM.h) { projectiles.splice(pi, 1); return; }
+
+        for (let ei = enemies.length - 1; ei >= 0; ei--) {
+            let en = enemies[ei];
+            if(Math.hypot(p.x-en.x, p.y-en.y) < en.r + p.r) {
+                // Dano
+                let finalDmg = p.dmg;
+                // Crítico
+                if(Math.random() < G.mods.critChance) finalDmg *= 2;
+                // Instakill (Lendário)
+                if(G.mods.instakill && !en.isBoss) finalDmg = en.hp + 10;
+                if(G.mods.instakill && en.isBoss) finalDmg *= 1.5;
+
+                en.hp -= finalDmg;
+                
+                // Explosão (Épico)
+                if(G.mods.explode && en.hp <= 0) {
+                    // Causa dano em área (simulado)
+                }
+
+                // Vampirismo
+                if(en.hp <= 0 && Math.random() < G.mods.lifesteal) G.hp = Math.min(G.maxHp, G.hp + 5);
+
+                // Perfuração
+                if(p.pierce > 0) {
+                    p.pierce--;
+                } else {
+                    projectiles.splice(pi, 1);
+                }
+
                 if(en.hp <= 0) {
                     if(Math.random() < 0.4) drops.push({x: en.x, y: en.y});
                     enemies.splice(ei, 1);
                 }
+                break; // Atingiu um inimigo, para loop (se não perfurar)
             }
-        });
+        }
     });
 
-    drops.forEach((d, i) => { if(Math.hypot(player.x-d.x, player.y-d.y) < 50) { G.hp = Math.min(100, G.hp+25); drops.splice(i, 1); } });
+    drops.forEach((d, i) => { if(Math.hypot(player.x-d.x, player.y-d.y) < 50) { G.hp = Math.min(G.maxHp, G.hp+25); drops.splice(i, 1); } });
+
+    // Objetos (Armas, Cristais)
+    objects.forEach((o, i) => {
+        if(o.type === 'crystal') o.angle += 0.05;
+        if(Math.hypot(player.x-o.x, player.y-o.y) < o.r + player.r) {
+            if(o.type === 'weapon') {
+                G.hasFireWpn = true; 
+                objects.splice(i, 1); 
+                showPopup(texts.pt.weapon);
+                document.getElementById('mobile-swap-btn').style.display = 'flex'; // Exibe botão se mobile
+            }
+            if(o.type === 'crystal') {
+                objects.splice(i, 1);
+                openUpgradeMenu();
+            }
+        }
+    });
 
     // Limpeza da Sala
     if(enemies.length === 0 && !G.enemiesDefeated) {
         G.enemiesDefeated = true;
-        G.clearedRooms.add(G.room); // Marca como limpa
-        if(G.room === 5 || (G.room % 10 === 0 && G.room !== 0)) pedestal = { x: ROOM.w/2, y: ROOM.h/2 };
+        G.clearedRooms.add(G.room);
+        
+        // Spawn de Recompensa
+        if(G.room > 0 && G.room % 10 === 0) {
+            spawnUpgradeCrystal();
+        }
     }
 
-    if(pedestal && Math.hypot(player.x-pedestal.x, player.y-pedestal.y) < 60) { G.hasFireWpn = true; pedestal = null; showPopup(texts.pt.weapon); }
-
-    // SISTEMA DE PORTAS (AVANÇAR E VOLTAR)
-    if (G.enemiesDefeated) {
+    // Portas
+    if (G.enemiesDefeated && objects.length === 0) { // Só libera porta se pegar recompensa
         const doorW = 200;
-        // Porta de Cima (Próxima Sala)
         if (player.y < ROOM.wallSize + 30 && player.x > ROOM.w/2 - doorW/2 && player.x < ROOM.w/2 + doorW/2) {
-            G.room++; 
-            initRoom('bottom');
+            G.room++; initRoom('bottom');
         }
-        // Porta de Baixo (Voltar) - Só aparece se room > 0
         if (G.room > 0 && player.y > ROOM.h - ROOM.wallSize - 30 && player.x > ROOM.w/2 - doorW/2 && player.x < ROOM.w/2 + doorW/2) {
-            G.room--; 
-            initRoom('top');
+            G.room--; initRoom('top');
         }
     }
 
@@ -305,74 +600,79 @@ function drawMinimap() {
     const sw = mCanvas.width / ROOM.w;
     const sh = mCanvas.height / ROOM.h;
 
-    // Jogador
-    mCtx.fillStyle = "#fff";
-    mCtx.fillRect(player.x * sw, player.y * sh, 4, 4);
+    mCtx.fillStyle = "#fff"; mCtx.fillRect(player.x * sw, player.y * sh, 4, 4);
+    mCtx.fillStyle = "#f00"; enemies.forEach(en => mCtx.fillRect(en.x * sw, en.y * sh, 3, 3));
+    
+    // Objetos no mapa
+    objects.forEach(o => {
+        mCtx.fillStyle = o.type === 'crystal' ? '#0ff' : '#f1c40f';
+        mCtx.fillRect(o.x * sw, o.y * sh, 5, 5);
+    });
 
-    // Inimigos
-    mCtx.fillStyle = "#f00";
-    enemies.forEach(en => mCtx.fillRect(en.x * sw, en.y * sh, 3, 3));
-
-    // Pedestal
-    if(pedestal) { mCtx.fillStyle = "#f1c40f"; mCtx.fillRect(pedestal.x * sw, pedestal.y * sh, 5, 5); }
-
-    // Portas
-    if(G.enemiesDefeated) {
+    if(G.enemiesDefeated && objects.length === 0) {
         mCtx.strokeStyle = "#f00";
-        // Porta Cima
         mCtx.strokeRect((ROOM.w/2-50)*sw, 0, 100*sw, 10*sh);
-        // Porta Baixo (se room > 0)
-        if(G.room > 0) {
-            mCtx.strokeRect((ROOM.w/2-50)*sw, mCanvas.height - 10*sh, 100*sw, 10*sh);
-        }
+        if(G.room > 0) mCtx.strokeRect((ROOM.w/2-50)*sw, mCanvas.height - 10*sh, 100*sw, 10*sh);
     }
 }
 
 function draw() {
     ctx.fillStyle = "#000"; ctx.fillRect(0,0,canvas.width, canvas.height);
-    if(!G.play) { requestAnimationFrame(draw); return; }
-    update();
+    if(!G.play && document.getElementById('upgrade-screen').style.display !== 'flex') { requestAnimationFrame(draw); return; }
+    
+    // Se tela de upgrade estiver aberta, não atualiza lógica, só desenha fundo
+    if(document.getElementById('upgrade-screen').style.display !== 'flex') {
+        update();
+    }
+    
     drawMinimap();
 
     ctx.save();
     let s = Math.min(canvas.width/ROOM.w, canvas.height/ROOM.h);
     ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(s,s); ctx.translate(-ROOM.w/2, -ROOM.h/2);
 
-    // Arena
+    // Cenário
     ctx.fillStyle = "#0d0000"; ctx.fillRect(0,0,ROOM.w,ROOM.h);
     ctx.fillStyle = "#1a0000"; 
     ctx.fillRect(0,0,ROOM.w,ROOM.wallSize); ctx.fillRect(0,ROOM.h-ROOM.wallSize,ROOM.w,ROOM.wallSize);
     ctx.fillRect(0,0,ROOM.wallSize,ROOM.h); ctx.fillRect(ROOM.w-ROOM.wallSize,0,ROOM.wallSize,ROOM.h);
 
-    if(G.enemiesDefeated) {
+    if(G.enemiesDefeated && objects.length === 0) {
         ctx.fillStyle = "#ff0000"; ctx.shadowBlur = 30; ctx.shadowColor = "#f00";
-        // Porta Cima
         ctx.fillRect(ROOM.w/2-100, 0, 200, ROOM.wallSize + 15);
-        // Porta Baixo
-        if (G.room > 0) {
-            ctx.fillRect(ROOM.w/2-100, ROOM.h - ROOM.wallSize - 15, 200, ROOM.wallSize + 15);
-        }
+        if (G.room > 0) ctx.fillRect(ROOM.w/2-100, ROOM.h - ROOM.wallSize - 15, 200, ROOM.wallSize + 15);
         ctx.shadowBlur = 0;
     }
 
-    if(pedestal) {
-        ctx.fillStyle = "#333"; ctx.fillRect(pedestal.x-50, pedestal.y-40, 100, 80);
-        ctx.fillStyle = "#ff4500"; ctx.font = "45px Arial"; ctx.fillText("🔫", pedestal.x-22, pedestal.y+15);
-    }
+    // Objetos
+    objects.forEach(o => {
+        if(o.type === 'weapon') {
+            ctx.fillStyle = "#333"; ctx.fillRect(o.x-50, o.y-40, 100, 80);
+            ctx.fillStyle = "#ff4500"; ctx.font = "45px Arial"; ctx.fillText("🔫", o.x-22, o.y+15);
+        }
+        if(o.type === 'crystal') {
+            ctx.save();
+            ctx.translate(o.x, o.y); ctx.rotate(o.angle);
+            ctx.fillStyle = "#00ffff"; ctx.shadowColor = "#00ffff"; ctx.shadowBlur = 20;
+            ctx.beginPath(); ctx.moveTo(0, -30); ctx.lineTo(20, 0); ctx.lineTo(0, 30); ctx.lineTo(-20, 0); ctx.fill();
+            ctx.restore();
+        }
+    });
 
     drops.forEach(d => { ctx.fillStyle = "#fff"; ctx.font = "35px Orbitron"; ctx.fillText("➕", d.x-15, d.y+15); });
 
     enemies.forEach(en => {
         ctx.fillStyle = en.isBoss ? "#600" : "#f00";
         ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill();
-        let hpPct = en.hp / (en.isBoss ? 1000+(G.room*50) : 70+G.room*15);
+        let hpPct = en.hp / en.maxHp;
         ctx.fillStyle = "#222"; ctx.fillRect(en.x-40, en.y-en.r-20, 80, 8);
         ctx.fillStyle = "#f00"; ctx.fillRect(en.x-40, en.y-en.r-20, 80 * hpPct, 8);
     });
 
     ctx.fillStyle = G.reloading ? "#444" : "#fff";
     ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
-    if(G.hasFireWpn) { ctx.strokeStyle = "#ff4500"; ctx.lineWidth = 5; ctx.stroke(); }
+    // Indicador da arma atual
+    ctx.strokeStyle = G.weapons[G.curWpn].color; ctx.lineWidth = 5; ctx.stroke();
     
     projectiles.forEach(p => { 
         ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); 
@@ -380,8 +680,8 @@ function draw() {
 
     ctx.restore();
     
-    document.getElementById('hp-bar').style.width = G.hp + "%";
-    document.getElementById('ammo-bar').style.width = (G.ammo/G.maxAmmo*100) + "%";
+    document.getElementById('hp-bar').style.width = (G.hp/G.maxHp*100) + "%";
+    document.getElementById('ammo-bar').style.width = G.infiniteAmmo ? "100%" : (G.ammo/G.maxAmmo*100) + "%";
     document.getElementById('room-txt').innerText = G.room;
     
     requestAnimationFrame(draw);
