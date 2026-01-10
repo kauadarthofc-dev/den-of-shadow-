@@ -25,6 +25,11 @@
     <button class="btn-ui" id="start-btn">INICIAR JOGO</button>
 </div>
 
+<div id="death-screen" class="overlay" style="display:none">
+    <h1 style="color:red">VOCÊ MORREU</h1>
+    <button class="btn-ui" onclick="location.reload()">RECOMECAR</button>
+</div>
+
 <div id="game-container">
     <canvas id="game"></canvas>
     <div id="mobile-ui" class="mobile-ctrl">
@@ -45,7 +50,7 @@ function resize() { canvas.width = window.innerWidth / 2; canvas.height = window
 window.addEventListener('resize', resize);
 resize();
 
-const Game = { started: false, lives: 6, maxLives: 6, room: 0, active: true, cleared: true, roomW: 1200, roomH: 900, camX: 0, camY: 0 };
+const Game = { started: false, lives: 6, room: 1, active: true, roomW: 1200, roomH: 900, camX: 0, camY: 0 };
 const input = { x: 0, y: 0 };
 const attack = { up: false, down: false, left: false, right: false };
 
@@ -57,7 +62,7 @@ document.getElementById('start-btn').onclick = () => {
     loop();
 };
 
-// --- CONTROLES (MOBILE + PC) ---
+// --- CONTROLES ---
 let joyTouchId = null;
 if(isMobile) {
     window.addEventListener('touchstart', processTouches, { passive: false });
@@ -94,8 +99,8 @@ function endTouch(e) {
     }
 }
 
+// Suporte teclado PC
 window.onkeydown = (e) => {
-    if(isMobile) return;
     let k = e.key.toLowerCase();
     if(k=='w') input.y = -1; if(k=='s') input.y = 1; if(k=='a') input.x = -1; if(k=='d') input.x = 1;
     if(k=='i' || e.key == 'ArrowUp') attack.up=true; if(k=='k' || e.key == 'ArrowDown') attack.down=true;
@@ -119,11 +124,12 @@ class Projectile {
 }
 
 class Enemy {
-    constructor(type = 'shooter', x, y) {
-        this.type = type; this.x = x || Math.random()*800+200; this.y = y || Math.random()*600+100;
-        this.hp = (type === 'bossT') ? 600 : 30;
-        this.alive = true; this.stun = 0; this.timer = 0; this.seePlayer = false;
-        this.w = 30; this.h = 30;
+    constructor(type, x, y) {
+        this.type = type; 
+        this.x = x || Math.random() * (Game.roomW - 200) + 100;
+        this.y = y || Math.random() * (Game.roomH - 200) + 100;
+        this.hp = (type === 'bossT') ? 600 : 40;
+        this.alive = true; this.stun = 0; this.timer = Math.random() * 50; this.seePlayer = false;
     }
     update() {
         if (this.stun > 0) { this.stun--; return; }
@@ -131,62 +137,72 @@ class Enemy {
 
         if (this.type === 'bossT') {
             if (--this.timer <= 0) {
-                for(let i=0; i<8; i++) {
-                    let a = (Math.PI*2/8)*i;
-                    projectiles.push(new Projectile(this.x+20, this.y+20, Math.cos(a), Math.sin(a), true));
+                for(let i=0; i<12; i++) {
+                    let a = (Math.PI*2/12)*i;
+                    projectiles.push(new Projectile(this.x+30, this.y+30, Math.cos(a), Math.sin(a), true));
                 }
-                this.timer = 120; this.stun = 40;
+                this.timer = 100; this.stun = 40;
             }
-        } else if (this.type === 'stalker') {
-            this.x += (p.x - this.x) * 0.02; this.y += (p.y - this.y) * 0.02;
-        } else if (this.type === 'kamikaze') {
-            this.x += (p.x - this.x) * 0.04; this.y += (p.y - this.y) * 0.04;
-            if (dist < 30) { Game.lives -= 2; this.alive = false; p.iframe = 60; }
-        } else if (this.type === 'assassin') {
+        } else if (this.type === 'stalker') { // AZUL: Segue o player
+            let a = Math.atan2(p.y - this.y, p.x - this.x);
+            this.x += Math.cos(a) * 2; this.y += Math.sin(a) * 2;
+        } else if (this.type === 'kamikaze') { // AMARELO: Explode
+            let a = Math.atan2(p.y - this.y, p.x - this.x);
+            this.x += Math.cos(a) * 3.5; this.y += Math.sin(a) * 3.5;
+            if (dist < 25) { Game.lives -= 2; this.alive = false; p.iframe = 60; }
+        } else if (this.type === 'assassin') { // VERDE: Segue apenas se ver
             if (dist < 250) this.seePlayer = true;
-            if (this.seePlayer) { this.x += (p.x - this.x) * 0.05; this.y += (p.y - this.y) * 0.05; }
-        } else { // Atirador normal
+            if (this.seePlayer) {
+                let a = Math.atan2(p.y - this.y, p.x - this.x);
+                this.x += Math.cos(a) * 4.5; this.y += Math.sin(a) * 4.5;
+            }
+        } else { // VERMELHO: Atirador
             if (--this.timer <= 0) {
                 let a = Math.atan2(p.y - this.y, p.x - this.x);
                 projectiles.push(new Projectile(this.x+15, this.y+15, Math.cos(a), Math.sin(a), true));
-                this.timer = 100; this.stun = 60;
+                this.timer = 120; this.stun = 90;
             }
         }
     }
     draw() {
         if (this.type === 'bossT') {
-            ctx.fillStyle = "#8e44ad";
-            ctx.fillRect(this.x, this.y, 60, 20); ctx.fillRect(this.x+20, this.y+20, 20, 40);
+            ctx.fillStyle = "#8e44ad"; // Roxo
+            ctx.fillRect(this.x, this.y, 80, 25); 
+            ctx.fillRect(this.x+27, this.y+25, 26, 60);
         } else {
             ctx.fillStyle = this.type === 'stalker' ? '#3498db' : this.type === 'kamikaze' ? '#f1c40f' : this.type === 'assassin' ? '#2ecc71' : '#ff4757';
             ctx.fillRect(this.x, this.y, 30, 30);
-            if (this.type === 'assassin' && this.seePlayer) { ctx.fillStyle = "#fff"; ctx.fillRect(this.x+10, this.y-10, 5, 15); }
         }
     }
 }
 
-let p = { x: 600, y: 800, iframe: 0, atkTicks: 0 };
+let p = { x: 600, y: 700, iframe: 0, atkTicks: 0 };
 let enemies = [], projectiles = [];
 
 function initRoom() {
-    projectiles = []; enemies = []; Game.cleared = false;
+    projectiles = []; enemies = []; p.x = 600; p.y = 800;
+    
     if (Game.room === 20) {
-        enemies.push(new Enemy('bossT', 600, 200));
+        enemies.push(new Enemy('bossT', 550, 200));
     } else {
-        let n = 2 + Math.floor(Game.room/4);
+        let n = 3 + Math.floor(Game.room/3);
         for(let i=0; i<n; i++) {
-            let r = Math.random();
-            if (r < 0.25) enemies.push(new Enemy('stalker'));
-            else if (r < 0.5) enemies.push(new Enemy('kamikaze'));
-            else if (r < 0.75) enemies.push(new Enemy('assassin'));
-            else enemies.push(new Enemy('shooter'));
+            let types = ['stalker', 'kamikaze', 'assassin', 'shooter'];
+            let type = types[Math.floor(Math.random() * types.length)];
+            enemies.push(new Enemy(type));
         }
     }
 }
 
 function loop() {
-    if(!Game.active || !Game.started) return requestAnimationFrame(loop);
+    if (!Game.active || !Game.started) return;
     
+    if (Game.lives <= 0) {
+        Game.active = false;
+        document.getElementById('death-screen').style.display = 'flex';
+        return;
+    }
+
     // Camera
     Game.camX += ((p.x - canvas.width/2) - Game.camX) * 0.1;
     Game.camY += ((p.y - canvas.height/2) - Game.camY) * 0.1;
@@ -194,12 +210,16 @@ function loop() {
     ctx.clearRect(0,0, canvas.width, canvas.height);
     ctx.save(); ctx.translate(-Game.camX, -Game.camY);
     
-    // Chão
-    ctx.strokeStyle = "#222";
+    // Chão e Bordas
+    ctx.strokeStyle = "#333"; ctx.lineWidth = 2;
     for(let i=0; i<Game.roomW; i+=100) for(let j=0; j<Game.roomH; j+=100) ctx.strokeRect(i, j, 100, 100);
+    ctx.strokeStyle = "red"; ctx.lineWidth = 10; ctx.strokeRect(0,0, Game.roomW, Game.roomH);
 
-    // Player
+    // Movimento Player
     p.x += input.x * 5; p.y += input.y * 5;
+    p.x = Math.max(20, Math.min(Game.roomW-45, p.x));
+    p.y = Math.max(20, Math.min(Game.roomH-45, p.y));
+    
     if (p.iframe > 0) p.iframe--;
     ctx.fillStyle = (p.iframe % 4 < 2) ? "#e67e22" : "#fff";
     ctx.fillRect(p.x, p.y, 25, 25);
@@ -211,26 +231,53 @@ function loop() {
         if(dx||dy) { projectiles.push(new Projectile(p.x+10, p.y+10, dx, dy)); p.atkTicks = 15; }
     }
 
-    // Inimigos e Projéteis
-    projectiles.forEach((pr, i) => {
+    // Projéteis
+    for(let i = projectiles.length-1; i >= 0; i--){
+        let pr = projectiles[i];
         pr.update(); pr.draw();
-        if (pr.enemy && p.iframe <= 0 && Math.hypot(pr.x-p.x-12, pr.y-p.y-12) < 15) { Game.lives--; p.iframe = 60; pr.active = false; }
-        if (!pr.enemy) enemies.forEach(e => {
-            if (e.alive && Math.hypot(pr.x-e.x-15, pr.y-e.y-15) < 25) { e.hp -= 10; pr.active = false; if(e.hp<=0) e.alive=false; }
-        });
+        if (pr.enemy) {
+            if (p.iframe <= 0 && Math.hypot(pr.x-p.x-12, pr.y-p.y-12) < 15) {
+                Game.lives--; p.iframe = 60; pr.active = false;
+            }
+        } else {
+            enemies.forEach(e => {
+                if (e.alive && Math.hypot(pr.x-e.x-15, pr.y-e.y-15) < 30) {
+                    e.hp -= 10; pr.active = false; if(e.hp <= 0) e.alive = false;
+                }
+            });
+        }
         if (!pr.active) projectiles.splice(i, 1);
+    }
+
+    // Inimigos
+    enemies.forEach(e => { 
+        if(e.alive) { 
+            e.update(); e.draw(); 
+            if(p.iframe <= 0 && Math.hypot(e.x-p.x, e.y-p.y) < 30) {
+                if(e.type === 'kamikaze') { Game.lives -= 2; e.alive = false; }
+                else { Game.lives--; }
+                p.iframe = 60;
+            }
+        } 
     });
 
-    enemies.forEach(e => { if(e.alive) { e.update(); e.draw(); if(p.iframe<=0 && Math.hypot(e.x-p.x, e.y-p.y)<30) { Game.lives--; p.iframe=60; } } });
-
+    // Porta para próxima sala
     if (enemies.filter(e => e.alive).length === 0) {
-        ctx.fillStyle = "#f1c40f"; ctx.fillRect(Game.roomW/2-50, 0, 100, 20);
-        if (p.y < 30) { Game.room++; initRoom(); p.y = Game.roomH - 100; }
+        ctx.fillStyle = "#f1c40f"; ctx.fillRect(Game.roomW/2-50, 0, 100, 30);
+        ctx.fillStyle = "#000"; ctx.fillText("SAÍDA", Game.roomW/2-20, 20);
+        if (p.y < 40 && Math.abs(p.x - Game.roomW/2) < 50) { 
+            Game.room++; 
+            initRoom(); 
+        }
     }
 
     ctx.restore();
-    ctx.fillStyle = "#fff"; ctx.fillText("VIDAS: " + Game.lives + " | SALA: " + Game.room, 20, 30);
-    if (Game.lives <= 0) location.reload();
+    
+    // HUD
+    ctx.fillStyle = "#fff"; ctx.font = "20px Arial";
+    ctx.fillText("VIDAS: " + Game.lives, 20, 40);
+    ctx.fillText("SALA: " + Game.room, 20, 70);
+    
     requestAnimationFrame(loop);
 }
 </script>
