@@ -5,21 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Fox of Isaac: Den of Shadows</title>
     <style>
-        * { touch-action: none !important; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+        * { touch-action: none !important; user-select: none; -webkit-user-select: none; }
         html, body { background: #000; margin: 0; padding: 0; overflow: hidden; height: 100%; width: 100%; position: fixed; font-family: 'Courier New', monospace; color: #fff; }
         .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .btn-ui { padding: 20px 40px; border: 4px solid #ff4d6d; background: #111; color: #fff; font-size: 20px; font-weight: bold; border-radius: 12px; cursor: pointer; margin: 10px; }
         #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
         canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
-        
-        /* Controles Mobile e Console Visual */
         .mobile-ctrl { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 1500; }
-        #joy-bound { position: absolute; bottom: 15%; left: 8%; width: 120px; height: 120px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; pointer-events: auto; }
+        #joy-bound { position: absolute; bottom: 15%; left: 8%; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; pointer-events: auto; }
         #joy-stick { position: absolute; left: 35px; top: 35px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.4; pointer-events: none; }
         #shoot-ctrl { position: absolute; bottom: 15%; right: 8%; display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; pointer-events: auto; }
         .atk-btn { width: 70px; height: 70px; background: rgba(52,152,219,0.1); border: 2px solid #3498db; border-radius: 50%; color: #3498db; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; }
-        #swap-btn { position: absolute; bottom: 45%; right: 8%; width: 80px; height: 70px; background: rgba(241, 196, 15, 0.2); border: 3px solid #f1c40f; border-radius: 15px; color: #f1c40f; display: flex; justify-content: center; align-items: center; font-size: 16px; font-weight: bold; pointer-events: auto; cursor: pointer; }
-        #fs-btn { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid #fff; border-radius: 5px; z-index: 2500; cursor: pointer; }
+        #swap-btn { position: absolute; bottom: 45%; right: 8%; width: 80px; height: 70px; background: rgba(241,196,15,0.2); border: 3px solid #f1c40f; border-radius: 15px; color: #f1c40f; display: flex; justify-content: center; align-items: center; font-size: 16px; font-weight: bold; pointer-events: auto; }
+        #fs-btn { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); padding: 8px 15px; background: #222; border: 1px solid #fff; border-radius: 5px; z-index: 2500; cursor: pointer; display: none; }
     </style>
 </head>
 <body>
@@ -28,11 +26,12 @@
 
 <div id="start-screen" class="overlay">
     <h1 style="color:#ff4d6d; font-size:40px; text-shadow:0 0 20px red;">FOX OF ISAAC</h1>
+    <p>SALA 5: FOGO | SALA 15: ÁCIDO | SALA 20: ???</p>
     <div class="btn-ui" id="btn-start">DESCER AO COVIL</div>
 </div>
 
 <div id="death-screen" class="overlay" style="display:none;">
-    <h1 style="color:red; font-size: 50px;">VOCÊ MORREU</h1>
+    <h1 style="color:red; font-size: 50px;">FIM DA LINHA</h1>
     <div class="btn-ui" onclick="location.reload()">RECOMEÇAR</div>
 </div>
 
@@ -41,8 +40,8 @@
     <div id="mobile-ui" class="mobile-ctrl">
         <div id="joy-bound"><div id="joy-stick"></div></div>
         <div id="shoot-ctrl">
-            <div></div><div class="atk-btn" onmousedown="setAtk('up',true)" onmouseup="setAtk('up',false)" ontouchstart="setAtk('up',true)" ontouchend="setAtk('up',false)">▲</div><div></div>
-            <div class="atk-btn" onmousedown="setAtk('left',true)" onmouseup="setAtk('left',false)" ontouchstart="setAtk('left',true)" ontouchend="setAtk('left',false)">◀</div><div class="atk-btn" onmousedown="setAtk('down',true)" onmouseup="setAtk('down',false)" ontouchstart="setAtk('down',true)" ontouchend="setAtk('down',false)">▼</div><div class="atk-btn" onmousedown="setAtk('right',true)" onmouseup="setAtk('right',false)" ontouchstart="setAtk('right',true)" ontouchend="setAtk('right',false)">▶</div>
+            <div></div><div class="atk-btn" data-dir="up">▲</div><div></div>
+            <div class="atk-btn" data-dir="left">◀</div><div class="atk-btn" data-dir="down">▼</div><div class="atk-btn" data-dir="right">▶</div>
         </div>
         <div id="swap-btn" onclick="cycleWeapon()">ARMA</div>
     </div>
@@ -52,11 +51,12 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+if(isMobile) document.getElementById('fs-btn').style.display = 'block';
 
 const Game = { 
-    started: false, room: 0, roomW: 1000, roomH: 800, 
+    started: false, room: 0, roomW: 1100, roomH: 800, 
     camX: 0, camY: 0, lives: 6, maxLives: 6, weapon: 'normal', 
-    hasFire: false, hasAcid: false, version: "v1.6.0",
+    hasFire: false, hasAcid: false, version: "v1.7.5",
     ammo: 5, maxAmmo: 5, reloading: false, reloadTimer: 0,
     doorPos: { x: 0, y: 0, side: 'top', open: false }
 };
@@ -68,11 +68,12 @@ const Weapons = {
 };
 
 const keys = new Set();
-const attack = { up: false, down: false, left: false, right: false };
+const attackDir = { up: false, down: false, left: false, right: false };
 let enemies = [], projectiles = [], particles = [], pools = [], pedestal = null;
-let p = { x: 500, y: 400, iframe: 0, timer: 0, dead: false, vx:0, vy:0 };
-
+let p = { x: 550, y: 400, iframe: 0, timer: 0, dead: false };
 let audioCtx = null;
+
+// Sistema de Sons Reforçado
 function playSfx(f, type, dur, vol=0.1) {
     if(!audioCtx) return;
     const osc = audioCtx.createOscillator();
@@ -80,7 +81,7 @@ function playSfx(f, type, dur, vol=0.1) {
     osc.type = type;
     osc.frequency.setValueAtTime(f, audioCtx.currentTime);
     g.gain.setValueAtTime(vol, audioCtx.currentTime);
-    g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + dur);
+    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
     osc.connect(g); g.connect(audioCtx.destination);
     osc.start(); osc.stop(audioCtx.currentTime + dur);
 }
@@ -89,26 +90,27 @@ function playDeathSfx() {
     if(!audioCtx) return;
     const osc = audioCtx.createOscillator();
     const g = audioCtx.createGain();
-    osc.frequency.setValueAtTime(200, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 1);
-    g.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1);
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 1.5);
+    g.gain.setValueAtTime(0.4, audioCtx.currentTime);
+    g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.5);
     osc.connect(g); g.connect(audioCtx.destination);
-    osc.start(); osc.stop(audioCtx.currentTime + 1);
+    osc.start(); osc.stop(audioCtx.currentTime + 1.5);
 }
 
 function toggleFS() {
-    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e=>{});
     else document.exitFullscreen();
 }
 
-function setAtk(dir, val) { attack[dir] = val; }
-
 function cycleWeapon() {
     if(!Game.hasFire && !Game.hasAcid) return;
-    if(Game.weapon === 'normal') Game.weapon = Game.hasFire ? 'fire' : 'acid';
-    else if(Game.weapon === 'fire') Game.weapon = Game.hasAcid ? 'acid' : 'normal';
-    else Game.weapon = 'normal';
+    const list = ['normal'];
+    if(Game.hasFire) list.push('fire');
+    if(Game.hasAcid) list.push('acid');
+    let idx = list.indexOf(Game.weapon);
+    Game.weapon = list[(idx + 1) % list.length];
     Game.maxAmmo = Weapons[Game.weapon].max; Game.ammo = Game.maxAmmo; Game.reloading = false;
 }
 
@@ -116,56 +118,68 @@ function randomizeDoor() {
     const sides = ['top', 'bottom', 'left', 'right'];
     Game.doorPos.side = sides[Math.floor(Math.random() * sides.length)];
     Game.doorPos.open = false;
+    const offset = 15;
     if(Game.doorPos.side==='top'){ Game.doorPos.x=Game.roomW/2-50; Game.doorPos.y=0; }
-    else if(Game.doorPos.side==='bottom'){ Game.doorPos.x=Game.roomW/2-50; Game.doorPos.y=Game.roomH-15; }
+    else if(Game.doorPos.side==='bottom'){ Game.doorPos.x=Game.roomW/2-50; Game.doorPos.y=Game.roomH-offset; }
     else if(Game.doorPos.side==='left'){ Game.doorPos.x=0; Game.doorPos.y=Game.roomH/2-50; }
-    else { Game.doorPos.x=Game.roomW-15; Game.doorPos.y=Game.roomH/2-50; }
+    else { Game.doorPos.x=Game.roomW-offset; Game.doorPos.y=Game.roomH/2-50; }
 }
 
 function initRoom() {
     enemies = []; projectiles = []; pools = []; pedestal = null;
     randomizeDoor();
     p.x = Game.roomW/2; p.y = Game.roomH/2;
-    p.iframe = 30; // 0.5s Iframe na entrada
+    p.iframe = 30; // 0.5s iframe ao entrar
     
-    if(Game.room === 5 && !Game.hasFire) pedestal = { type: 'fire', x: Game.roomW/2, y: 200 };
-    if(Game.room === 15 && !Game.hasAcid) pedestal = { type: 'acid', x: Game.roomW/2, y: 200 };
+    if(Game.room === 5 && !Game.hasFire) pedestal = { type: 'fire', x: Game.roomW/2, y: 300 };
+    if(Game.room === 15 && !Game.hasAcid) pedestal = { type: 'acid', x: Game.roomW/2, y: 300 };
 
-    if(Game.room > 0) {
-        for(let i=0; i<3+Math.floor(Game.room/1.5); i++) {
+    if(Game.room === 20) {
+        // BOSS: The Void Sentinel
+        enemies.push({ type:'boss', x:Game.roomW/2-50, y:150, hp:1000, maxHp:1000, w:100, h:100, hit:0, state:0, timer:0 });
+    } else if(Game.room > 0) {
+        let count = 3 + Math.floor(Game.room/1.8);
+        for(let i=0; i<count; i++) {
+            let ex, ey;
+            do { // Garante spawn longe do player
+                ex = Math.random()*(Game.roomW-100)+50;
+                ey = Math.random()*(Game.roomH-100)+50;
+            } while(Math.hypot(ex-p.x, ey-p.y) < 300);
+
             let r = Math.random();
             enemies.push({ 
                 type: r<0.2?'kamikaze':r<0.4?'shooter':r<0.7?'stalker':'assassin', 
-                x:Math.random()*(Game.roomW-100)+50, y:Math.random()*(Game.roomH-100)+50, 
-                hp:40+Game.room*5, w:30, h:30, hit:0, shootTimer:Math.random()*50 
+                x:ex, y:ey, hp:40+Game.room*6, w:30, h:30, hit:0, shootTimer:Math.random()*60 
             });
         }
     }
 }
 
 function drawUI() {
-    // Vida e Munição (Agrupados)
+    // Vida (Hexágonos)
     for(let i=0; i<Game.maxLives; i++) {
-        let x = 35 + i * 42; let y = 35;
+        let x = 35 + i * 42, y = 35;
         ctx.fillStyle = i < Game.lives ? "#ff4d6d" : "#222";
-        ctx.beginPath(); for(let a=0; a<6; a++) ctx.lineTo(x + 16 * Math.cos(a * Math.PI/3), y + 16 * Math.sin(a * Math.PI/3));
+        ctx.beginPath(); for(let a=0; a<6; a++) ctx.lineTo(x+16*Math.cos(a*Math.PI/3), y+16*Math.sin(a*Math.PI/3));
         ctx.closePath(); ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
     }
+    // Munição (Abaixo da Vida)
     const wInfo = Weapons[Game.weapon];
-    ctx.textAlign = "left"; ctx.fillStyle = "#fff"; ctx.font = "bold 14px Courier";
+    ctx.textAlign = "left"; ctx.fillStyle = "#fff"; ctx.font = "bold 13px Courier";
     ctx.fillText(wInfo.name, 20, 75);
-    ctx.fillStyle = "#333"; ctx.fillRect(20, 85, 120, 10);
+    ctx.fillStyle = "#333"; ctx.fillRect(20, 85, 120, 8);
     ctx.fillStyle = Game.reloading ? "#f1c40f" : wInfo.color;
-    ctx.fillRect(20, 85, (Game.ammo/Game.maxAmmo)*120, 10);
+    ctx.fillRect(20, 85, (Game.ammo/Game.maxAmmo)*120, 8);
 
     // Minimapa
-    const mS = 80; const mX = canvas.width - mS - 20; const mY = 20;
-    ctx.fillStyle = "rgba(0,0,0,0.7)"; ctx.fillRect(mX, mY, mS, mS);
-    ctx.fillStyle = Game.doorPos.open ? "#f1c40f" : "#444";
+    const mS = 90, mX = canvas.width - mS - 20, mY = 20;
+    ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(mX, mY, mS, mS);
+    ctx.fillStyle = Game.doorPos.open ? "#f1c40f" : "#333";
     ctx.fillRect(mX+(Game.doorPos.x/Game.roomW)*mS, mY+(Game.doorPos.y/Game.roomH)*mS, 6, 6);
-    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(mX+(p.x/Game.roomW)*mS, mY+(p.y/Game.roomH)*mS, 2, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(mX+(p.x/Game.roomW)*mS, mY+(p.y/Game.roomH)*mS, 2.5, 0, Math.PI*2); ctx.fill();
 
-    ctx.textAlign = "center"; ctx.font = "20px Courier"; ctx.fillText(`SALA ${Game.room}`, canvas.width/2, 35);
+    ctx.textAlign = "center"; ctx.font = "bold 22px Courier";
+    ctx.fillText(Game.room === 20 ? "!!! BOSS !!!" : `ANDAR ${Game.room}`, canvas.width/2, 40);
 }
 
 function loop() {
@@ -177,21 +191,23 @@ function loop() {
     Game.camY += (p.y - canvas.height/2 - Game.camY) * 0.1;
     ctx.translate(-Game.camX, -Game.camY);
 
-    // Chão e Tutorial
-    ctx.fillStyle = "#0a0a0a"; ctx.fillRect(0,0,Game.roomW, Game.roomH);
-    ctx.strokeStyle = "#151515"; for(let i=0; i<Game.roomW; i+=100) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,Game.roomH); ctx.stroke(); }
-    
+    // Arena
+    ctx.fillStyle = "#0d0d0d"; ctx.fillRect(0,0,Game.roomW, Game.roomH);
+    ctx.strokeStyle = "#1a1a1a"; ctx.lineWidth = 2;
+    for(let i=0; i<=Game.roomW; i+=100) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,Game.roomH); ctx.stroke(); }
+    for(let i=0; i<=Game.roomH; i+=100) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(Game.roomW,i); ctx.stroke(); }
+
     if(Game.room === 0) {
-        ctx.fillStyle = "rgba(255,255,255,0.2)"; ctx.textAlign = "center"; ctx.font = "20px Courier";
-        ctx.fillText("WASD: MOVER | SETAS: ATIRAR", Game.roomW/2, Game.roomH/2 - 40);
-        ctx.fillText("Q: TROCAR ARMA | DERROTE OS INIMIGOS", Game.roomW/2, Game.roomH/2);
-        ctx.fillText("PARA ABRIR A PORTA", Game.roomW/2, Game.roomH/2 + 40);
+        ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.textAlign = "center"; ctx.font = "18px Courier";
+        ctx.fillText("WASD / JOYSTICK: MOVER", Game.roomW/2, 350);
+        ctx.fillText("SETAS / BOTÕES: ATIRAR", Game.roomW/2, 380);
+        ctx.fillText("SALA 5: FOGO | SALA 15: ÁCIDO", Game.roomW/2, 410);
     }
 
     // Poças de Ácido
     pools.forEach((po, i) => {
-        ctx.fillStyle = "rgba(50, 205, 50, 0.2)"; ctx.beginPath(); ctx.arc(po.x, po.y, po.r, 0, Math.PI*2); ctx.fill();
-        enemies.forEach(e => { if(Math.hypot(e.x-po.x, e.y-po.y) < po.r && p.timer % 30 === 0) { e.hp -= 2; e.hit = 3; } });
+        ctx.fillStyle = "rgba(50, 205, 50, 0.25)"; ctx.beginPath(); ctx.arc(po.x, po.y, po.r, 0, Math.PI*2); ctx.fill();
+        enemies.forEach(e => { if(Math.hypot(e.x-po.x, e.y-po.y) < po.r && p.timer % 30 === 0) { e.hp -= 3; e.hit = 3; } });
         po.life--; if(po.life <= 0) pools.splice(i,1);
     });
 
@@ -199,61 +215,70 @@ function loop() {
     if(!p.dead) {
         let mx = (keys.has('a')?-1:keys.has('d')?1:0);
         let my = (keys.has('w')?-1:keys.has('s')?1:0);
-        p.x = Math.max(10, Math.min(Game.roomW-35, p.x + mx * 5));
-        p.y = Math.max(10, Math.min(Game.roomH-35, p.y + my * 5));
+        p.x = Math.max(15, Math.min(Game.roomW-40, p.x + mx * 5.2));
+        p.y = Math.max(15, Math.min(Game.roomH-40, p.y + my * 5.2));
         if(p.iframe > 0) p.iframe--;
         ctx.fillStyle = p.iframe%4<2?"#fff":"#ff4d6d"; ctx.fillRect(p.x, p.y, 25, 25);
         
         p.timer++;
-        if(Game.reloading) { Game.reloadTimer++; if(Game.reloadTimer > 50) { Game.ammo = Game.maxAmmo; Game.reloading = false; Game.reloadTimer = 0; } }
-        let sx = (keys.has('arrowleft')?-1:keys.has('arrowright')?1:keys.has('j')?-1:keys.has('l')?1:0);
-        let sy = (keys.has('arrowup')?-1:keys.has('arrowdown')?1:keys.has('i')?-1:keys.has('k')?1:0);
-        if(attack.up) sy=-1; if(attack.down) sy=1; if(attack.left) sx=-1; if(attack.right) sx=1;
+        if(Game.reloading) { Game.reloadTimer++; if(Game.reloadTimer > 55) { Game.ammo = Game.maxAmmo; Game.reloading = false; Game.reloadTimer = 0; } }
+        
+        let sx = (keys.has('arrowleft')?-1:keys.has('arrowright')?1:0);
+        let sy = (keys.has('arrowup')?-1:keys.has('arrowdown')?1:0);
+        if(attackDir.up) sy=-1; if(attackDir.down) sy=1; if(attackDir.left) sx=-1; if(attackDir.right) sx=1;
 
         if((sx || sy) && p.timer % 15 === 0 && !Game.reloading) {
-            projectiles.push({x:p.x+10, y:p.y+10, dx:sx, dy:sy, type:Game.weapon, owner:'player'});
-            Game.ammo--; if(Game.ammo <= 0) Game.reloading = true; playSfx(200, 'square', 0.05);
+            projectiles.push({x:p.x+8, y:p.y+8, dx:sx, dy:sy, type:Game.weapon, owner:'player'});
+            Game.ammo--; if(Game.ammo <= 0) Game.reloading = true; playSfx(220, 'square', 0.06);
         }
     }
 
-    // Inimigos com Sistema de Separação
+    // Inimigos e IA
     enemies.forEach((e, i) => {
         let ang = Math.atan2(p.y-e.y, p.x-e.x);
-        e.x += Math.cos(ang)*2.2; e.y += Math.sin(ang)*2.2;
-
-        // Anti-Colisão entre inimigos
-        for(let j=i+1; j<enemies.length; j++) {
-            let e2 = enemies[j];
-            let dx = e2.x - e.x; let dy = e2.y - e.y;
-            let dist = Math.hypot(dx, dy);
-            if(dist < 30) {
-                let force = (30 - dist) / 2;
-                let ax = (dx/dist)*force; let ay = (dy/dist)*force;
-                e.x -= ax; e.y -= ay; e2.x += ax; e2.y += ay;
+        if(e.type !== 'boss') {
+            let spd = e.type==='kamikaze'?2.9:e.type==='assassin'?3.3:2.2;
+            e.x += Math.cos(ang)*spd; e.y += Math.sin(ang)*spd;
+            // Separação
+            enemies.forEach(e2 => { if(e!==e2 && Math.hypot(e.x-e2.x, e.y-e2.y)<35) { e.x-=Math.cos(ang); e.y-=Math.sin(ang); }});
+        } else {
+            // Lógica do Boss
+            e.timer++;
+            if(e.timer % 100 === 0) e.state = Math.floor(Math.random()*2);
+            if(e.state === 0 && e.timer % 20 === 0) { // Círculo de Tiros
+                for(let a=0; a<Math.PI*2; a+=Math.PI/4) projectiles.push({x:e.x+50, y:e.y+50, dx:Math.cos(a), dy:Math.sin(a), type:'normal', owner:'enemy'});
             }
+            if(e.state === 1 && e.timer % 120 === 0) { // Invocar Kamikaze
+                enemies.push({type:'kamikaze', x:e.x, y:e.y+110, hp:50, w:30, h:30, hit:0});
+            }
+            // Barra de HP do Boss
+            ctx.fillStyle = "#333"; ctx.fillRect(e.x-50, e.y-20, 200, 10);
+            ctx.fillStyle = "#f00"; ctx.fillRect(e.x-50, e.y-20, (e.hp/e.maxHp)*200, 10);
         }
 
-        ctx.fillStyle = e.hit > 0 ? "#fff" : (e.type==='kamikaze'?"#f1c40f":e.type==='assassin'?"#8e44ad":"#3498db");
+        ctx.fillStyle = e.hit > 0 ? "#fff" : (e.type==='kamikaze'?"#f1c40f":e.type==='assassin'?"#8e44ad":e.type==='boss'?"#555":"#3498db");
         if(e.hit>0) e.hit--; ctx.fillRect(e.x, e.y, e.w, e.h);
-        if(e.hp <= 0) { enemies.splice(i,1); }
-        if(p.iframe <= 0 && Math.hypot(p.x-e.x, p.y-e.y) < 28) {
-            Game.lives -= (e.type==='kamikaze'?2:1); p.iframe = 45;
+        if(e.hp <= 0) { enemies.splice(i,1); playSfx(100, 'sine', 0.2); }
+        if(p.iframe <= 0 && Math.hypot(p.x-e.x, p.y-e.y) < (e.type==='boss'?70:28)) {
+            Game.lives -= (e.type==='kamikaze'?2:1); p.iframe = 50;
             if(e.type==='kamikaze') enemies.splice(i,1);
         }
     });
 
     // Projéteis
     projectiles.forEach((pr, i) => {
-        pr.x += pr.dx*9; pr.y += pr.dy*9;
-        ctx.fillStyle = Weapons[pr.type]?.color; ctx.fillRect(pr.x, pr.y, 8, 8);
+        pr.x += pr.dx*8.5; pr.y += pr.dy*8.5;
+        ctx.fillStyle = Weapons[pr.type].color; ctx.fillRect(pr.x, pr.y, 10, 10);
         if(pr.owner==='player') {
             enemies.forEach(e => {
                 if(pr.x > e.x && pr.x < e.x+e.w && pr.y > e.y && pr.y < e.y+e.h) {
                     e.hp -= Weapons[pr.type].dmg;
-                    if(pr.type==='acid') pools.push({x:pr.x, y:pr.y, r:40, life:150});
+                    if(pr.type==='acid') pools.push({x:pr.x, y:pr.y, r:45, life:180});
                     e.hit = 5; projectiles.splice(i,1);
                 }
             });
+        } else if(Math.hypot(pr.x-p.x, pr.y-p.y) < 20 && p.iframe <= 0) {
+            Game.lives--; p.iframe = 50; projectiles.splice(i,1);
         }
         if(pr.x<0||pr.x>Game.roomW||pr.y<0||pr.y>Game.roomH) projectiles.splice(i,1);
     });
@@ -262,7 +287,17 @@ function loop() {
     if(enemies.length === 0 && !pedestal) {
         Game.doorPos.open = true;
         ctx.fillStyle = "#f1c40f"; ctx.fillRect(Game.doorPos.x, Game.doorPos.y, (Game.doorPos.side==='top'||Game.doorPos.side==='bottom'?100:15), (Game.doorPos.side==='left'||Game.doorPos.side==='right'?100:15));
-        if(Math.hypot(p.x-Game.doorPos.x, p.y-Game.doorPos.y) < 60) { Game.room++; initRoom(); }
+        if(Math.hypot(p.x-Game.doorPos.x, p.y-Game.doorPos.y) < 70) { Game.room++; initRoom(); }
+    }
+
+    // Pedestais
+    if(pedestal) {
+        ctx.fillStyle = pedestal.type==='fire'?"#ff4500":"#32cd32"; ctx.fillRect(pedestal.x-15, pedestal.y-15, 30, 30);
+        ctx.strokeStyle = "#fff"; ctx.strokeRect(pedestal.x-15, pedestal.y-15, 30, 30);
+        if(Math.hypot(p.x-pedestal.x, p.y-pedestal.y) < 40) {
+            if(pedestal.type==='fire') Game.hasFire=true; else Game.hasAcid=true;
+            pedestal=null; playSfx(600, 'sine', 0.4);
+        }
     }
 
     ctx.restore();
@@ -272,12 +307,17 @@ function loop() {
     requestAnimationFrame(loop);
 }
 
-// Inicialização
-window.addEventListener('keydown', e => keys.add(e.key.toLowerCase()));
+// Mobile Handlers
+document.querySelectorAll('.atk-btn').forEach(btn => {
+    btn.onmousedown = btn.ontouchstart = (e) => { e.preventDefault(); attackDir[btn.dataset.dir] = true; };
+    btn.onmouseup = btn.ontouchend = (e) => { e.preventDefault(); attackDir[btn.dataset.dir] = false; };
+});
+
+window.addEventListener('keydown', e => { keys.add(e.key.toLowerCase()); if(e.key.toLowerCase()==='q') cycleWeapon(); });
 window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
 document.getElementById('btn-start').onclick = () => { 
-    audioCtx = new AudioContext(); Game.started = true; 
-    document.getElementById('start-screen').style.display = 'none'; 
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)(); 
+    Game.started = true; document.getElementById('start-screen').style.display = 'none'; 
     if(isMobile) document.getElementById('mobile-ui').style.display = 'block';
     initRoom(); loop(); 
 };
