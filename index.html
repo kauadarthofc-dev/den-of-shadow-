@@ -5,246 +5,332 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Den of Shadow 💀 Lord of Light</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Orbitron:wght@400;700&display=swap');
+
         :root {
             --c-comum: #3498db; --c-incomum: #2ecc71; --c-raro: #f1c40f; 
             --c-epico: #9b59b6; --c-lendario: linear-gradient(45deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff);
+            --player-glow: 0 0 25px 8px rgba(0, 234, 255, 0.6);
+            --text-glow: 0 0 10px rgba(0, 234, 255, 0.4);
         }
         * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
-        body { margin: 0; background: #05050a; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; }
-        canvas { display: block; image-rendering: auto; }
+        body { margin: 0; background: #05050a; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; }
+        canvas { display: block; image-rendering: pixelated; }
 
-        /* Interface */
-        .ui-screen { position: absolute; inset: 0; background: radial-gradient(circle, rgba(15,12,41,0.95) 0%, rgba(5,5,15,1) 100%); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
-        .title-box { border: 2px solid #fff; padding: 30px; border-radius: 20px; background: rgba(231, 76, 60, 0.1); box-shadow: 0 0 30px rgba(231, 76, 60, 0.3); text-align: center; }
-        .title-text { font-size: clamp(40px, 10vw, 80px); color: #e74c3c; margin: 0; text-transform: uppercase; letter-spacing: 8px; text-shadow: 0 0 20px #e74c3c; }
-        .btn-main { padding: 18px 50px; background: #2ecc71; border: none; color: white; font-size: 24px; font-weight: 900; border-radius: 50px; cursor: pointer; transition: 0.3s; box-shadow: 0 6px 0 #1c8d4c; }
-        .btn-main:active { transform: translateY(4px); box-shadow: 0 2px 0 #1c8d4c; }
-
-        /* HUD Mobile */
-        #mobile-hud { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 1000; }
-        #joy-base { position: absolute; bottom: 50px; left: 50px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; pointer-events: auto; }
-        #joy-stick { position: absolute; width: 65px; height: 65px; background: #00eaff; border-radius: 50%; left: 42.5px; top: 42.5px; box-shadow: 0 0 20px #00eaff; }
-        #atk-grid { position: absolute; bottom: 40px; right: 40px; display: grid; grid-template-columns: repeat(3, 95px); gap: 15px; pointer-events: auto; }
-        .btn-atk { width: 95px; height: 95px; background: rgba(255,255,255,0.1); border: 3px solid #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 35px; color: white; }
-        #swap-mob { position: absolute; bottom: 45px; right: 380px; width: 110px; height: 110px; background: #f1c40f; border: 4px solid #fff; border-radius: 25px; pointer-events: auto; display: flex; align-items: center; justify-content: center; color: #000; font-weight: 900; }
-
-        /* Cartas */
-        .card { width: 240px; height: 350px; background: #1a1a2e; border: 5px solid #fff; border-radius: 20px; padding: 20px; cursor: pointer; transition: 0.3s; text-align: center; pointer-events: auto; }
-        .card:hover { transform: translateY(-10px); border-color: #00eaff; }
-        
-        #weapon-tag { position: absolute; bottom: 180px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 2px solid #f1c40f; padding: 15px; border-radius: 15px; display: none; z-index: 500; text-align: center; }
-    </style>
-</head>
-<body>
-
-<div id="start-screen" class="ui-screen">
-    <div class="title-box">
-        <h1 class="title-text">Den of Shadow 💀</h1>
-    </div>
-    <button class="btn-main" id="btn-play" style="margin-top:30px">INICIAR JORNADA</button>
-    <div style="margin-top:40px; text-align: center;">
-        <a href="mailto:kauadarthofc@gmail.com" style="color:#bdc3c7; text-decoration:none;">📧 kauadarthofc@gmail.com</a><br><br>
-        <a href="https://youtube.com/@kaua_darth" target="_blank" style="color:#ff0000; text-decoration:none; font-weight:bold;">🎬 YouTube: @kaua_darth</a>
-    </div>
-</div>
-
-<div id="upgrade-screen" class="ui-screen" style="display:none;">
-    <h2 style="color:#f1c40f; font-size:40px; margin-bottom:30px;">BENÇÃO DIVINA</h2>
-    <div id="cards-container" style="display:flex; gap:25px;"></div>
-</div>
-
-<div id="death-screen" class="ui-screen" style="display:none;">
-    <h1 style="color:#e74c3c; font-size:80px;">FIM DA LUZ</h1>
-    <button class="btn-main" onclick="location.reload()">RENAESCER</button>
-</div>
-
-<div id="weapon-tag"></div>
-<canvas id="gameCanvas"></canvas>
-
-<div id="mobile-hud">
-    <div id="joy-base"><div id="joy-stick"></div></div>
-    <div id="atk-grid">
-        <div></div><div class="btn-atk" data-dir="up">▲</div><div></div>
-        <div class="btn-atk" data-dir="left">◀</div><div class="btn-atk" data-dir="down">▼</div><div class="btn-atk" data-dir="right">▶</div>
-    </div>
-    <div id="swap-mob">🔄</div>
-</div>
-
-<script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-
-const G = {
-    play: false, room: 0, w: 2200, h: 1600, cx: 0, cy: 0, shake: 0,
-    hp: 12, maxHp: 12, weapon: 'magnum', triple: 0, ric: 0, dual: false, vamp: 0,
-    hasFire: false, hasShot: false, hasStaff: false,
-    inv: {
-        magnum: { a: 15, m: 15, d: 12, c: "#00eaff", n: "Magnum", cd: 18, rld: 70 },
-        fire: { a: 40, m: 40, d: 5, c: "#ff4500", n: "Lança-Chamas", cd: 3, rld: 120 },
-        shotgun: { a: 7, m: 7, d: 15, c: "#f1c40f", n: "Shotgun", cd: 60, rld: 100 },
-        staff: { a: 14, m: 14, d: 10, c: "#9b59b6", n: "Cajado", cd: 30, rld: 90 }
-    }
-};
-
-let p = { x: 1100, y: 800, r: 28, iframe: 0, t: 0, leg: 0, rel: false, relT: 0, alive: true, rot: 0 };
-let enemies = [], projectiles = [], drops = [], pedestals = [], warns = [], particles = [];
-const keys = new Set();
-const mobAtk = { up: false, down: false, left: false, right: false };
-const joy = { active: false, x: 0, y: 0, sx: 0, sy: 0 };
-
-function spawnRoom() {
-    enemies = []; projectiles = []; drops = []; pedestals = []; warns = [];
-    p.x = G.w/2; p.y = G.h/2;
-    if(G.room === 0) return;
-
-    if(G.room % 10 === 0) {
-        enemies.push({ 
-            type:'boss', x:G.w/2, y:450, hp:2500+G.room*200, max:2500+G.room*200, r:130, t:0, name: "SOBERANO" 
-        });
-    } else {
-        let count = 5 + Math.floor(G.room/1.5);
-        for(let i=0; i<count; i++) {
-            let ex, ey;
-            do { ex = 300+Math.random()*(G.w-600); ey = 300+Math.random()*(G.h-600); } while(Math.hypot(ex-p.x, ey-p.y) < 600);
-            enemies.push({ type:'stalker', x:ex, y:ey, r:38, hp:120+G.room*20, f: Math.floor(Math.random()*4) });
+        /* Animações Globais */
+        @keyframes pulse-bg {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
-    }
-}
-
-function update() {
-    if(!G.play) return;
-
-    let mx = joy.active ? joy.x : (keys.has('a')?-1:keys.has('d')?1:0);
-    let my = joy.active ? joy.y : (keys.has('w')?-1:keys.has('s')?1:0);
-    p.x = Math.max(60, Math.min(G.w-60, p.x + mx * 8));
-    p.y = Math.max(60, Math.min(G.h-60, p.y + my * 8));
-    if(mx||my) { p.leg += 0.3; p.rot = Math.atan2(my, mx); }
-
-    let ax = (keys.has('arrowleft')?-1:keys.has('arrowright')?1:0);
-    let ay = (keys.has('arrowup')?-1:keys.has('arrowdown')?1:0);
-    if(isMobile) { if(mobAtk.up) ay=-1; if(mobAtk.down) ay=1; if(mobAtk.left) ax=-1; if(mobAtk.right) ax=1; }
-    
-    if((ax||ay) && !p.rel) {
-        p.rot = Math.atan2(ay, ax);
-        let w = G.inv[G.weapon];
-        if(p.t % w.cd === 0 && w.a > 0) {
-            projectiles.push({x:p.x, y:p.y, dx:Math.cos(p.rot)*20, dy:Math.sin(p.rot)*20, dmg:w.d, life:80});
-            w.a--; if(w.a <= 0) p.rel = true;
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 5px #fff, 0 0 10px #00eaff, 0 0 15px #00eaff; }
+            50% { text-shadow: 0 0 8px #fff, 0 0 15px #00eaff, 0 0 25px #00eaff; }
         }
-    }
+        @keyframes loading-block {
+            0% { transform: translateX(-100px); }
+            100% { transform: translateX(calc(100vw + 100px)); }
+        }
+        @keyframes life-pulse {
+            0%, 100% { box-shadow: 0 0 8px rgba(255, 77, 109, 0.7); }
+            50% { box-shadow: 0 0 15px rgba(255, 77, 109, 1); }
+        }
+        @keyframes weapon-float {
+            0%, 100% { transform: translate(-50%, -10px); }
+            50% { transform: translate(-50%, -25px); }
+        }
 
-    if(p.rel) { p.relT++; if(p.relT > 70){ G.inv[G.weapon].a = G.inv[G.weapon].m; p.rel=false; p.relT=0; }}
+        /* Telas UI */
+        .ui-screen { 
+            position: absolute; inset: 0; 
+            background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e);
+            background-size: 400% 400%;
+            animation: pulse-bg 15s ease infinite;
+            z-index: 3000; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            backdrop-filter: blur(8px); 
+            text-align: center;
+        }
+        .title-box { 
+            border: 4px solid #fff; 
+            padding: 30px 60px; 
+            border-radius: 25px; 
+            background: rgba(231, 76, 60, 0.15); 
+            box-shadow: 0 0 40px rgba(231, 76, 60, 0.5); 
+            margin-bottom: 40px;
+        }
+        .title-text { 
+            font-family: 'Press Start 2P', cursive;
+            font-size: clamp(40px, 10vw, 80px); 
+            color: #e74c3c; 
+            margin: 0; 
+            text-transform: uppercase; 
+            letter-spacing: 10px; 
+            text-shadow: 0 0 25px #e74c3c, 0 0 40px #e74c3c; 
+        }
+        .subtitle-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(16px, 3vw, 24px);
+            color: #bdc3c7;
+            margin-top: 15px;
+            letter-spacing: 3px;
+            text-shadow: var(--text-glow);
+        }
+        .hint-bar { 
+            font-family: 'Orbitron', sans-serif;
+            color: #2ecc71; 
+            margin: 25px 0; 
+            font-weight: bold; 
+            font-size: 16px; 
+            text-transform: uppercase; 
+            letter-spacing: 2px;
+            text-shadow: var(--text-glow);
+        }
+        .btn-main { 
+            padding: 20px 60px; 
+            background: linear-gradient(45deg, #2ecc71, #27ae60); 
+            border: none; 
+            color: white; 
+            font-size: 26px; 
+            font-weight: 700; 
+            border-radius: 50px; 
+            cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            box-shadow: 0 8px 0 #1c8d4c, 0 15px 30px rgba(0,0,0,0.6);
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0,0,0,0.8);
+        }
+        .btn-main:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 12px 0 #1c8d4c, 0 25px 50px rgba(0,0,0,0.8); }
+        .btn-main:active { transform: translateY(2px); box-shadow: 0 4px 0 #1c8d4c; }
 
-    enemies.forEach((e, i) => {
-        let ang = Math.atan2(p.y-e.y, p.x-e.x);
-        e.x += Math.cos(ang) * 3; e.y += Math.sin(ang) * 3;
-        if(Math.hypot(p.x-e.x, p.y-e.y) < p.r + e.r && p.iframe <= 0) { G.hp--; p.iframe=50; }
-        if(e.hp <= 0) { if(e.type==='boss') showUpgrades(); enemies.splice(i,1); }
-    });
+        /* Links no Rodapé */
+        .footer-links a {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 15px;
+            margin: 0 15px;
+            transition: color 0.3s;
+            text-decoration: none;
+            text-shadow: var(--text-glow);
+        }
+        .footer-links a:hover { color: #00eaff; }
+        .footer-links a.youtube { color: #ff0000; font-weight: bold; }
+        .footer-links a.youtube:hover { color: #e74c3c; }
 
-    projectiles.forEach((pr, i) => {
-        pr.x += pr.dx; pr.y += pr.dy; pr.life--;
-        enemies.forEach(e => {
-            if(Math.hypot(pr.x-e.x, pr.y-e.y) < e.r+15) { e.hp -= pr.dmg; projectiles.splice(i,1); }
-        });
-        if(pr.life<=0) projectiles.splice(i,1);
-    });
+        /* Tela de Carregamento */
+        #loading-screen {
+            background: linear-gradient(-45deg, #05050a, #1a1a2e, #05050a);
+            background-size: 400% 400%;
+            animation: pulse-bg 10s ease infinite;
+            display: none; /* Inicia oculto */
+        }
+        #loading-screen h2 {
+            font-family: 'Press Start 2P', cursive;
+            color: #00eaff;
+            font-size: clamp(20px, 5vw, 40px);
+            margin-bottom: 50px;
+            animation: glow 1.5s infinite ease-in-out;
+        }
+        .loading-bar-container {
+            width: 80%;
+            max-width: 600px;
+            height: 20px;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            margin-top: 30px;
+        }
+        .loading-block {
+            position: absolute;
+            left: -100px; /* Começa fora da tela */
+            top: 0;
+            width: 50px;
+            height: 100%;
+            background-color: #00eaff;
+            box-shadow: 0 0 15px #00eaff;
+            animation: loading-block 3s linear infinite;
+        }
 
-    if(enemies.length === 0 && Math.hypot(p.x-G.w/2, p.y) < 100) { G.room++; spawnRoom(); }
-    if(p.iframe > 0) p.iframe--;
-    p.t++;
-}
+        /* Controles Mobile */
+        #mobile-hud { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 2000; } /* Aumentei o z-index */
+        #joy-base { 
+            position: absolute; bottom: 50px; left: 50px; 
+            width: 150px; height: 150px; 
+            background: rgba(255,255,255,0.1); 
+            border: 2px solid rgba(255,255,255,0.3); 
+            border-radius: 50%; 
+            pointer-events: auto; 
+            box-shadow: var(--player-glow);
+            backdrop-filter: blur(3px);
+        }
+        #joy-stick { 
+            position: absolute; width: 65px; height: 65px; 
+            background: linear-gradient(45deg, #00eaff, #0072ff); 
+            border-radius: 50%; 
+            left: 42.5px; top: 42.5px; 
+            box-shadow: 0 0 25px #00eaff; 
+            transition: all 0.1s ease-out;
+        }
+        #atk-grid { 
+            position: absolute; bottom: 40px; right: 40px; 
+            display: grid; grid-template-columns: repeat(3, 95px); gap: 15px; 
+            pointer-events: auto; 
+        }
+        .btn-atk { 
+            width: 95px; height: 95px; 
+            background: rgba(255,255,255,0.1); 
+            border: 3px solid #00eaff; 
+            border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center; 
+            font-size: 38px; color: white; 
+            box-shadow: 0 0 15px rgba(0, 234, 255, 0.4);
+            backdrop-filter: blur(3px);
+            transition: all 0.2s;
+        }
+        .btn-atk:active { 
+            background: rgba(0, 234, 255, 0.3); 
+            box-shadow: 0 0 30px #00eaff; 
+            transform: scale(0.95);
+        }
+        #swap-mob { 
+            position: absolute; bottom: 45px; right: 380px; 
+            width: 110px; height: 110px; 
+            background: linear-gradient(45deg, #f1c40f, #e67e22); 
+            border: 4px solid #fff; border-radius: 25px; 
+            pointer-events: auto; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; 
+            color: #000; font-weight: 900; 
+            box-shadow: 0 0 20px #f1c40f; 
+            font-size: 20px;
+            text-shadow: none;
+            transition: all 0.2s;
+        }
+        #swap-mob:active { transform: scale(0.9); box-shadow: 0 0 10px #f1c40f; }
 
-function draw() {
-    ctx.fillStyle = "#05050a"; ctx.fillRect(0,0, canvas.width, canvas.height);
-    if(!G.play) return;
-    update();
+        /* Cartas de Upgrade */
+        #upgrade-screen h2 {
+            font-family: 'Press Start 2P', cursive;
+            color: #f1c40f; 
+            font-size: clamp(25px, 6vw, 50px); 
+            margin-bottom: 40px; 
+            text-shadow: 0 0 25px #f1c40f; 
+        }
+        .card { 
+            width: 280px; height: 400px; 
+            background: linear-gradient(145deg, #1a1a2e 0%, #0f0c29 100%); 
+            border: 5px solid; 
+            border-image: linear-gradient(45deg, #3498db, #2ecc71, #f1c40f, #9b59b6, #ff00ff) 1;
+            border-radius: 25px; 
+            padding: 25px; 
+            cursor: pointer; 
+            position: relative; 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            text-align: center; 
+            display: flex; flex-direction: column; justify-content: space-between;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        }
+        .card::before {
+            content: '';
+            position: absolute; inset: -2px;
+            border-radius: 26px;
+            background: var(--card-glow-color);
+            z-index: -1;
+            opacity: 0;
+            filter: blur(20px);
+            transition: opacity 0.4s ease-in-out;
+        }
+        .card:hover { 
+            transform: translateY(-20px) rotate(2deg) scale(1.05); 
+            box-shadow: 0 25px 60px rgba(0,0,0,0.9);
+        }
+        .card:hover::before { opacity: 0.8; }
+        .card h3 { 
+            font-family: 'Press Start 2P', cursive;
+            font-size: 24px; 
+            color: var(--card-title-color, #fff); 
+            margin-top: 0;
+            text-shadow: var(--text-glow);
+        }
+        .card p { 
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px; 
+            color: #bdc3c7; 
+            flex-grow: 1; /* Permite que o parágrafo ocupe o espaço */
+            margin-bottom: 20px;
+        }
+        .card b { 
+            font-family: 'Press Start 2P', cursive;
+            font-size: 14px; 
+            background: var(--card-rarity-bg, #333); 
+            padding: 8px 18px; 
+            border-radius: 12px; 
+            color: #fff; 
+            text-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
 
-    ctx.save();
-    G.cx += (p.x - canvas.width/2 - G.cx) * 0.1;
-    G.cy += (p.y - canvas.height/2 - G.cy) * 0.1;
-    ctx.translate(-G.cx, -G.cy);
+        /* Cores de Raridade para as Cartas */
+        .card.comum { --card-glow-color: rgba(52, 152, 219, 0.6); --card-title-color: var(--c-comum); --card-rarity-bg: var(--c-comum); }
+        .card.incomum { --card-glow-color: rgba(46, 204, 113, 0.6); --card-title-color: var(--c-incomum); --card-rarity-bg: var(--c-incomum); }
+        .card.raro { --card-glow-color: rgba(241, 196, 15, 0.6); --card-title-color: var(--c-raro); --card-rarity-bg: var(--c-raro); }
+        .card.epico { --card-glow-color: rgba(155, 89, 182, 0.6); --card-title-color: var(--c-epico); --card-rarity-bg: var(--c-epico); }
+        .card.lendario { 
+            --card-glow-color: rgba(255, 0, 255, 0.6); 
+            --card-title-color: #fff; /* Fica melhor com o gradiente */
+            --card-rarity-bg: var(--c-lendario); 
+            border-image: var(--c-lendario) 1;
+        }
 
-    // Grid
-    ctx.strokeStyle="rgba(255,255,255,0.05)";
-    for(let i=0; i<G.w; i+=100) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,G.h); ctx.stroke(); }
-    for(let i=0; i<G.h; i+=100) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(G.w,i); ctx.stroke(); }
+        /* Tela de Morte */
+        #death-screen h1 {
+            font-family: 'Press Start 2P', cursive;
+            color: #e74c3c; 
+            font-size: clamp(60px, 12vw, 100px); 
+            text-shadow: 0 0 40px #e74c3c, 0 0 60px #e74c3c;
+            letter-spacing: 5px;
+        }
 
-    // Player
-    ctx.fillStyle = (p.iframe>0 && p.t%4<2)?"#ff4d6d":"#fff";
-    ctx.fillRect(p.x-28, p.y-35, 56, 62);
+        /* Weapon Tag */
+        #weapon-tag { 
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(90deg, rgba(0,0,0,0.8), rgba(0,0,0,0.9), rgba(0,0,0,0.8)); 
+            border: 2px solid #f1c40f; 
+            padding: 18px 35px; 
+            border-radius: 20px; 
+            z-index: 2500; 
+            font-size: 18px; 
+            line-height: 1.5;
+            text-shadow: var(--text-glow);
+            box-shadow: 0 0 20px rgba(241, 196, 15, 0.5);
+        }
+        #weapon-tag b { color: #f1c40f; font-size: 22px; text-shadow: 0 0 10px #f1c40f; }
 
-    enemies.forEach(e => {
-        ctx.fillStyle = e.type==='boss'?"#9b59b6":"#34495e";
-        ctx.fillRect(e.x-35, e.y-35, 70, 70);
-    });
+        /* Fullscreen Button */
+        #fs-mob { 
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%); 
+            padding: 12px 30px; 
+            background: rgba(50,50,50,0.8); 
+            color: #fff; 
+            border: 2px solid #fff; 
+            border-radius: 30px; 
+            pointer-events: auto; z-index: 4000; 
+            font-size: 14px; 
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: var(--text-glow);
+            backdrop-filter: blur(5px);
+            transition: all 0.2s;
+        }
+        #fs-mob:active { transform: translateX(-50%) scale(0.95); background: rgba(80,80,80,0.9); }
 
-    projectiles.forEach(pr => { ctx.fillStyle = "#00eaff"; ctx.beginPath(); ctx.arc(pr.x, pr.y, 10, 0, 7); ctx.fill(); });
-
-    if(enemies.length === 0) { ctx.fillStyle="#2ecc71"; ctx.fillRect(G.w/2-100, -10, 200, 30); }
-    ctx.restore();
-
-    // HUD
-    ctx.fillStyle="#fff"; ctx.font="bold 25px Arial"; ctx.fillText(`SALA: ${G.room}`, 30, 50);
-    ctx.fillStyle="#ff4d6d"; ctx.fillRect(30, 70, (G.hp/G.maxHp)*200, 20);
-
-    requestAnimationFrame(draw);
-}
-
-function showUpgrades() {
-    G.play = false; 
-    const screen = document.getElementById('upgrade-screen');
-    const box = document.getElementById('cards-container');
-    screen.style.display = 'flex';
-    box.innerHTML = '';
-
-    const opts = [
-        {n:"VIDA", d:"+4 Corações", a:()=>{G.maxHp+=4; G.hp+=4;}},
-        {n:"DANO", d:"+10 de Ataque", a:()=>{for(let k in G.inv) G.inv[k].d+=10;}}
-    ];
-
-    opts.forEach(u => {
-        let d = document.createElement('div');
-        d.className = 'card';
-        d.innerHTML = `<h3>${u.n}</h3><p>${u.d}</p>`;
-        d.onclick = (e) => {
-            e.stopPropagation();
-            u.a();
-            screen.style.display = 'none';
-            G.play = true; 
-        };
-        box.appendChild(d);
-    });
-}
-
-// Mobile
-if(isMobile) document.getElementById('mobile-hud').style.display = 'block';
-const knob=document.getElementById('joy-stick'), base=document.getElementById('joy-base');
-base.ontouchstart = (e) => { joy.active=true; let r=base.getBoundingClientRect(); joy.sx=r.left+75; joy.sy=r.top+75; };
-base.ontouchmove = (e) => {
-    if(!joy.active) return; let t=e.touches[0];
-    let dx=t.clientX-joy.sx, dy=t.clientY-joy.sy;
-    let d=Math.min(Math.hypot(dx,dy), 55); let a=Math.atan2(dy,dx);
-    joy.x=(Math.cos(a)*d)/55; joy.y=(Math.sin(a)*d)/55;
-    knob.style.transform=`translate(${Math.cos(a)*d}px, ${Math.sin(a)*d}px)`;
-};
-base.ontouchend = () => { joy.active=false; joy.x=0; joy.y=0; knob.style.transform='none'; };
-document.querySelectorAll('.btn-atk').forEach(b => {
-    b.ontouchstart=(e)=>{ e.preventDefault(); mobAtk[b.dataset.dir]=true; };
-    b.ontouchend=(e)=>{ e.preventDefault(); mobAtk[b.dataset.dir]=false; };
-});
-
-window.onkeydown=e=>keys.add(e.key.toLowerCase());
-window.onkeyup=e=>keys.delete(e.key.toLowerCase());
-document.getElementById('btn-play').onclick = () => { 
-    G.play=true; 
-    document.getElementById('start-screen').style.display='none'; 
-    spawnRoom(); 
-    draw(); 
-};
-window.onresize = () => { canvas.width=window.innerWidth; canvas.height=window.innerHeight; }; 
-window.onresize();
-</script>
-</body>
-</html>
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .title-text { font-size: 40px; letter-spacing: 5px; }
+            .subtitle-text { font-size: 16px; }
+            .btn-main { font-size: 20px; padding: 15px 40px; }
+            .hint-bar { font-size: 12px; }
+            .footer-links a { font-size: 12px; margin: 0 8px; }
+            #atk-grid { grid-template-columns: repeat(3, 70px); gap: 10px; bottom: 20px; right: 20px; }
+            .btn-atk { width: 70px; height: 70px; font-size: 25px; }
+            #joy-base { width: 120px; height: 120px; bottom: 30px; left: 30px; }
+            #joy-stick { width: 50px; height: 50px; left: 35px; top: 35px; }
+            #swap-mob { width: 90px; height: 90px; bottom: 35px; right: 280px; font-size: 16px; }
+            .card { width: 200px; height: 300px; padding
