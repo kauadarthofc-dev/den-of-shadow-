@@ -7,29 +7,33 @@
     <style>
         * { touch-action: none !important; user-select: none; outline: none; -webkit-tap-highlight-color: transparent; }
         html, body { background: #000; margin: 0; padding: 0; overflow: hidden; height: 100%; width: 100%; position: fixed; font-family: 'Courier New', monospace; color: #fff; }
-        canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; background: #050505; }
+        canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
 
-        /* UI de Início e Morte */
         .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
         .btn-ui { padding: 20px 60px; border: 4px solid #ff4d6d; background: #111; color: #fff; font-size: 24px; font-weight: bold; border-radius: 15px; cursor: pointer; }
         
-        /* Controles Mobile Melhorados */
+        /* Mobile UI - Zonas Independentes */
         #mobile-ui { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 1000; }
-        #joy-zone { position: absolute; bottom: 0; left: 0; width: 50%; height: 60%; pointer-events: auto; }
-        #atk-zone { position: absolute; bottom: 0; right: 0; width: 50%; height: 60%; pointer-events: auto; }
+        #joy-zone { position: absolute; bottom: 0; left: 0; width: 45%; height: 65%; pointer-events: auto; }
+        #atk-zone { position: absolute; bottom: 0; right: 0; width: 45%; height: 65%; pointer-events: auto; }
+        #joy-bound { position: absolute; bottom: 15%; left: 15%; width: 140px; height: 140px; background: rgba(255,255,255,0.1); border: 2px solid #fff; border-radius: 50%; }
+        #joy-stick { position: absolute; left: 45px; top: 45px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.5; }
         
-        #joy-bound { position: absolute; bottom: 20%; left: 15%; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border: 2px solid #fff; border-radius: 50%; }
-        #joy-stick { position: absolute; left: 50px; top: 50px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.5; }
+        #btn-grid { position: absolute; bottom: 10%; right: 10%; display: grid; grid-template-columns: repeat(3, 110px); gap: 10px; }
+        .atk-btn { width: 110px; height: 110px; background: rgba(52,152,219,0.2); border: 4px solid #3498db; border-radius: 50%; color: #3498db; display: flex; justify-content: center; align-items: center; font-size: 45px; pointer-events: auto; }
         
-        #btn-grid { position: absolute; bottom: 10%; right: 10%; display: grid; grid-template-columns: repeat(3, 100px); gap: 15px; }
-        .atk-btn { width: 100px; height: 100px; background: rgba(52,152,219,0.2); border: 4px solid #3498db; border-radius: 50%; color: #3498db; display: flex; justify-content: center; align-items: center; font-size: 40px; pointer-events: auto; }
-        
-        #swap-btn { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: 130px; height: 60px; background: rgba(241,196,15,0.3); border: 3px solid #f1c40f; border-radius: 10px; color: #fff; display: flex; justify-content: center; align-items: center; font-weight: bold; pointer-events: auto; }
-        #fs-btn { position: absolute; top: 20px; right: 20px; padding: 10px; background: #222; border: 1px solid #fff; pointer-events: auto; display: none; }
+        #swap-btn { position: absolute; bottom: 15%; right: 40%; width: 100px; height: 100px; background: rgba(241,196,15,0.3); border: 4px solid #f1c40f; border-radius: 50%; color: #fff; display: flex; justify-content: center; align-items: center; font-weight: bold; pointer-events: auto; text-align: center; font-size: 14px; }
+        #fs-btn { position: absolute; top: 10px; left: 10px; padding: 12px; background: rgba(0,0,0,0.5); border: 2px solid #fff; pointer-events: auto; z-index: 2500; border-radius: 8px; font-size: 12px; }
 
-        #card-screen { display: none; z-index: 3000; }
-        .card { width: 160px; height: 240px; background: #1a1a1a; border: 3px solid #f1c40f; border-radius: 12px; margin: 10px; padding: 15px; text-align: center; cursor: pointer; }
-        .mythic { border-color: #ff00ff; box-shadow: 0 0 20px #ff00ff; color: #ff00ff; }
+        /* Upgrades Raridades */
+        #card-screen { display: none; z-index: 3000; flex-direction: row; flex-wrap: wrap; }
+        .card { width: 160px; height: 240px; background: #111; border-radius: 12px; margin: 10px; padding: 15px; text-align: center; cursor: pointer; border: 4px solid #fff; }
+        .comum { border-color: #3498db; color: #3498db; }
+        .incomum { border-color: #2ecc71; color: #2ecc71; }
+        .raro { border-color: #f1c40f; color: #f1c40f; }
+        .epico { border-color: #9b59b6; color: #9b59b6; }
+        .lendario { border-color: #ff00ff; animation: rainbow 2s infinite; }
+        @keyframes rainbow { 0%{border-color: red;} 20%{border-color: yellow;} 40%{border-color: green;} 60%{border-color: blue;} 80%{border-color: purple;} 100%{border-color: red;} }
     </style>
 </head>
 <body>
@@ -37,18 +41,18 @@
 <div id="fs-btn" onclick="toggleFS()">TELA CHEIA</div>
 
 <div id="start-screen" class="overlay">
-    <h1 style="color:#ff4d6d; font-size:50px; text-shadow: 0 0 20px red;">DEN OF SHADOW</h1>
+    <h1 style="color:#ff4d6d; font-size:55px; text-shadow: 0 0 20px red; margin:0;">DEN OF SHADOW</h1>
     <p id="platform-hint" style="color:#aaa; font-size:18px;"></p>
-    <div class="btn-ui" id="btn-start">JOGAR</div>
+    <div class="btn-ui" id="btn-start">INICIAR</div>
 </div>
 
 <div id="card-screen" class="overlay">
-    <h2 style="color:#f1c40f">UPGRADE</h2>
+    <h2 style="color:#f1c40f; width:100%">ESCOLHA SEU DESTINO</h2>
     <div style="display:flex;" id="cards-box"></div>
 </div>
 
 <div id="death-screen" class="overlay" style="display:none;">
-    <h1 style="color:red; font-size: 60px;">MORTE</h1>
+    <h1 style="color:red; font-size: 60px;">FIM DO SONHO</h1>
     <div class="btn-ui" onclick="location.reload()">REENTRAR</div>
 </div>
 
@@ -62,238 +66,323 @@
             <div class="atk-btn" data-dir="left">◀</div><div class="atk-btn" data-dir="down">▼</div><div class="atk-btn" data-dir="right">▶</div>
         </div>
     </div>
-    <div id="swap-btn">TROCAR ARMA</div>
+    <div id="swap-btn">SWAP</div>
 </div>
 
 <script>
-window.onload = () => {
-    const canvas = document.getElementById('game');
-    const ctx = canvas.getContext('2d');
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    // Ajuste de Plataforma
-    if(isMobile) {
-        document.getElementById('platform-hint').innerText = "MOBILE: Esquerda Move | Direita Atira";
-        document.getElementById('mobile-ui').style.display = 'block';
-        document.getElementById('fs-btn').style.display = 'block';
-    } else {
-        document.getElementById('platform-hint').innerText = "PC: WASD para Mover | SETAS para Atirar | Q troca Arma";
+// Configuração Inicial
+const Game = {
+    started: false, paused: false, room: 1, isHealRoom: false,
+    roomW: 1600, roomH: 1200, camX: 0, camY: 0,
+    lives: 6, maxLives: 6, weapon: 'normal',
+    dmgMult: 1, moveSpd: 6.5,
+    hasFire: false, hasShotgun: false,
+    // Upgrades acumuláveis
+    tripleShot: 0, ricochete: 0, dualWield: false, vampirismo: 0, pets: 0,
+    weapons: {
+        normal: { ammo: 8, max: 8, dmg: 10, color: "#0ff", name: "MAGNUM", type: "single" },
+        fire: { ammo: 30, max: 30, dmg: 6, burn: 2, color: "#ff4500", name: "FOGO", type: "breath" },
+        shotgun: { ammo: 6, max: 6, dmg: 17, color: "#f1c40f", name: "SHOTGUN", type: "shot" }
     }
-
-    const Game = {
-        started: false, paused: false, room: 1, isHealRoom: false,
-        roomW: 1600, roomH: 1200, camX: 0, camY: 0,
-        lives: 6, maxLives: 6, weapon: 'normal',
-        dmgMult: 1, atkSpd: 14, moveSpd: 6.5,
-        hasFire: false, hasShotgun: false, dualWield: false,
-        weapons: {
-            normal: { ammo: 8, max: 8, dmg: 10, color: "#0ff", name: "MAGNUM", type: "single" },
-            fire: { ammo: 25, max: 25, dmg: 6, burn: 2, color: "#ff4500", name: "FOGO", type: "breath" },
-            shotgun: { ammo: 6, max: 6, dmg: 17, color: "#f1c40f", name: "SHOTGUN", type: "shot" }
-        }
-    };
-
-    let enemies = [], projectiles = [], particles = [], pedestal = null;
-    let p = { x: 800, y: 600, iframe: 0, timer: 0, dead: false, reloadTimer: 0, reloading: false };
-    const keys = new Set();
-    const attackDir = { up: false, down: false, left: false, right: false };
-    const joy = { active: false, x: 0, y: 0, startX: 0, startY: 0 };
-
-    function initRoom() {
-        enemies = []; projectiles = []; pedestal = null;
-        p.x = Game.roomW/2; p.y = Game.roomH/2; p.iframe = 45;
-
-        if(Game.isHealRoom) {
-            pedestal = { type: 'heart', x: Game.roomW/2, y: Game.roomH/2 };
-        } else {
-            if(Game.room % 10 === 0) {
-                enemies.push({ type:'boss', x:Game.roomW/2-80, y:200, hp:600+Game.room*30, maxHp:600+Game.room*30, w:160, h:160, hit:0, fireTicks:0 });
-            } else {
-                let n = 4 + Math.floor(Game.room/2);
-                for(let i=0; i<n; i++) {
-                    enemies.push({ 
-                        type: Math.random() < 0.25 ? 'kamikaze' : 'stalker', 
-                        x: Math.random()*Game.roomW, y: Math.random()*Game.roomH, 
-                        hp: 40+Game.room*7, w:50, h:50, hit:0, fireTicks:0 
-                    });
-                }
-            }
-            if(Game.room === 5 && !Game.hasFire) pedestal = { type:'fire', x:Game.roomW/2, y:350 };
-            if(Game.room === 15 && !Game.hasShotgun) pedestal = { type:'shotgun', x:Game.roomW/2, y:350 };
-        }
-    }
-
-    function fire() {
-        const w = Game.weapons[Game.weapon];
-        if(p.reloading || w.ammo <= 0) return;
-
-        let sx = (keys.has('arrowleft')?-1:keys.has('arrowright')?1:0);
-        let sy = (keys.has('arrowup')?-1:keys.has('arrowdown')?1:0);
-        if(attackDir.up) sy=-1; if(attackDir.down) sy=1; if(attackDir.left) sx=-1; if(attackDir.right) sx=1;
-        if(!sx && !sy) return;
-
-        const shots = Game.dualWield ? 2 : 1;
-        for(let s=0; s<shots; s++) {
-            let off = s * 15;
-            if(w.type === "single") {
-                projectiles.push({x:p.x+15+off, y:p.y+15, dx:sx, dy:sy, type:Game.weapon, life:100});
-            } else if(w.type === "breath") {
-                for(let i=0; i<3; i++) projectiles.push({x:p.x+15+off, y:p.y+15, dx:sx+(Math.random()-0.5)*0.5, dy:sy+(Math.random()-0.5)*0.5, type:Game.weapon, life:30});
-            } else if(w.type === "shot") {
-                for(let i=-2; i<=2; i++) {
-                    let a = Math.atan2(sy, sx) + i*0.2;
-                    projectiles.push({x:p.x+15+off, y:p.y+15, dx:Math.cos(a), dy:Math.sin(a), type:Game.weapon, life:25});
-                }
-            }
-        }
-        w.ammo--; if(w.ammo <= 0) p.reloading = true;
-    }
-
-    function drawMinimap() {
-        const s = 140, x = canvas.width - s - 20, y = 20;
-        ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.fillRect(x,y,s,s);
-        ctx.strokeStyle = "#fff"; ctx.strokeRect(x,y,s,s);
-        ctx.fillStyle = "#fff"; ctx.fillRect(x + (p.x/Game.roomW)*s, y + (p.y/Game.roomH)*s, 4, 4);
-        ctx.fillStyle = "red"; enemies.forEach(e => ctx.fillRect(x + (e.x/Game.roomW)*s, y + (e.y/Game.roomH)*s, 3, 3));
-    }
-
-    function loop() {
-        if(!Game.started || Game.paused) return requestAnimationFrame(loop);
-        ctx.clearRect(0,0, canvas.width, canvas.height);
-        
-        ctx.save();
-        Game.camX += (p.x - canvas.width/2 - Game.camX) * 0.1;
-        Game.camY += (p.y - canvas.height/2 - Game.camY) * 0.1;
-        ctx.translate(-Game.camX, -Game.camY);
-
-        // Cenário dinâmico
-        ctx.fillStyle = Game.isHealRoom ? "#051a05" : (Game.room % 10 === 0 ? "#1a0505" : "#0a0a0f");
-        ctx.fillRect(0,0, Game.roomW, Game.roomH);
-        ctx.strokeStyle = "#222"; 
-        for(let i=0; i<Game.roomW; i+=100) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i, Game.roomH); ctx.stroke(); }
-
-        if(!p.dead) {
-            let mx = joy.active ? joy.x : (keys.has('a')?-1:keys.has('d')?1:0);
-            let my = joy.active ? joy.y : (keys.has('w')?-1:keys.has('s')?1:0);
-            p.x = Math.max(20, Math.min(Game.roomW-50, p.x + mx * Game.moveSpd));
-            p.y = Math.max(20, Math.min(Game.roomH-50, p.y + my * Game.moveSpd));
-            if(p.iframe > 0) p.iframe--;
-            ctx.fillStyle = p.iframe%4<2?"#fff":"#ff4d6d"; ctx.fillRect(p.x, p.y, 40, 40);
-
-            if(p.reloading) { p.reloadTimer++; if(p.reloadTimer > 50){ Game.weapons[Game.weapon].ammo = Game.weapons[Game.weapon].max; p.reloading = false; p.reloadTimer = 0; }}
-            if(p.timer % Game.atkSpd === 0) fire();
-        }
-
-        enemies.forEach((e, i) => {
-            let ang = Math.atan2(p.y-e.y, p.x-e.x);
-            if(e.fireTicks > 0 && p.timer % 30 === 0) { e.hp -= 2; e.fireTicks--; e.hit = 4; }
-            let spd = e.type==='kamikaze'?4.8:2.8;
-            e.x += Math.cos(ang)*spd; e.y += Math.sin(ang)*spd;
-            ctx.fillStyle = e.fireTicks > 0 ? "#ff8c00" : (e.hit > 0 ? "#fff" : (e.type==='kamikaze'?"#f1c40f":"#3498db"));
-            ctx.fillRect(e.x, e.y, e.w, e.h);
-
-            if(e.hp <= 0) { enemies.splice(i,1); if(e.type==='boss') showUpgrade(); }
-            if(p.iframe <= 0 && Math.hypot(p.x-e.x, p.y-e.y) < 50) {
-                if(e.type==='kamikaze') {
-                    Game.lives -= 2;
-                    enemies.forEach(o => { if(o!==e && Math.hypot(e.x-o.x, e.y-o.y) < 200) o.hp -= 150; });
-                    enemies.splice(i,1);
-                } else Game.lives--;
-                p.iframe = 60;
-            }
-        });
-
-        projectiles.forEach((pr, i) => {
-            pr.x += pr.dx*15; pr.y += pr.dy*15; pr.life--;
-            ctx.fillStyle = Game.weapons[pr.type].color; ctx.fillRect(pr.x, pr.y, 10, 10);
-            enemies.forEach(e => {
-                if(pr.x > e.x && pr.x < e.x+e.w && pr.y > e.y && pr.y < e.y+e.h) {
-                    e.hp -= Game.weapons[pr.type].dmg * Game.dmgMult;
-                    if(pr.type==='fire') e.fireTicks = 5;
-                    e.hit = 5; projectiles.splice(i,1);
-                }
-            });
-            if(pr.life <= 0) projectiles.splice(i,1);
-        });
-
-        if(enemies.length === 0 && !pedestal) {
-            ctx.fillStyle = "#f1c40f"; ctx.fillRect(Game.roomW/2-60, 0, 120, 20);
-            if(Math.hypot(p.x-Game.roomW/2, p.y) < 60) { Game.room++; Game.isHealRoom=false; initRoom(); }
-            if(Game.room % 10 === 0) {
-                ctx.fillStyle = "#2ecc71"; ctx.fillRect(0, Game.roomH/2-60, 20, 120);
-                if(Math.hypot(p.x, p.y-Game.roomH/2) < 60) { Game.isHealRoom=true; initRoom(); }
-            }
-        }
-
-        if(pedestal) {
-            ctx.fillStyle = pedestal.type==='heart'?"#ff4d6d":Game.weapons[pedestal.type].color;
-            ctx.fillRect(pedestal.x-25, pedestal.y-25, 50, 50);
-            if(Math.hypot(p.x-pedestal.x, p.y-pedestal.y) < 60) {
-                if(pedestal.type==='heart') Game.lives=Game.maxLives;
-                else if(pedestal.type==='fire') Game.hasFire=true;
-                else Game.hasShotgun=true;
-                pedestal=null;
-            }
-        }
-        ctx.restore();
-        
-        // HUD
-        ctx.fillStyle="#fff"; ctx.font="bold 20px Courier";
-        ctx.fillText(`SALA: ${Game.room}`, 25, 40);
-        ctx.fillText(`${Game.weapons[Game.weapon].name}: ${Game.weapons[Game.weapon].ammo}`, 25, 110);
-        for(let i=0; i<Game.maxLives; i++) { ctx.fillStyle=i<Game.lives?"#ff4d6d":"#333"; ctx.beginPath(); ctx.arc(40+i*30, 70, 12, 0, Math.PI*2); ctx.fill(); }
-        drawMinimap();
-        if(Game.lives <= 0) { p.dead = true; document.getElementById('death-screen').style.display='flex'; }
-        p.timer++;
-        requestAnimationFrame(loop);
-    }
-
-    // Handlers
-    const jZone = document.getElementById('joy-zone'), jb = document.getElementById('joy-bound'), js = document.getElementById('joy-stick');
-    jZone.ontouchstart = (e) => { joy.active=true; const r=jb.getBoundingClientRect(); joy.startX=r.left+r.width/2; joy.startY=r.top+r.height/2; };
-    jZone.ontouchmove = (e) => {
-        if(!joy.active) return; const t=e.touches[0]; let dx=t.clientX-joy.startX, dy=t.clientY-joy.startY;
-        let d=Math.min(Math.hypot(dx,dy),50); let a=Math.atan2(dy,dx); joy.x=(Math.cos(a)*d)/50; joy.y=(Math.sin(a)*d)/50;
-        js.style.transform=`translate(${Math.cos(a)*d}px, ${Math.sin(a)*d}px)`;
-    };
-    jZone.ontouchend = () => { joy.active=false; joy.x=0; joy.y=0; js.style.transform='translate(0,0)'; };
-
-    document.querySelectorAll('.atk-btn').forEach(b => {
-        b.ontouchstart=(e)=>{ e.preventDefault(); attackDir[b.dataset.dir]=true; };
-        b.ontouchend=(e)=>{ e.preventDefault(); attackDir[b.dataset.dir]=false; };
-    });
-
-    function cycle() {
-        const list = ['normal']; if(Game.hasFire) list.push('fire'); if(Game.hasShotgun) list.push('shotgun');
-        Game.weapon = list[(list.indexOf(Game.weapon) + 1) % list.length];
-        p.reloading = false;
-    }
-    document.getElementById('swap-btn').onclick = (e) => { e.preventDefault(); cycle(); };
-
-    function showUpgrade() {
-        Game.paused = true; document.getElementById('card-screen').style.display='flex';
-        const box = document.getElementById('cards-box'); box.innerHTML='';
-        let pool = [
-            {n:"VIDA", d:"+2 HP Máx", a:()=>{Game.maxLives+=2; Game.lives+=2;}},
-            {n:"DANO", d:"+40%", a:()=>{Game.dmgMult+=0.4;}},
-            {n:"VELOZ", d:"+1.5 Spd", a:()=>{Game.moveSpd+=1.5;}}
-        ];
-        if(Game.room >= 20 && Math.random() < 0.01) pool.push({n:"MÍTICO", d:"DUAL WIELD", m:true, a:()=>{Game.dualWield=true;}});
-        pool.forEach(u => {
-            let d = document.createElement('div'); d.className = 'card' + (u.m?' mythic':'');
-            d.innerHTML = `<h3>${u.n}</h3><p>${u.d}</p>`;
-            d.onclick = () => { u.a(); Game.paused=false; document.getElementById('card-screen').style.display='none'; };
-            box.appendChild(d);
-        });
-    }
-
-    window.onkeydown = e => { keys.add(e.key.toLowerCase()); if(e.key==='q') cycle(); };
-    window.onkeyup = e => keys.delete(e.key.toLowerCase());
-    document.getElementById('btn-start').onclick = () => { Game.started=true; document.getElementById('start-screen').style.display='none'; initRoom(); loop(); };
-    window.onresize = () => { canvas.width=window.innerWidth; canvas.height=window.innerHeight; }; window.onresize();
 };
 
+let enemies = [], projectiles = [], particles = [], drops = [], pets = [];
+let p = { x: 800, y: 600, iframe: 0, timer: 0, dead: false, reloadTimer: 0, reloading: false };
+const keys = new Set();
+const attackDir = { up: false, down: false, left: false, right: false };
+const joy = { active: false, x: 0, y: 0, startX: 0, startY: 0 };
+
+if(isMobile) {
+    document.getElementById('platform-hint').innerText = "MOBILE: Esquerda Move | Direita Atira";
+    document.getElementById('mobile-ui').style.display = 'block';
+} else {
+    document.getElementById('platform-hint').innerText = "PC: WASD Move | SETAS Atira | Q Troca";
+}
+
+function initRoom() {
+    enemies = []; projectiles = []; drops = [];
+    p.x = Game.roomW/2; p.y = Game.roomH/2; p.iframe = 60;
+
+    if(Game.isHealRoom) {
+        drops.push({x: Game.roomW/2, y: Game.roomH/2, type:'big_heal'});
+    } else {
+        // Lógica de Spawn Seguro (longe do player)
+        let n = Game.room === 1 ? 3 : 4 + Math.floor(Game.room/2.5);
+        for(let i=0; i<n; i++) {
+            let ex, ey;
+            do { ex = Math.random()*Game.roomW; ey = Math.random()*Game.roomH; } 
+            while(Math.hypot(ex-p.x, ey-p.y) < 400);
+
+            let type = 'stalker';
+            if(Game.room >= 2) type = Math.random() < 0.3 ? 'dasher' : 'stalker';
+            if(Game.room >= 4) type = Math.random() < 0.2 ? 'kamikaze' : type;
+            if(Game.room % 10 === 0) {
+                enemies = [{ type:'boss', x:Game.roomW/2-80, y:200, hp:600+Game.room*30, maxHp:600+Game.room*30, w:160, h:160, hit:0, fireTicks:0, timer:0 }];
+                break;
+            }
+            enemies.push({ type, x: ex, y: ey, hp: 40+Game.room*8, w:50, h:50, hit:0, fireTicks:0, dashTimer:0 });
+        }
+    }
+}
+
+function fire(owner='player', ox, oy, dx, dy, typeW) {
+    const w = Game.weapons[typeW];
+    const totalTriple = 1 + Game.tripleShot;
+    const dual = Game.dualWield ? 2 : 1;
+
+    for(let d=0; d<dual; d++) {
+        let sideOff = d * 20;
+        for(let i=0; i<totalTriple; i++) {
+            let angOff = (i - (totalTriple-1)/2) * 0.2;
+            let baseAng = Math.atan2(dy, dx) + angOff;
+            
+            if(w.type === "single") {
+                projectiles.push({x:ox+sideOff, y:oy, dx:Math.cos(baseAng), dy:Math.sin(baseAng), type:typeW, life:100, ric: Game.ricochete});
+            } else if(w.type === "breath") {
+                for(let b=0; b<2; b++) projectiles.push({x:ox+sideOff, y:oy, dx:Math.cos(baseAng)+(Math.random()-0.5)*0.4, dy:Math.sin(baseAng)+(Math.random()-0.5)*0.4, type:typeW, life:35, ric:0});
+            } else if(w.type === "shot") {
+                for(let s=-2; s<=2; s++) projectiles.push({x:ox+sideOff, y:oy, dx:Math.cos(baseAng+s*0.25), dy:Math.sin(baseAng+s*0.25), type:typeW, life:25, ric:0});
+            }
+        }
+    }
+}
+
+function update() {
+    if(!Game.started || Game.paused || p.dead) return;
+
+    // Movimento Player
+    let mx = joy.active ? joy.x : (keys.has('a')?-1:keys.has('d')?1:0);
+    let my = joy.active ? joy.y : (keys.has('w')?-1:keys.has('s')?1:0);
+    p.x = Math.max(30, Math.min(Game.roomW-70, p.x + mx * Game.moveSpd));
+    p.y = Math.max(30, Math.min(Game.roomH-70, p.y + my * Game.moveSpd));
+    if(p.iframe > 0) p.iframe--;
+
+    // Ataque Player
+    let sax = (keys.has('arrowleft')?-1:keys.has('arrowright')?1:0);
+    let say = (keys.has('arrowup')?-1:keys.has('arrowdown')?1:0);
+    if(attackDir.up) say=-1; if(attackDir.down) say=1; if(attackDir.left) sax=-1; if(attackDir.right) sax=1;
+    
+    const curW = Game.weapons[Game.weapon];
+    if(p.reloading) { p.reloadTimer++; if(p.reloadTimer > 50){ curW.ammo = curW.max; p.reloading = false; p.reloadTimer = 0; }}
+    if((sax || say) && p.timer % 15 === 0 && !p.reloading) {
+        fire('player', p.x+20, p.y+20, sax, say, Game.weapon);
+        curW.ammo--; if(curW.ammo <= 0) p.reloading = true;
+    }
+
+    // Inimigos
+    enemies.forEach((e, i) => {
+        let dist = Math.hypot(p.x-e.x, p.y-e.y);
+        let ang = Math.atan2(p.y-e.y, p.x-e.x);
+        
+        if(e.fireTicks > 0 && p.timer % 30 === 0) { e.hp -= 2; e.fireTicks--; e.hit = 4; }
+
+        if(e.type === 'dasher') {
+            e.dashTimer++;
+            if(e.dashTimer > 100) { // Dash!
+                e.x += Math.cos(ang)*20; e.y += Math.sin(ang)*20;
+                if(e.dashTimer > 115) e.dashTimer = 0;
+            } else { e.x += Math.cos(ang)*2; e.y += Math.sin(ang)*2; }
+        } else if(e.type === 'kamikaze') {
+            e.x += Math.cos(ang)*1.8; e.y += Math.sin(ang)*1.8; // Lento
+        } else {
+            e.x += Math.cos(ang)*2.2; e.y += Math.sin(ang)*2.2; // Stalker Lento
+        }
+
+        // Dano no Player
+        if(p.iframe <= 0 && dist < 50) {
+            if(e.type === 'kamikaze') {
+                Game.lives -= 2;
+                enemies.forEach(o => { if(o!==e && Math.hypot(e.x-o.x, e.y-o.y) < 200) o.hp -= 150; });
+                enemies.splice(i,1);
+            } else { Game.lives--; }
+            p.iframe = 60;
+        }
+        if(e.hp <= 0) {
+            if(Math.random() < 0.2) drops.push({x:e.x, y:e.y, type:'heal'});
+            if(Game.vampirismo > 0 && Math.random() < 0.05 * Game.vampirismo) Game.lives = Math.min(Game.maxLives, Game.lives+1);
+            if(e.type === 'boss') showUpgrade();
+            enemies.splice(i,1);
+        }
+    });
+
+    // Projéteis
+    projectiles.forEach((pr, i) => {
+        pr.x += pr.dx*15; pr.y += pr.dy*15; pr.life--;
+        enemies.forEach(e => {
+            if(pr.x > e.x && pr.x < e.x+e.w && pr.y > e.y && pr.y < e.y+e.h) {
+                e.hp -= Game.weapons[pr.type].dmg * Game.dmgMult;
+                if(pr.type === 'fire') e.fireTicks = 5;
+                e.hit = 5;
+                if(pr.ric > 0) { pr.dx *= -1; pr.dy *= -1; pr.ric--; } else projectiles.splice(i,1);
+            }
+        });
+        if(pr.life <= 0) projectiles.splice(i,1);
+    });
+
+    // Drops Cura
+    drops.forEach((d, i) => {
+        if(Math.hypot(p.x-d.x, p.y-d.y) < 50) {
+            Game.lives = Math.min(Game.maxLives, Game.lives + (d.type==='big_heal'?6:1));
+            drops.splice(i,1);
+        }
+    });
+
+    // Pets
+    if(Game.pets > 0 && pets.length < Game.pets) pets.push({ang: Math.random()*6, dist: 80});
+    pets.forEach(pet => {
+        pet.ang += 0.05;
+        let px = p.x + 20 + Math.cos(pet.ang)*pet.dist;
+        let py = p.y + 20 + Math.sin(pet.ang)*pet.dist;
+        if(p.timer % 40 === 0 && enemies.length > 0) {
+            let target = enemies[0];
+            let tang = Math.atan2(target.y-py, target.x-px);
+            projectiles.push({x:px, y:py, dx:Math.cos(tang), dy:Math.sin(tang), type:'normal', life:60, ric:0});
+        }
+    });
+
+    // Porta Próxima Sala
+    if(enemies.length === 0) {
+        if(Math.hypot(p.x-Game.roomW/2, p.y) < 60) { Game.room++; Game.isHealRoom=false; initRoom(); }
+        if(Game.room % 10 === 0) {
+            if(Math.hypot(p.x, p.y-Game.roomH/2) < 60) { Game.isHealRoom=true; initRoom(); }
+        }
+    }
+    p.timer++;
+}
+
+function draw() {
+    ctx.clearRect(0,0, canvas.width, canvas.height);
+    ctx.save();
+    Game.camX += (p.x - canvas.width/2 - Game.camX) * 0.1;
+    Game.camY += (p.y - canvas.height/2 - Game.camY) * 0.1;
+    ctx.translate(-Game.camX, -Game.camY);
+
+    // Cenário
+    ctx.fillStyle = Game.isHealRoom ? "#051a05" : (Game.room % 10 === 0 ? "#1a0505" : "#0a0a0f");
+    ctx.fillRect(0,0, Game.roomW, Game.roomH);
+    ctx.strokeStyle = "#1a1a1a";
+    for(let i=0; i<Game.roomW; i+=100) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i, Game.roomH); ctx.stroke(); }
+
+    // Drops
+    drops.forEach(d => {
+        ctx.fillStyle = "#ff4d6d"; ctx.shadowBlur = 15; ctx.shadowColor = "#ff4d6d";
+        ctx.fillRect(d.x, d.y, d.type==='big_heal'?40:20, d.type==='big_heal'?40:20);
+        ctx.shadowBlur = 0;
+    });
+
+    // Player e Pets
+    ctx.fillStyle = p.iframe%4<2?"#fff":"#ff4d6d"; ctx.fillRect(p.x, p.y, 40, 40);
+    pets.forEach(pet => {
+        ctx.fillStyle = "#f1c40f";
+        ctx.fillRect(p.x + 15 + Math.cos(pet.ang)*pet.dist, p.y + 15 + Math.sin(pet.ang)*pet.dist, 15, 15);
+    });
+
+    // Inimigos
+    enemies.forEach(e => {
+        ctx.fillStyle = e.hit > 0 ? "#fff" : (e.type==='kamikaze'?"#f1c40f":(e.type==='dasher'?"#e74c3c":"#3498db"));
+        if(e.fireTicks > 0) ctx.fillStyle = "#ff8c00";
+        ctx.fillRect(e.x, e.y, e.w, e.h);
+        if(e.type==='boss') { // Barra de vida Boss
+            ctx.fillStyle="#333"; ctx.fillRect(e.x, e.y-20, e.w, 10);
+            ctx.fillStyle="red"; ctx.fillRect(e.x, e.y-20, (e.hp/e.maxHp)*e.w, 10);
+        }
+    });
+
+    // Projéteis
+    projectiles.forEach(pr => {
+        ctx.fillStyle = Game.weapons[pr.type].color;
+        ctx.fillRect(pr.x, pr.y, 10, 10);
+    });
+
+    // Portas
+    if(enemies.length === 0) {
+        ctx.fillStyle = "#f1c40f"; ctx.fillRect(Game.roomW/2-60, 0, 120, 20); // Porta Normal
+        if(Game.room % 10 === 0) { ctx.fillStyle = "#2ecc71"; ctx.fillRect(0, Game.roomH/2-60, 20, 120); } // Porta Cura
+    }
+
+    ctx.restore();
+
+    // HUD
+    ctx.fillStyle="#fff"; ctx.font="bold 20px Courier";
+    ctx.fillText(`SALA: ${Game.room}`, 20, 60);
+    ctx.fillText(`${Game.weapons[Game.weapon].name}: ${Game.weapons[Game.weapon].ammo}`, 20, 130);
+    for(let i=0; i<Game.maxLives; i++) { 
+        ctx.fillStyle=i<Game.lives?"#ff4d6d":"#333"; 
+        ctx.beginPath(); ctx.arc(35+i*30, 90, 12, 0, Math.PI*2); ctx.fill(); 
+    }
+    
+    // Minimapa
+    const ms = 140; ctx.fillStyle="rgba(0,0,0,0.8)"; ctx.fillRect(canvas.width-160, 20, ms, ms);
+    ctx.strokeStyle="#fff"; ctx.strokeRect(canvas.width-160, 20, ms, ms);
+    ctx.fillStyle="#fff"; ctx.fillRect(canvas.width-160 + (p.x/Game.roomW)*ms, 20 + (p.y/Game.roomH)*ms, 4, 4);
+    ctx.fillStyle="red"; enemies.forEach(e => ctx.fillRect(canvas.width-160 + (e.x/Game.roomW)*ms, 20 + (e.y/Game.roomH)*ms, 3, 3));
+}
+
+// Lógica de Upgrades e Raridades
+function showUpgrade() {
+    Game.paused = true; document.getElementById('card-screen').style.display='flex';
+    const box = document.getElementById('cards-box'); box.innerHTML='';
+    
+    const options = [
+        {n:"TIRO TRIPLO", d:"Atira mais balas", r:"raro", a:()=>{Game.tripleShot = Math.min(4, Game.tripleShot+1)}},
+        {n:"RICOCHETE", d:"Balas quicam", r:"epico", a:()=>{Game.ricochete++}},
+        {n:"VAMPIRISMO", d:"Cura ao matar", r:"incomun", a:()=>{Game.vampirismo++}},
+        {n:"PET AJUDANTE", d:"Um mini-robô", r:"raro", a:()=>{Game.pets++}},
+        {n:"MAGNUM+", d:"Dano Magnum", r:"comun", a:()=>{Game.weapons.normal.dmg += 5}},
+        {n:"VIDA+", d:"Mais HP Máx", r:"comun", a:()=>{Game.maxLives+=2; Game.lives+=2;}},
+        {n:"DUAL WIELD", d:"Duas Armas", r:"lendario", a:()=>{Game.dualWield=true}}
+    ];
+
+    for(let i=0; i<3; i++) {
+        let rng = Math.random();
+        let rarity = rng < 0.5 ? "comun" : (rng < 0.75 ? "incomun" : (rng < 0.95 ? "raro" : (rng < 0.99 ? "epico" : "lendario")));
+        let pool = options.filter(o => o.r === rarity);
+        if(pool.length === 0) pool = [options[4]]; 
+        let up = pool[Math.floor(Math.random()*pool.length)];
+
+        let d = document.createElement('div'); d.className = `card ${up.r}`;
+        d.innerHTML = `<h3>${up.n}</h3><small>${up.r.toUpperCase()}</small><p>${up.d}</p>`;
+        d.onclick = () => { up.a(); Game.paused=false; document.getElementById('card-screen').style.display='none'; };
+        box.appendChild(d);
+    }
+}
+
+// Input Handlers
+window.onkeydown = e => { keys.add(e.key.toLowerCase()); if(e.key==='q') cycleW(); };
+window.onkeyup = e => keys.delete(e.key.toLowerCase());
+
+const jZone = document.getElementById('joy-zone'), jb = document.getElementById('joy-bound'), js = document.getElementById('joy-stick');
+jZone.ontouchstart = (e) => { joy.active=true; const r=jb.getBoundingClientRect(); joy.startX=r.left+r.width/2; joy.startY=r.top+r.height/2; };
+jZone.ontouchmove = (e) => {
+    if(!joy.active) return; const t=e.touches[0];
+    let dx=t.clientX-joy.startX, dy=t.clientY-joy.startY;
+    let d=Math.min(Math.hypot(dx,dy),50); let a=Math.atan2(dy,dx);
+    joy.x=(Math.cos(a)*d)/50; joy.y=(Math.sin(a)*d)/50;
+    js.style.transform=`translate(${Math.cos(a)*d}px, ${Math.sin(a)*d}px)`;
+};
+jZone.ontouchend = () => { joy.active=false; joy.x=0; joy.y=0; js.style.transform='translate(0,0)'; };
+
+document.querySelectorAll('.atk-btn').forEach(b => {
+    b.ontouchstart=(e)=>{ e.preventDefault(); attackDir[b.dataset.dir]=true; };
+    b.ontouchend=(e)=>{ e.preventDefault(); attackDir[b.dataset.dir]=false; };
+});
+
+function cycleW() {
+    const list = ['normal']; if(Game.hasFire) list.push('fire'); if(Game.hasShotgun) list.push('shotgun');
+    Game.weapon = list[(list.indexOf(Game.weapon) + 1) % list.length];
+    p.reloading = false;
+}
+document.getElementById('swap-btn').onclick = (e) => { e.preventDefault(); cycleW(); };
+
+// Game Loop
+function main() { update(); draw(); requestAnimationFrame(main); }
+document.getElementById('btn-start').onclick = () => { Game.started=true; document.getElementById('start-screen').style.display='none'; initRoom(); main(); };
 function toggleFS() { if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+window.onresize = () => { canvas.width=window.innerWidth; canvas.height=window.innerHeight; }; window.onresize();
 </script>
 </body>
 </html>
