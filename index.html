@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 Interactive</title>
+    <title>Den of Shadow 💀 Lord of Light</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&family=Special+Elite&display=swap');
         
@@ -22,36 +22,36 @@
         .btn-main { padding: 15px 50px; font-size: 20px; background: transparent; border: 2px solid #ff0000; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 10px; transition: 0.3s; }
         .btn-main:hover { background: #ff0000; box-shadow: 0 0 40px #ff0000; }
 
-        /* CUTSCENE INTERATIVA */
-        #cutscene-screen { background: #000; cursor: pointer; }
-        #cutscene-text { font-family: 'Special Elite', cursive; font-size: 28px; color: #ccc; max-width: 800px; text-align: center; line-height: 1.6; pointer-events: none; }
-        .click-hint { position: absolute; bottom: 50px; font-size: 14px; color: #444; animation: blink 1.5s infinite; }
+        /* IDIOMA */
+        .lang-select { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 4000; }
+        .lang-btn { background: rgba(255,0,0,0.2); border: 1px solid #ff0000; color: white; padding: 5px 15px; cursor: pointer; font-family: 'Orbitron'; }
+        .lang-btn.active { background: #ff0000; box-shadow: 0 0 10px #ff0000; }
 
-        /* MENU DE PAUSA */
-        #pause-screen { background: rgba(0,0,0,0.85); display: none; z-index: 5000; }
-        #pause-screen h2 { font-size: 50px; color: #ff0000; text-shadow: 0 0 20px #ff0000; }
-
+        /* CUTSCENE */
+        #cutscene-screen { background: #000; cursor: pointer; text-align: center; padding: 20px; }
+        #cutscene-text { font-family: 'Special Elite', cursive; font-size: 26px; color: #ccc; max-width: 800px; line-height: 1.6; }
+        
         /* HUD */
         #hud { position: absolute; top: 20px; left: 20px; z-index: 1000; display: none; flex-direction: column; gap: 8px; }
         .stat-container { background: rgba(0,0,0,0.8); padding: 6px; border-left: 3px solid #ff0000; width: 180px; }
         .bar-bg { width: 100%; height: 6px; background: #222; margin-top: 4px; }
         .bar-fill { height: 100%; transition: width 0.2s; }
 
-        /* BOTÃO PAUSA MOBILE */
-        #btn-pause-mobile { position: absolute; top: 20px; right: 20px; width: 50px; height: 50px; background: rgba(255,0,0,0.3); border: 2px solid #ff0000; color: white; border-radius: 10px; z-index: 2000; display: none; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
-
         .social-footer { position: absolute; bottom: 30px; text-align: center; }
         .social-link { color: #ff0000; text-decoration: none; display: block; margin: 5px; font-size: 14px; }
-
-        @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
     </style>
 </head>
 <body>
 
+<div class="lang-select" id="lang-area">
+    <button class="lang-btn active" onclick="changeLang('pt')">PT</button>
+    <button class="lang-btn" onclick="changeLang('en')">EN</button>
+</div>
+
 <div id="start-screen" class="ui-screen">
     <h1>DEN OF SHADOW</h1>
-    <p style="letter-spacing: 5px; color: #ff0000; margin-bottom: 30px;">LORD OF LIGHT</p>
-    <button class="btn-main" onclick="initCutscene()">JOGAR</button>
+    <p id="subtitle" style="letter-spacing: 5px; color: #ff0000; margin-bottom: 30px;">LORD OF LIGHT</p>
+    <button class="btn-main" id="play-btn" onclick="initCutscene()">JOGAR</button>
     <div class="social-footer">
         <a href="mailto:kauaderthofc@gmail.com" class="social-link">kauaderthofc@gmail.com</a>
         <a href="https://youtube.com/@kaua_darth" target="_blank" class="social-link">YouTube: @kaua_darth</a>
@@ -60,64 +60,78 @@
 
 <div id="cutscene-screen" class="ui-screen" style="display:none;" onclick="nextHistory()">
     <div id="cutscene-text"></div>
-    <div class="click-hint">CLIQUE PARA CONTINUAR / CLICK TO CONTINUE</div>
-</div>
-
-<div id="pause-screen" class="ui-screen">
-    <h2>PAUSADO</h2>
-    <button class="btn-main" onclick="togglePause()">VOLTAR</button>
-    <button class="btn-main" onclick="location.reload()" style="font-size: 14px; border-color: #555;">MENU PRINCIPAL</button>
+    <div style="margin-top:40px; color:#444; font-size:12px;" id="hint">CLIQUE PARA CONTINUAR / CLICK TO CONTINUE</div>
 </div>
 
 <div id="hud">
-    <div class="stat-container"><div>HP</div><div class="bar-bg"><div id="hp-fill" class="bar-fill" style="width: 100%; background: #ff0000;"></div></div></div>
-    <div class="stat-container" style="border-color:#f1c40f;"><div>AMMO</div><div class="bar-bg"><div id="ammo-fill" class="bar-fill" style="width: 100%; background: #f1c40f;"></div></div></div>
-    <div style="font-weight: bold; color: #ff0000;">SALA: <span id="room-txt">0</span></div>
+    <div class="stat-container"><div id="label-hp">VIDA</div><div class="bar-bg"><div id="hp-fill" class="bar-fill" style="width: 100%; background: #ff0000;"></div></div></div>
+    <div class="stat-container" style="border-color:#f1c40f;"><div id="label-ammo">MUNIÇÃO</div><div class="bar-bg"><div id="ammo-fill" class="bar-fill" style="width: 100%; background: #f1c40f;"></div></div></div>
+    <div style="font-weight: bold; color: #ff0000;"><span id="label-room">SALA</span>: <span id="room-txt">0</span></div>
 </div>
-
-<div id="btn-pause-mobile" onclick="togglePause()">II</div>
 
 <canvas id="gameCanvas"></canvas>
 
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
 
-const ROOM = { w: 1200, h: 800, wallSize: 50 };
+const ROOM = { w: 1200, h: 800, wallSize: 60 };
 const G = { 
-    play: false, paused: false, room: 0, 
-    hp: 100, ammo: 20, maxAmmo: 20, 
-    reloading: false, reloadTime: 1200, lastShot: 0, 
-    enemiesDefeated: false 
+    play: false, room: 0, hp: 100, ammo: 20, maxAmmo: 20, 
+    reloading: false, enemiesDefeated: false, lang: 'pt' 
 };
 
-// HISTÓRIA
-const historyText = [
-    "No início, as trevas consumiram o Reino do Alvorecer...",
-    "O Lorde da Luz foi traído e jogado neste calabouço.",
-    "Para escapar, ele deve enfrentar seus próprios medos...",
-    "Sua única saída é através da Den of Shadow.",
-    "Prepare-se. A escuridão está faminta."
-];
-let historyIndex = 0;
+const texts = {
+    pt: {
+        sub: "LORDE DA LUZ", play: "JOGAR", hp: "VIDA", ammo: "MUNIÇÃO", room: "SALA",
+        tut: "WASD PARA MOVER | SETAS PARA ATIRAR",
+        history: [
+            "O Lorde da Luz foi traído por sua própria sombra...",
+            "Agora ele está preso no abismo mais profundo.",
+            "Cada sala é um fragmento de sua mente corrompida.",
+            "Tutorial: Use WASD para mover e as SETAS para atirar nas 4 direções."
+        ]
+    },
+    en: {
+        sub: "LORD OF LIGHT", play: "PLAY", hp: "HEALTH", ammo: "AMMO", room: "ROOM",
+        tut: "WASD TO MOVE | ARROWS TO SHOOT",
+        history: [
+            "The Lord of Light was betrayed by his own shadow...",
+            "Now he is trapped in the deepest abyss.",
+            "Every room is a fragment of his corrupted mind.",
+            "Tutorial: Use WASD to move and ARROWS to shoot in 4 directions."
+        ]
+    }
+};
 
+function changeLang(l) {
+    G.lang = l;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase() === l));
+    document.getElementById('subtitle').innerText = texts[l].sub;
+    document.getElementById('play-btn').innerText = texts[l].play;
+    document.getElementById('label-hp').innerText = texts[l].hp;
+    document.getElementById('label-ammo').innerText = texts[l].ammo;
+    document.getElementById('label-room').innerText = texts[l].room;
+}
+
+let historyIndex = 0;
 function initCutscene() {
     document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('lang-area').style.display = 'none';
     document.getElementById('cutscene-screen').style.display = 'flex';
     nextHistory();
 }
 
 function nextHistory() {
-    if (historyIndex < historyText.length) {
-        document.getElementById('cutscene-text').innerText = historyText[historyIndex];
+    const h = texts[G.lang].history;
+    if (historyIndex < h.length) {
+        document.getElementById('cutscene-text').innerText = h[historyIndex];
         historyIndex++;
     } else {
         startGame();
     }
 }
 
-// JOGO
 let player = { x: 600, y: 400, r: 25, spd: 7 };
 let enemies = [], projectiles = [], doors = [];
 const keys = {};
@@ -125,119 +139,95 @@ const keys = {};
 function startGame() {
     document.getElementById('cutscene-screen').style.display = 'none';
     document.getElementById('hud').style.display = 'flex';
-    if(isMobile) document.getElementById('btn-pause-mobile').style.display = 'flex';
     G.play = true;
     initRoom();
-}
-
-function togglePause() {
-    if (!G.play) return;
-    G.paused = !G.paused;
-    document.getElementById('pause-screen').style.display = G.paused ? 'flex' : 'none';
 }
 
 function initRoom() {
     enemies = []; projectiles = []; doors = [];
     G.enemiesDefeated = false;
     player.x = ROOM.w/2; player.y = ROOM.h/2;
-    if(G.room === 0) { G.enemiesDefeated = true; spawnDoors(); } 
-    else { spawnEnemies(); }
-}
-
-function spawnEnemies() {
-    let count = 2 + Math.floor(G.room * 0.8);
-    for(let i=0; i < count; i++) {
-        enemies.push({ 
-            x: 200 + Math.random()*(ROOM.w-400), 
-            y: 200 + Math.random()*(ROOM.h-400), 
-            hp: 40 + G.room*15, r: 30, spd: 1.5 + (Math.random() * G.room * 0.1) 
-        });
+    
+    if(G.room > 0) {
+        let count = 2 + Math.floor(G.room * 0.5);
+        for(let i=0; i<count; i++) {
+            enemies.push({ 
+                x: 200 + Math.random()*(ROOM.w-400), 
+                y: 200 + Math.random()*(ROOM.h-400), 
+                hp: 40 + G.room*10, r: 30, spd: 1.5 + (G.room * 0.1) 
+            });
+        }
+    } else {
+        G.enemiesDefeated = true;
+        spawnDoors();
     }
 }
 
 function spawnDoors() {
-    // Porta aleatória em uma das 4 paredes
-    const sides = ['N', 'S', 'E', 'W'];
-    const side = sides[Math.floor(Math.random() * sides.length)];
-    let d = { x: 0, y: 0, w: 100, h: 50 };
-    if(side === 'N') { d = { x: ROOM.w/2-50, y: 0, w: 100, h: 50 }; }
-    if(side === 'S') { d = { x: ROOM.w/2-50, y: ROOM.h-50, w: 100, h: 50 }; }
-    if(side === 'E') { d = { x: ROOM.w-50, y: ROOM.h/2-50, w: 50, h: 100 }; }
-    if(side === 'W') { d = { x: 0, y: ROOM.h/2-50, w: 50, h: 100 }; }
-    doors.push(d);
+    // Porta Norte
+    doors.push({ x: ROOM.w/2 - 60, y: 0, w: 120, h: 65 });
 }
 
 function update() {
-    if(!G.play || G.paused) return;
+    if(!G.play) return;
 
-    // Movimento WASD
     let mx = 0, my = 0;
     if(keys['w']) my = -1; if(keys['s']) my = 1; if(keys['a']) mx = -1; if(keys['d']) mx = 1;
-    player.x = Math.max(ROOM.wallSize+player.r, Math.min(ROOM.w-ROOM.wallSize-player.r, player.x + mx*player.spd));
-    player.y = Math.max(ROOM.wallSize+player.r, Math.min(ROOM.h-ROOM.wallSize-player.r, player.y + my*player.spd));
+    player.x = Math.max(ROOM.wallSize + player.r, Math.min(ROOM.w - ROOM.wallSize - player.r, player.x + mx * player.spd));
+    player.y = Math.max(ROOM.wallSize + player.r, Math.min(ROOM.h - ROOM.wallSize - player.r, player.y + my * player.spd));
 
-    // Tiros Setas
     let ax = 0, ay = 0;
     if(keys['arrowup']) ay = -1; if(keys['arrowdown']) ay = 1; if(keys['arrowleft']) ax = -1; if(keys['arrowright']) ax = 1;
-
-    if((ax || ay) && !G.reloading) {
-        if(G.ammo > 0) {
-            if(Date.now() - G.lastShot > 200) {
-                projectiles.push({ x: player.x, y: player.y, vx: ax*15, vy: ay*15, r: 8 });
-                G.lastShot = Date.now(); G.ammo--;
-            }
-        } else {
+    if((ax || ay) && !G.reloading && G.ammo > 0) {
+        projectiles.push({ x: player.x, y: player.y, vx: ax*14, vy: ay*14, r: 8 });
+        G.ammo--;
+        if(G.ammo <= 0) {
             G.reloading = true;
-            setTimeout(() => { G.ammo = G.maxAmmo; G.reloading = false; }, G.reloadTime);
+            setTimeout(() => { G.ammo = G.maxAmmo; G.reloading = false; }, 1000);
         }
     }
 
-    // IA Inimigos e Colisão
-    enemies.forEach((en, ei) => {
-        let dx = player.x - en.x, dy = player.y - en.y;
-        let dist = Math.hypot(dx, dy);
-        en.x += (dx/dist) * en.spd; en.y += (dy/dist) * en.spd;
-
-        if(dist < player.r + en.r) { G.hp -= 0.2; } // Dano por contato
-    });
-
-    projectiles.forEach((p, pi) => {
+    projectiles.forEach((p, i) => {
         p.x += p.vx; p.y += p.vy;
         enemies.forEach((en, ei) => {
             if(Math.hypot(p.x-en.x, p.y-en.y) < en.r) {
-                en.hp -= 25; projectiles.splice(pi, 1);
+                en.hp -= 20; projectiles.splice(i, 1);
                 if(en.hp <= 0) enemies.splice(ei, 1);
             }
         });
     });
 
-    if(enemies.length === 0 && !G.enemiesDefeated) { G.enemiesDefeated = true; spawnDoors(); }
-    
-    // Passar de sala
+    if(enemies.length === 0 && !G.enemiesDefeated) {
+        G.enemiesDefeated = true;
+        spawnDoors();
+    }
+
+    // Colisão REAL com portas
     doors.forEach(d => {
-        if(player.x > d.x && player.x < d.x+d.w && player.y > d.y && player.y < d.y+d.h) {
-            G.room++; initRoom();
+        if(player.x > d.x && player.x < d.x + d.w && player.y < d.y + d.h + 10) {
+            G.room++;
+            initRoom();
         }
     });
-
-    if(G.hp <= 0) location.reload();
 }
 
 function draw() {
     ctx.fillStyle = "#000"; ctx.fillRect(0,0,canvas.width, canvas.height);
     if(!G.play) { requestAnimationFrame(draw); return; }
     update();
-    
+
     ctx.save();
     let s = Math.min(canvas.width/ROOM.w, canvas.height/ROOM.h)*0.95;
     ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(s,s); ctx.translate(-ROOM.w/2, -ROOM.h/2);
+
+    // Chão
+    ctx.fillStyle = "#080000"; ctx.fillRect(0,0,ROOM.w,ROOM.h);
     
-    // Chão e Tutorial
-    ctx.fillStyle = "#0a0000"; ctx.fillRect(0,0,ROOM.w,ROOM.h);
+    // Tutorial
     if(G.room === 0) {
-        ctx.fillStyle = "rgba(255,0,0,0.2)"; ctx.textAlign = "center"; ctx.font = "20px Orbitron";
-        ctx.fillText("WASD PARA MOVER", ROOM.w/2, ROOM.h/2 - 60);
-        ctx.fillText("SETAS PARA ATIRAR", ROOM.w/2, ROOM.h/2 + 60);
+        ctx.fillStyle = "rgba(255,0,0,0.3)"; ctx.font = "20px Orbitron"; ctx.textAlign = "center";
+        ctx.fillText(texts[G.lang].tut, ROOM.w/2, ROOM.h/2 + 100);
+        ctx.fillText("VÁ PARA O NORTE / GO NORTH", ROOM.w/2, ROOM.h/2 - 100);
     }
 
     // Paredes
@@ -245,33 +235,26 @@ function draw() {
     ctx.fillRect(0,0,ROOM.w,ROOM.wallSize); ctx.fillRect(0,ROOM.h-ROOM.wallSize,ROOM.w,ROOM.wallSize);
     ctx.fillRect(0,0,ROOM.wallSize,ROOM.h); ctx.fillRect(ROOM.w-ROOM.wallSize,0,ROOM.wallSize,ROOM.h);
 
-    // Portas
+    // Portas Ativas
     if(G.enemiesDefeated) {
-        ctx.fillStyle = "#ff0000"; ctx.shadowBlur = 15; ctx.shadowColor = "#ff0000";
+        ctx.fillStyle = "#ff0000"; ctx.shadowBlur = 20; ctx.shadowColor = "#f00";
         doors.forEach(d => ctx.fillRect(d.x, d.y, d.w, d.h));
+        ctx.shadowBlur = 0;
     }
 
     // Entidades
-    ctx.shadowBlur = 10; ctx.shadowColor = "#ff0000"; ctx.fillStyle = "#ff0000";
-    enemies.forEach(en => { ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill(); });
-    
-    ctx.fillStyle = G.reloading ? "#555" : "#fff"; 
-    ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
-    
+    ctx.fillStyle = "#ff0000"; enemies.forEach(en => { ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill(); });
+    ctx.fillStyle = G.reloading ? "#444" : "#fff"; ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = "#fff"; projectiles.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); });
-    ctx.restore();
 
+    ctx.restore();
     document.getElementById('hp-fill').style.width = G.hp + "%";
     document.getElementById('ammo-fill').style.width = (G.ammo/G.maxAmmo*100) + "%";
     document.getElementById('room-txt').innerText = G.room;
     requestAnimationFrame(draw);
 }
 
-// INPUTS
-window.addEventListener('keydown', e => {
-    keys[e.key.toLowerCase()] = true;
-    if(e.key === 'Escape') togglePause();
-});
+window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
 window.addEventListener('keyup', e => delete keys[e.key.toLowerCase()]);
 window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
 window.onresize(); draw();
