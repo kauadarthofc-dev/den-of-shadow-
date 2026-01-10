@@ -12,17 +12,21 @@
         #death-screen, #card-screen { display: none; z-index: 2000; }
         .card { width: 110px; height: 160px; background: #1a1a1a; border: 3px solid #f1c40f; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; padding: 5px; text-align: center; }
         .card b { color: #f1c40f; font-size: 14px; margin-bottom: 10px; }
-        .card span { font-size: 10px; }
         #game-container { position: relative; width: 100vw; height: 100vh; }
         canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+        
+        /* Mobile UI */
         .mobile-ctrl { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 50; }
         #joy-bound { position: absolute; bottom: 15%; left: 8%; width: 120px; height: 120px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; pointer-events: auto; }
-        #joy-stick { position: absolute; left: 35px; top: 35px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.4; pointer-events: none; }
+        #joy-stick { position: absolute; left: 35px; top: 35px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.4; }
         #shoot-ctrl { position: absolute; bottom: 15%; right: 8%; display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; pointer-events: auto; }
         .atk-btn { width: 70px; height: 70px; background: rgba(52,152,219,0.1); border: 2px solid #3498db; border-radius: 50%; color: #3498db; display: flex; justify-content: center; align-items: center; font-size: 24px; }
+        #fs-btn { position: absolute; top: 10px; right: 10px; padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid #fff; color: #fff; z-index: 100; pointer-events: auto; display: none; border-radius: 5px; font-size: 12px; }
     </style>
 </head>
 <body>
+
+<div id="fs-btn">TELA CHEIA</div>
 
 <div id="start-screen" class="overlay">
     <h1 style="color:#ff4d6d;">COVIL DAS SOMBRAS</h1>
@@ -36,7 +40,7 @@
 </div>
 
 <div id="card-screen" class="overlay">
-    <h2 style="color:#f1c40f">UPGRADE DE BOSS</h2>
+    <h2 style="color:#f1c40f">UPGRADE</h2>
     <div id="card-container" style="display: flex; gap: 15px;"></div>
 </div>
 
@@ -62,7 +66,7 @@ const Stats = { moveSpd: 4.5, atkSpd: 18, damage: 10 };
 const input = { x: 0, y: 0 };
 const attack = { up: false, down: false, left: false, right: false };
 let enemies = [], projectiles = [], particles = [], pedestal = null, joyId = null;
-let p = { x: 400, y: 300, iframe: 0, timer: 0 };
+let p = { x: 400, y: 300, iframe: 0, timer: 0, dead: false };
 
 // --- ÁUDIO ---
 let audioCtx;
@@ -90,13 +94,35 @@ function startMusic() {
     }, 500);
 }
 
+// --- EFEITOS DE MORTE ---
+function explode(x, y, color, count = 15) {
+    for(let i=0; i<count; i++) {
+        particles.push({
+            x, y, 
+            vx: (Math.random()-0.5)*6, 
+            vy: (Math.random()-0.5)*6, 
+            life: 1.0, 
+            color: color
+        });
+    }
+}
+
+// --- FULLSCREEN ---
+if(isMobile) {
+    const fsBtn = document.getElementById('fs-btn');
+    fsBtn.style.display = 'block';
+    fsBtn.onclick = () => {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+    };
+}
+
 function resize() {
     canvas.width = window.innerWidth / 2;
     canvas.height = window.innerHeight / 2;
 }
 window.onresize = resize; resize();
 
-// --- INICIALIZAÇÃO ---
 document.getElementById('btn-start').onclick = () => {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     Game.started = true;
@@ -108,25 +134,13 @@ document.getElementById('btn-start').onclick = () => {
 };
 
 function initRoom() {
-    enemies = []; projectiles = []; particles = []; pedestal = null;
+    enemies = []; projectiles = []; pedestal = null;
     p.x = Game.roomW/2; p.y = Game.roomH - 100;
+    if (Game.room === 5 && Game.weapon === 'normal') pedestal = { x: Game.roomW/2-15, y: Game.roomH/2-15, w: 30, h: 30 };
     
-    // Sala 5 - Troca de Arma
-    if (Game.room === 5 && Game.weapon === 'normal') {
-        pedestal = { x: Game.roomW/2-15, y: Game.roomH/2-15, w: 30, h: 30 };
-    }
-
     if (Game.room % 10 === 0) {
-        // Boss
-        enemies.push({ 
-            type: 'boss', 
-            shooter: Game.room % 20 === 0, 
-            x: Game.roomW/2-40, y: 150, 
-            hp: 400 + (Game.room*10), maxHp: 400 + (Game.room*10), 
-            w: 80, h: 80, timer: 0 
-        });
+        enemies.push({ type: 'boss', shooter: Game.room % 20 === 0, x: Game.roomW/2-40, y: 150, hp: 400 + (Game.room*10), maxHp: 400 + (Game.room*10), w: 80, h: 80, timer: 0 });
     } else {
-        // Inimigos Normais
         let count = 2 + Math.floor(Game.room/2);
         for(let i=0; i<count; i++) {
             let r = Math.random();
@@ -168,7 +182,16 @@ if(isMobile) {
 
 function loop() {
     if(!Game.started || Game.paused) return requestAnimationFrame(loop);
-    if(Game.lives <= 0) { document.getElementById('death-screen').style.display='flex'; document.getElementById('final-room').innerText="SALA: "+Game.room; return; }
+    
+    if(Game.lives <= 0 && !p.dead) {
+        p.dead = true;
+        explode(p.x, p.y, "#fff", 30);
+        playSfx(50, 'sawtooth', 0.8, 0.3);
+        setTimeout(() => {
+            document.getElementById('death-screen').style.display='flex';
+            document.getElementById('final-room').innerText="SALA: "+Game.room;
+        }, 800);
+    }
 
     ctx.clearRect(0,0, canvas.width, canvas.height);
     ctx.save();
@@ -183,7 +206,6 @@ function loop() {
 
     // Pedestal Sala 5
     if(pedestal) {
-        ctx.fillStyle="#444"; ctx.fillRect(pedestal.x-5, pedestal.y+15, pedestal.w+10, 15);
         ctx.fillStyle="#f1c40f"; ctx.fillRect(pedestal.x, pedestal.y, pedestal.w, pedestal.h);
         if(Math.hypot(p.x-pedestal.x, p.y-pedestal.y)<30) { 
             Game.weapon='fire'; Stats.damage+=15; Stats.atkSpd=10; pedestal=null; 
@@ -193,26 +215,33 @@ function loop() {
 
     // Saída
     if(enemies.length===0) {
-        let isBoss = Game.room % 10 === 0;
-        ctx.fillStyle = isBoss ? "#f00" : "#f1c40f";
-        if(isBoss) { ctx.shadowBlur = 15; ctx.shadowColor = "red"; }
-        ctx.fillRect(Game.roomW/2-40, -10, 80, 20); ctx.shadowBlur = 0;
-        if(p.y < 20 && Math.abs(p.x - Game.roomW/2) < 40) { Game.room++; initRoom(); }
+        let isB = Game.room % 10 === 0;
+        ctx.fillStyle = isB ? "#f00" : "#f1c40f";
+        ctx.fillRect(Game.roomW/2-40, -10, 80, 20);
+        if(!p.dead && p.y < 20 && Math.abs(p.x - Game.roomW/2) < 40) { Game.room++; initRoom(); }
     }
 
-    // Player
-    p.x = Math.max(10, Math.min(Game.roomW-35, p.x + input.x * Stats.moveSpd));
-    p.y = Math.max(10, Math.min(Game.roomH-35, p.y + input.y * Stats.moveSpd));
-    if(p.iframe > 0) p.iframe--;
-    ctx.fillStyle = p.iframe%4<2?"#fff":"#ff4d6d"; ctx.fillRect(p.x, p.y, 25, 25);
+    // Partículas
+    particles.forEach((pt, i) => {
+        pt.x += pt.vx; pt.y += pt.vy; pt.life -= 0.02;
+        ctx.globalAlpha = pt.life; ctx.fillStyle = pt.color;
+        ctx.fillRect(pt.x, pt.y, 3, 3);
+        if(pt.life <= 0) particles.splice(i, 1);
+    });
+    ctx.globalAlpha = 1.0;
 
-    p.timer++;
-    if(p.timer % Stats.atkSpd === 0) {
-        let dx=0, dy=0;
-        if(attack.up) dy=-1; else if(attack.down) dy=1; else if(attack.left) dx=-1; else if(attack.right) dx=1;
-        if(dx||dy) { 
-            projectiles.push({x:p.x+8, y:p.y+8, dx, dy, enemy:false, type:Game.weapon}); 
-            playSfx(150, 'square', 0.05); 
+    // Player
+    if(!p.dead) {
+        p.x = Math.max(10, Math.min(Game.roomW-35, p.x + input.x * Stats.moveSpd));
+        p.y = Math.max(10, Math.min(Game.roomH-35, p.y + input.y * Stats.moveSpd));
+        if(p.iframe > 0) p.iframe--;
+        ctx.fillStyle = p.iframe%4<2?"#fff":"#ff4d6d"; ctx.fillRect(p.x, p.y, 25, 25);
+        
+        p.timer++;
+        if(p.timer % Stats.atkSpd === 0) {
+            let dx=0, dy=0;
+            if(attack.up) dy=-1; else if(attack.down) dy=1; else if(attack.left) dx=-1; else if(attack.right) dx=1;
+            if(dx||dy) { projectiles.push({x:p.x+8, y:p.y+8, dx, dy, enemy:false, type:Game.weapon}); playSfx(150, 'square', 0.05); }
         }
     }
 
@@ -224,19 +253,21 @@ function loop() {
             e.timer++; s = (e.timer%180<50)?5:1.2;
             if(e.shooter && e.timer%40===0) { for(let a=0;a<6.28;a+=0.78) projectiles.push({x:e.x+40,y:e.y+40,dx:Math.cos(a),dy:Math.sin(a),enemy:true}); }
         }
-        e.x += Math.cos(ang)*s; e.y += Math.sin(ang)*s;
+        if(!p.dead) { e.x += Math.cos(ang)*s; e.y += Math.sin(ang)*s; }
         
         ctx.fillStyle = e.type==='boss'?(e.shooter?"#8e44ad":"#c0392b"):e.type==='kamikaze'?"#f1c40f":e.type==='assassino'?"#9b59b6":"#3498db";
         ctx.fillRect(e.x, e.y, e.w, e.h);
 
-        // Dano
-        if(p.iframe<=0 && Math.hypot(p.x-e.x, p.y-e.y)<25) {
-            let dmg = e.type==='kamikaze'?3:1;
-            Game.lives -= dmg; p.iframe=60;
+        if(!p.dead && p.iframe<=0 && Math.hypot(p.x-e.x, p.y-e.y)<25) {
+            Game.lives -= (e.type==='kamikaze'?3:1); p.iframe=60;
             playSfx(100, 'sawtooth', 0.3, 0.2);
-            if(e.type==='kamikaze') { e.hp=0; playSfx(60, 'sawtooth', 0.5); }
+            if(e.type==='kamikaze') { e.hp=0; }
         }
-        if(e.hp<=0) { enemies.splice(i,1); if(e.type==='boss') showUpgrade(); }
+        if(e.hp<=0) { 
+            explode(e.x+e.w/2, e.y+e.h/2, ctx.fillStyle);
+            enemies.splice(i,1); 
+            if(e.type==='boss') showUpgrade(); 
+        }
     });
 
     // Projéteis
@@ -246,7 +277,7 @@ function loop() {
         ctx.fillRect(pr.x, pr.y, 8, 8);
         if(!pr.enemy) {
             enemies.forEach(e => { if(Math.hypot(pr.x-e.x-e.w/2, pr.y-e.y-e.h/2)<30) { e.hp -= Stats.damage; projectiles.splice(i,1); }});
-        } else if(p.iframe<=0 && Math.hypot(pr.x-p.x-12, pr.y-p.y-12)<15) { Game.lives--; p.iframe=60; projectiles.splice(i,1); playSfx(100, 'sawtooth', 0.3); }
+        } else if(!p.dead && p.iframe<=0 && Math.hypot(pr.x-p.x-12, pr.y-p.y-12)<15) { Game.lives--; p.iframe=60; projectiles.splice(i,1); playSfx(100, 'sawtooth', 0.3); }
         if(pr.x<0||pr.x>Game.roomW||pr.y<0||pr.y>Game.roomH) projectiles.splice(i,1);
     });
 
@@ -261,19 +292,12 @@ function loop() {
 function showUpgrade() {
     Game.paused = true; document.getElementById('card-screen').style.display='flex';
     const container = document.getElementById('card-container'); container.innerHTML = '';
-    const pool = [
-        {t:"DANO+", s:"+10 de Dano", f:()=>Stats.damage+=10},
-        {t:"VELÔ+", s:"+1 de Velocidade", f:()=>Stats.moveSpd+=1},
-        {t:"VIDA+", s:"+1 Coração Máx", f:()=> {Game.maxLives++; Game.lives++;}},
-        {t:"RAPIDEZ", s:"Tiros mais velozes", f:()=>Stats.atkSpd=Math.max(6, Stats.atkSpd-3)}
-    ];
-    for(let i=0; i<3; i++) {
-        let u = pool[Math.floor(Math.random()*pool.length)];
-        let d = document.createElement('div'); d.className='card';
-        d.innerHTML=`<b>${u.t}</b><span>${u.s}</span>`;
+    const pool = [{t:"DANO+", f:()=>Stats.damage+=10}, {t:"VELÔ+", f:()=>Stats.moveSpd+=1}, {t:"VIDA+", f:()=> {Game.maxLives++; Game.lives++;}}];
+    pool.forEach(u => {
+        let d = document.createElement('div'); d.className='card'; d.innerHTML=`<b>${u.t}</b>`;
         d.onclick = () => { u.f(); playSfx(600, 'sine', 0.3); Game.paused=false; document.getElementById('card-screen').style.display='none'; };
         container.appendChild(d);
-    }
+    });
 }
 </script>
 </body>
