@@ -19,22 +19,13 @@
         #joy-stick { position: absolute; left: 35px; top: 35px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.4; }
         #shoot-ctrl { position: absolute; bottom: 12%; right: 8%; display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; pointer-events: auto; }
         .atk-btn { width: 70px; height: 70px; background: rgba(52,152,219,0.1); border: 2px solid #3498db; border-radius: 50%; color: #3498db; display: flex; justify-content: center; align-items: center; font-size: 24px; }
-        
-        #upgrade-screen .card-container { display: flex; gap: 10px; margin-top: 20px; }
-        .card { background: #111; border: 2px solid #f1c40f; padding: 15px; width: 100px; font-size: 12px; cursor: pointer; pointer-events: auto; }
     </style>
 </head>
 <body>
 
-<div id="start-screen" class="overlay" onclick="startGame()">
+<div id="start-screen" class="overlay">
     <h1 style="color:#ff4d6d; font-size: 36px;">COVIL DAS SOMBRAS</h1>
-    <div class="btn-ui">TOQUE PARA ENTRAR</div>
-    <p style="color:#666; margin-top: 15px;">Chão e Contador Atualizados</p>
-</div>
-
-<div id="upgrade-screen" class="overlay" style="display:none">
-    <h2 style="color:#f1c40f">BOSS DERROTADO!</h2>
-    <div class="card-container" id="upgrade-options"></div>
+    <div class="btn-ui" id="btn-start">INICIAR DESAFIO</div>
 </div>
 
 <div id="game-container">
@@ -51,7 +42,14 @@
 <script>
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
-const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const isMobile = ('ontouchstart' in window);
+
+const Game = { started: false, room: 1, roomW: 800, roomH: 600, camX: 0, camY: 0, shake: 0, lives: 6, maxLives: 6 };
+const Stats = { moveSpd: 4.0, atkSpd: 18, damage: 10 };
+const input = { x: 0, y: 0 };
+const attack = { up: false, down: false, left: false, right: false };
+let enemies = [], projectiles = [], joyId = null;
+let p = { x: 400, y: 300, iframe: 0, timer: 0 };
 
 function resize() {
     canvas.width = window.innerWidth / 2;
@@ -60,12 +58,9 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-const Game = { started: false, room: 1, roomW: 800, roomH: 600, camX: 0, camY: 0, paused: false, shake: 0, lives: 6, maxLives: 6 };
-const Stats = { moveSpd: 4.5, atkSpd: 16, damage: 10 };
-const input = { x: 0, y: 0 };
-const attack = { up: false, down: false, left: false, right: false };
-let enemies = [], projectiles = [], particles = [];
-let p = { x: 400, y: 500, iframe: 0, timer: 0 };
+// --- INICIALIZAÇÃO ---
+document.getElementById('btn-start').addEventListener('click', startGame);
+document.getElementById('btn-start').addEventListener('touchstart', (e) => { e.preventDefault(); startGame(); });
 
 function startGame() {
     if(Game.started) return;
@@ -80,67 +75,97 @@ function initRoom() {
     enemies = []; projectiles = [];
     p.x = Game.roomW/2; p.y = Game.roomH - 120;
     
-    if(Game.room % 10 === 0) {
-        enemies.push({ type: 'boss', x: Game.roomW/2 - 40, y: 150, hp: 500 + (Game.room * 5), maxHp: 500 + (Game.room * 5), timer: 0 });
-    } else {
-        let count = 2 + Math.floor(Game.room / 3);
-        for(let i=0; i<count; i++) {
-            enemies.push({ 
-                type: Math.random() < 0.25 ? 'kamikaze' : 'stalker', 
-                x: 100 + Math.random()*(Game.roomW-200), 
-                y: 100 + Math.random()*(Game.roomH-300), 
-                hp: 40, alive: true 
-            });
-        }
+    // Inimigos aparecem em todas as salas
+    let count = 2 + Math.floor(Game.room / 2);
+    for(let i=0; i<count; i++) {
+        enemies.push({ 
+            type: Math.random() < 0.3 ? 'kamikaze' : 'stalker', 
+            x: 100 + Math.random()*(Game.roomW-200), 
+            y: 100 + Math.random()*(Game.roomH-300), 
+            hp: 40, alive: true 
+        });
     }
 }
 
-// Renderiza o chão de pedra
-function drawDungeonFloor() {
-    const tileSize = 40;
-    for (let x = 0; x < Game.roomW; x += tileSize) {
-        for (let y = 0; y < Game.roomH; y += tileSize) {
-            // Cor base da pedra
-            ctx.fillStyle = (x + y) % 80 === 0 ? "#1a1a1a" : "#1d1d1d";
-            ctx.fillRect(x, y, tileSize, tileSize);
-            
-            // Detalhes de ranhuras
-            ctx.strokeStyle = "#141414";
-            ctx.lineWidth = 2;
-            ctx.strokeRect(x + 2, y + 2, tileSize - 4, tileSize - 4);
-            
-            // Pequenas "falhas" na pedra para textura
-            ctx.fillStyle = "#222";
-            if ((x+y) % 120 === 0) ctx.fillRect(x + 10, y + 10, 4, 4);
+// --- CONTROLES PC ---
+window.addEventListener('keydown', e => {
+    let k = e.key.toLowerCase();
+    if(k==='w') input.y = -1; if(k==='s') input.y = 1;
+    if(k==='a') input.x = -1; if(k==='d') input.x = 1;
+    if(k==='arrowup') attack.up = true; if(k==='arrowdown') attack.down = true;
+    if(k==='arrowleft') attack.left = true; if(k==='arrowright') attack.right = true;
+});
+window.addEventListener('keyup', e => {
+    let k = e.key.toLowerCase();
+    if(k==='w' || k==='s') input.y = 0; if(k==='a' || k==='d') input.x = 0;
+    if(k==='arrowup') attack.up = false; if(k==='arrowdown') attack.down = false;
+    if(k==='arrowleft') attack.left = false; if(k==='arrowright') attack.right = false;
+});
+
+// --- CONTROLES MOBILE ---
+if(isMobile) {
+    const joyBound = document.getElementById('joy-bound');
+    joyBound.addEventListener('touchstart', e => {
+        for(let t of e.changedTouches) joyId = t.identifier;
+    });
+    window.addEventListener('touchmove', e => {
+        const r = joyBound.getBoundingClientRect();
+        for(let t of e.touches) {
+            if(t.identifier === joyId) {
+                let dx = (t.clientX - (r.left + r.width/2)) / 50;
+                let dy = (t.clientY - (r.top + r.height/2)) / 50;
+                let dist = Math.hypot(dx, dy);
+                input.x = dx / (dist > 1 ? dist : 1);
+                input.y = dy / (dist > 1 ? dist : 1);
+                document.getElementById('joy-stick').style.left = (35 + input.x*30)+'px';
+                document.getElementById('joy-stick').style.top = (35 + input.y*30)+'px';
+            }
         }
-    }
+    });
+    window.addEventListener('touchend', e => {
+        for(let t of e.changedTouches) {
+            if(t.identifier === joyId) {
+                joyId = null; input.x = 0; input.y = 0;
+                document.getElementById('joy-stick').style.left = '35px'; document.getElementById('joy-stick').style.top = '35px';
+            }
+        }
+    });
+    document.querySelectorAll('.atk-btn').forEach(btn => {
+        btn.addEventListener('touchstart', e => { e.preventDefault(); attack[btn.dataset.dir] = true; });
+        btn.addEventListener('touchend', e => { e.preventDefault(); attack[btn.dataset.dir] = false; });
+    });
 }
 
+// --- RENDERIZAÇÃO E LÓGICA ---
 function loop() {
-    if(!Game.started || Game.paused) return requestAnimationFrame(loop);
-    
+    if(!Game.started) return;
+    if(Game.lives <= 0) { alert("Fim de Jogo! Sala: " + Game.room); location.reload(); return; }
+
     ctx.clearRect(0,0, canvas.width, canvas.height);
     ctx.save();
-    
-    if(Game.shake > 0) { ctx.translate(Math.random()*Game.shake, Math.random()*Game.shake); Game.shake *= 0.8; }
     
     Game.camX += ((p.x - canvas.width/2) - Game.camX) * 0.1;
     Game.camY += ((p.y - canvas.height/2) - Game.camY) * 0.1;
     ctx.translate(-Game.camX, -Game.camY);
 
-    // Layout da Sala
-    drawDungeonFloor();
+    // Desenho do Chão (Estilo Pedra)
+    for (let x = 0; x < Game.roomW; x += 40) {
+        for (let y = 0; y < Game.roomH; y += 40) {
+            ctx.fillStyle = (x + y) % 80 === 0 ? "#1a1a1a" : "#1d1d1d";
+            ctx.fillRect(x, y, 40, 40);
+            ctx.strokeStyle = "#141414"; ctx.strokeRect(x+1, y+1, 38, 38);
+        }
+    }
 
     // Paredes
-    ctx.fillStyle = "#2c2c2e";
-    ctx.fillRect(-20, -20, Game.roomW+40, 20); // Topo
-    ctx.fillRect(-20, Game.roomH, Game.roomW+40, 20); // Baixo
-    ctx.fillRect(-20, 0, 20, Game.roomH); // Esq
-    ctx.fillRect(Game.roomW, 0, 20, Game.roomH); // Dir
+    ctx.fillStyle = "#333";
+    ctx.fillRect(-20, -20, Game.roomW+40, 20); ctx.fillRect(-20, Game.roomH, Game.roomW+40, 20);
+    ctx.fillRect(-20, 0, 20, Game.roomH); ctx.fillRect(Game.roomW, 0, 20, Game.roomH);
 
-    // Player e Lógica permanecem...
-    p.x = Math.max(15, Math.min(Game.roomW-40, p.x + input.x * Stats.moveSpd));
-    p.y = Math.max(15, Math.min(Game.roomH-40, p.y + input.y * Stats.moveSpd));
+    // Movimento do Player (Sem travas)
+    p.x = Math.max(10, Math.min(Game.roomW-35, p.x + input.x * Stats.moveSpd));
+    p.y = Math.max(10, Math.min(Game.roomH-35, p.y + input.y * Stats.moveSpd));
+    
     if(p.iframe > 0) p.iframe--;
     ctx.fillStyle = p.iframe % 4 < 2 ? "#fff" : "#ff4d6d";
     ctx.fillRect(p.x, p.y, 25, 25);
@@ -150,61 +175,62 @@ function loop() {
     if(p.timer % Stats.atkSpd === 0) {
         let dx=0, dy=0;
         if(attack.up) dy=-1; else if(attack.down) dy=1; else if(attack.left) dx=-1; else if(attack.right) dx=1;
-        if(dx||dy) projectiles.push({x: p.x+10, y:p.y+10, dx, dy, enemy:false, active:true});
+        if(dx||dy) projectiles.push({x: p.x+10, y:p.y+10, dx, dy, enemy:false});
     }
 
-    // Inimigos e Projéteis (resumido para foco nas mudanças)
+    // Inimigos
     enemies.forEach((e, i) => {
         let ang = Math.atan2(p.y - e.y, p.x - e.x);
-        e.x += Math.cos(ang) * (e.type==='kamikaze'?3:1.5);
-        e.y += Math.sin(ang) * (e.type==='kamikaze'?3:1.5);
+        e.x += Math.cos(ang) * (e.type==='kamikaze'?2.5:1.5);
+        e.y += Math.sin(ang) * (e.type==='kamikaze'?2.5:1.5);
+        
         ctx.fillStyle = e.type==='kamikaze' ? "#f1c40f" : "#3498db";
         ctx.fillRect(e.x, e.y, 30, 30);
-        if(p.iframe <= 0 && Math.hypot(p.x-e.x, p.y-e.y) < 30) { Game.lives--; p.iframe=60; if(e.type==='kamikaze') e.hp=0; }
-        if(e.hp<=0) enemies.splice(i,1);
+
+        // Sistema de Dano (Sem imortalidade)
+        let dist = Math.hypot(p.x - e.x, p.y - e.y);
+        if(p.iframe <= 0 && dist < 28) {
+            Game.lives -= (e.type==='kamikaze' ? 2 : 1);
+            p.iframe = 60;
+            if(e.type==='kamikaze') { // Explosão causa dano a outros inimigos
+                enemies.forEach(other => { if(Math.hypot(e.x-other.x, e.y-other.y) < 100) other.hp -= 50; });
+                e.hp = 0;
+            }
+        }
+        if(e.hp <= 0) enemies.splice(i, 1);
     });
 
-    for(let i=projectiles.length-1; i>=0; i--) {
-        let pr = projectiles[i]; pr.x += pr.dx*7; pr.y += pr.dy*7;
-        ctx.fillStyle = pr.enemy ? "#f0f" : "#0ff"; ctx.fillRect(pr.x, pr.y, 6, 6);
-        enemies.forEach(e => { if(Math.hypot(pr.x-e.x-15, pr.y-e.y-15)<30) { e.hp-=Stats.damage; pr.active=false; }});
-        if(pr.x<0||pr.x>Game.roomW||pr.y<0||pr.y>Game.roomH) pr.active=false;
-        if(!pr.active) projectiles.splice(i,1);
-    }
+    // Projéteis
+    projectiles.forEach((pr, i) => {
+        pr.x += pr.dx * 6; pr.y += pr.dy * 6;
+        ctx.fillStyle = "#0ff"; ctx.fillRect(pr.x, pr.y, 6, 6);
+        enemies.forEach(e => {
+            if(Math.hypot(pr.x-e.x-15, pr.y-e.y-15) < 25) { e.hp -= Stats.damage; projectiles.splice(i, 1); }
+        });
+        if(pr.x<0 || pr.x>Game.roomW || pr.y<0 || pr.y>Game.roomH) projectiles.splice(i, 1);
+    });
 
-    // Saída
+    // Saída da Sala
     if(enemies.length === 0) {
         ctx.fillStyle = "#f1c40f"; ctx.fillRect(Game.roomW/2-40, -10, 80, 20);
-        if(p.y < 30 && Math.abs(p.x - Game.roomW/2) < 50) { Game.room++; initRoom(); }
+        if(p.y < 20 && Math.abs(p.x - Game.roomW/2) < 40) {
+            Game.room++;
+            initRoom();
+        }
     }
 
     ctx.restore();
 
-    // --- HUD ATUALIZADA ---
-    // Corações (Canto Superior Esquerdo)
+    // HUD
     for(let i=0; i<Game.maxLives; i++) {
         ctx.fillStyle = i < Game.lives ? "#ff4d6d" : "#333";
         ctx.fillRect(20 + i*25, 20, 18, 18);
     }
+    ctx.fillStyle = "#fff"; ctx.font = "bold 14px Arial";
+    ctx.fillText("SALA: " + Game.room, canvas.width - 80, 35);
 
-    // Contador de Salas (Canto Superior Direito)
-    ctx.fillStyle = "rgba(44, 44, 46, 0.8)";
-    ctx.fillRect(canvas.width - 100, 15, 85, 30);
-    ctx.strokeStyle = "#f1c40f";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(canvas.width - 100, 15, 85, 30);
-    
-    ctx.fillStyle = "#fff";
-    ctx.font = "bold 12px 'Courier New'";
-    ctx.textAlign = "center";
-    ctx.fillText("ROOM: " + Game.room, canvas.width - 57, 34);
-    ctx.textAlign = "left"; // Reset para o resto do código
-
-    if(Game.lives <= 0) location.reload();
     requestAnimationFrame(loop);
 }
-
-// Funções de controles mobile do código anterior permanecem aqui...
 </script>
 </body>
 </html>
