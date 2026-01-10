@@ -6,481 +6,454 @@
     <title>Den of Shadow</title>
     <style>
         :root {
-            --common: #3498db; --uncommon: #2ecc71; --rare: #f1c40f; 
-            --epic: #9b59b6; --legendary: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+            --comum: #3498db; --incomum: #2ecc71; --raro: #f1c40f; 
+            --epico: #9b59b6; --lendario: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
         }
-        body { margin: 0; overflow: hidden; background: #222; font-family: 'Courier New', Courier, monospace; touch-action: none; }
-        #gameCanvas { display: block; background: #3d3d3d; border: 4px solid #1a1a1a; margin: auto; }
+        body { margin: 0; overflow: hidden; background: #2c3e50; font-family: 'Verdana', sans-serif; touch-action: none; }
+        canvas { display: block; }
         
-        /* UI Estilizada */
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; color: white; }
+        /* UI de Camada Superior */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
         .hud { pointer-events: auto; }
-        
-        #fullscreen-btn { 
+
+        /* Botão Fullscreen Mobile Centralizado no Topo */
+        #fs-btn { 
             position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-            padding: 10px 20px; background: rgba(0,0,0,0.7); color: gold; border: 2px solid gold; 
-            border-radius: 5px; cursor: pointer; pointer-events: auto; z-index: 100;
+            padding: 12px 25px; background: rgba(0,0,0,0.7); color: gold; border: 2px solid gold; 
+            border-radius: 10px; cursor: pointer; font-weight: bold; z-index: 100;
         }
 
-        /* Botões Mobile Otimizados */
-        .mobile-ctrl { 
-            position: absolute; bottom: 20px; background: rgba(255,255,255,0.2); 
-            border: 3px solid #fff; border-radius: 50%; pointer-events: auto;
-        }
-        #joystick { width: 120px; height: 120px; left: 30px; }
-        #swap-btn { width: 90px; height: 90px; right: 140px; bottom: 40px; background: rgba(255,165,0,0.4); display: flex; align-items: center; justify-content: center; font-weight: bold;}
-        #dash-btn { width: 90px; height: 90px; right: 30px; bottom: 140px; background: rgba(0,191,255,0.4); }
+        /* Controles Mobile Melhorados */
+        .m-ctrl { position: absolute; background: rgba(255,255,255,0.15); border: 4px solid #fff; border-radius: 50%; display: none; }
+        #joy-base { width: 140px; height: 140px; bottom: 40px; left: 40px; }
+        #btn-dash { width: 100px; height: 100px; bottom: 160px; right: 40px; background: rgba(0,150,255,0.3); }
+        #btn-swap { width: 100px; height: 100px; bottom: 40px; right: 160px; background: rgba(255,150,0,0.3); }
 
-        /* Cards de Upgrade */
+        /* Sistema de Cartas de Upgrade */
         #upgrade-screen { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.9); padding: 20px; display: none; flex-direction: row; gap: 20px;
-            border: 5px solid gold; border-radius: 15px; pointer-events: auto;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; gap: 30px; pointer-events: auto;
         }
         .card { 
-            width: 180px; height: 260px; border: 3px solid #fff; position: relative;
-            display: flex; flex-direction: column; align-items: center; text-align: center;
-            padding: 10px; cursor: pointer; transition: 0.3s;
+            width: 240px; height: 360px; border-radius: 20px; border: 5px solid #fff;
+            display: flex; flex-direction: column; align-items: center; padding: 20px;
+            cursor: pointer; position: relative; overflow: hidden; color: white; transition: 0.3s;
         }
-        .card:hover { transform: scale(1.05); }
-        .card .bg-skull { position: absolute; font-size: 80px; opacity: 0.1; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none;}
+        .card:hover { transform: scale(1.1); box-shadow: 0 0 30px rgba(255,255,255,0.5); }
+        .card-bg-skull { position: absolute; font-size: 150px; opacity: 0.05; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
         
-        #boss-hp-bar { 
-            position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
-            width: 60%; height: 20px; background: #333; border: 2px solid #fff; display: none;
-        }
-        #boss-hp-fill { width: 100%; height: 100%; background: #e74c3c; transition: width 0.3s; }
-        #boss-name { text-align: center; color: #ff4757; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+        /* Barra de Vida do Boss */
+        #boss-hud { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); width: 60%; display: none; text-align: center; }
+        #boss-bar-fill { width: 100%; height: 20px; background: #e74c3c; border: 2px solid white; transition: width 0.3s; }
+        #boss-name { color: white; font-size: 20px; font-weight: bold; text-shadow: 2px 2px black; margin-bottom: 5px; }
 
+        /* Menu Inicial */
+        #menu { position: absolute; width: 100%; height: 100%; background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; z-index: 1000; }
     </style>
 </head>
 <body>
 
-    <button id="fullscreen-btn">TELA CHEIA</button>
+    <div id="menu">
+        <h1 style="font-size: 70px; margin-bottom: 10px;">DEN OF SHADOW 💀</h1>
+        <p id="platform-hint" style="color: #00ffff;"></p>
+        <button id="play-btn" style="padding: 20px 60px; font-size: 25px; cursor: pointer; border-radius: 10px;">INICIAR</button>
+        <div style="margin-top: 40px; text-align: center;">
+            <a href="mailto:kauadarthofc@gmail.com" style="color: white;">kauadarthofc@gmail.com</a><br><br>
+            <a href="https://youtube.com/@kaua_darth" target="_blank" style="color: #ff0000; text-decoration: none; font-weight: bold;">📺 YouTube: @kaua_darth</a>
+        </div>
+    </div>
 
     <div id="ui-layer">
-        <div id="boss-hp-bar" class="hud">
-            <div id="boss-name">BOSS</div>
-            <div id="boss-hp-fill"></div>
-        </div>
+        <button id="fs-btn" class="hud">TELA CHEIA</button>
         
+        <div id="boss-hud">
+            <div id="boss-name">NOME DO BOSS</div>
+            <div id="boss-bar-fill"></div>
+        </div>
+
         <div id="upgrade-screen"></div>
 
-        <div id="joystick" class="mobile-ctrl hud"></div>
-        <div id="swap-btn" class="mobile-ctrl hud">SWAP</div>
-        <div id="dash-btn" class="mobile-ctrl hud">DASH</div>
+        <div id="joy-base" class="m-ctrl hud"></div>
+        <div id="btn-dash" class="m-ctrl hud" style="display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;">DASH</div>
+        <div id="btn-swap" class="m-ctrl hud" style="display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;">SWAP</div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
 
 <script>
-/** * DEN OF SHADOW - ENGINE PRINCIPAL
- * Suporte: PC/Mobile/Console
+/**
+ * DEN OF SHADOW - ULTIMATE CONSOLIDATED VERSION
  */
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-// Configuração de Tela
-function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resize);
-resize();
+// Configs Iniciais
+let gameActive = false;
+let floor = 1;
+let currentRoom = 0; // 0 = Tutorial
+let state = 'EXPLORING'; // EXPLORING, COMBAT, UPGRADE, HEALING
+let portalLeft = null;
 
-// --- ESTADO DO JOGO ---
-const Game = {
-    title: "DEN OF SHADOW 💀",
-    author: "kauadarthofc@gmail",
-    yt: "@kaua_darth",
-    floor: 0,
-    room: 0,
-    state: 'MENU', // MENU, PLAYING, UPGRADE, GAMEOVER
-    minimapOpen: true,
-    platform: isMobile ? "MOBILE" : "PC",
-    tutorialDone: false
-};
-
-// --- PLAYER ---
+// Player (Lord da Luz)
 const player = {
-    x: 100, y: 100,
-    w: 50, h: 65,
-    speed: 5,
-    hp: 10, maxHp: 10,
-    invincible: false,
+    x: 0, y: 0, w: 65, h: 90,
+    hp: 10, maxHp: 10, speed: 5.5,
+    angle: 0, invul: 0, dashCd: 0,
     vampirismCount: 0,
-    tripleShotLevel: 0,
-    ricochet: false,
-    dualWield: false,
+    tripleShot: 0, ricochet: false, dualWield: false,
     weapons: [
-        { name: 'Magnum', type: 'pistol', damage: 8, ammo: Infinity, maxAmmo: Infinity, cd: 400, lastFire: 0, color: '#f1c40f' },
-        { name: 'Flame Breath', type: 'flamethrower', damage: 6, burn: 2, ammo: 25, maxAmmo: 25, cd: 80, lastFire: 0, color: '#e67e22' }
+        { name: 'Magnum', type: 'pistol', dmg: 8, ammo: Infinity, maxAmmo: Infinity, cd: 350, last: 0, color: '#f1c40f' },
+        { name: 'Flame Thrower', type: 'fire', dmg: 4, burn: 2, ammo: 25, maxAmmo: 25, cd: 50, last: 0, color: '#e67e22' },
+        { name: 'Sawed-off', type: 'shotgun', dmg: 17, ammo: 8, maxAmmo: 8, cd: 1200, last: 0, color: '#95a5a6' }
     ],
-    currentWeaponIndex: 0,
-    velX: 0, velY: 0,
-    angle: 0,
-    animFrame: 0,
-    isDead: false
+    curWp: 0
 };
 
-// --- INPUTS ---
-const keys = {};
-let mouse = { x: 0, y: 0, down: false };
-window.onkeydown = e => keys[e.code] = true;
-window.onkeyup = e => keys[e.code] = false;
-canvas.onmousemove = e => { mouse.x = e.clientX; mouse.y = e.clientY; };
-canvas.onmousedown = () => mouse.down = true;
-canvas.onmouseup = () => mouse.down = false;
-
-// Swap Weapon Fix
-document.getElementById('swap-btn').onclick = () => {
-    player.currentWeaponIndex = (player.currentWeaponIndex + 1) % player.weapons.length;
-};
-
-// --- SISTEMA DE SALAS E MAPA ---
 let enemies = [];
 let projectiles = [];
 let particles = [];
 let drops = [];
-let doors = [];
-let currentBoss = null;
+let indicators = [];
+let activeBoss = null;
+
+// --- ENGINE CORE ---
+function setup() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    if(isMobile) {
+        document.querySelectorAll('.m-ctrl').forEach(b => b.style.display = 'block');
+        document.getElementById('platform-hint').innerText = "📱 MOBILE: Use o analógico e botões laterais.";
+    } else {
+        document.getElementById('platform-hint').innerText = "💻 PC: WASD para mover, Mouse para atirar, Q troca arma.";
+    }
+}
 
 class Enemy {
     constructor(x, y, type) {
         this.x = x; this.y = y;
-        this.type = type;
-        this.w = 55; this.h = 55;
-        this.hp = type === 'kamikaze' ? 5 : 15;
-        this.speed = type === 'kamikaze' ? 1.5 : 2;
-        this.color = type === 'kamikaze' ? '#ff4d4d' : '#2ecc71';
-        this.face = Math.floor(Math.random() * 3);
-        this.dashCooldown = 0;
+        this.type = type; // 'kamikaze', 'dasher'
+        this.w = 60; this.h = 60;
+        this.hp = type === 'kamikaze' ? 10 : 20;
+        this.speed = type === 'kamikaze' ? 1.5 : 2.8;
+        this.color = type === 'kamikaze' ? '#ff2222' : '#2ecc71';
+        this.dashTimer = 0;
     }
 
     update() {
-        // Evitar sobreposição de inimigos
-        enemies.forEach(other => {
-            if(other === this) return;
-            let dx = this.x - other.x;
-            let dy = this.y - other.y;
-            let dist = Math.sqrt(dx*dx + dy*dy);
-            if(dist < 50) {
-                this.x += dx/dist * 2;
-                this.y += dy/dist * 2;
-            }
-        });
-
-        // Movimento
         let dx = player.x - this.x;
         let dy = player.y - this.y;
-        let dist = Math.sqrt(dx*dx + dy*dy);
-        
-        if (this.type === 'dasher' && dist < 300 && this.dashCooldown <= 0) {
-            this.speed = 12;
-            this.dashCooldown = 100;
-        } else {
-            this.speed = this.type === 'kamikaze' ? 1.5 : 2.5;
-            if(this.dashCooldown > 0) this.dashCooldown--;
+        let dist = Math.hypot(dx, dy);
+
+        // IA de Movimento
+        if(dist > 5) {
+            this.x += (dx/dist) * this.speed;
+            this.y += (dy/dist) * this.speed;
         }
 
-        this.x += (dx/dist) * this.speed;
-        this.y += (dy/dist) * this.speed;
-
-        // Dano no player
-        if (dist < 40 && !player.invincible) {
-            takeDamage(this.type === 'kamikaze' ? 2 : 1);
-            // Knockback
-            player.x += (dx/dist) * 20;
-            player.y += (dy/dist) * 20;
+        // Colisão Player
+        if(dist < 45 && player.invul <= 0) {
+            damagePlayer(this.type === 'kamikaze' ? 2 : 1);
             if(this.type === 'kamikaze') this.die();
         }
+
+        // Separar inimigos (não entrar um no outro)
+        enemies.forEach(other => {
+            if(other === this) return;
+            let d = Math.hypot(this.x - other.x, this.y - other.y);
+            if(d < 55) {
+                this.x -= (other.x - this.x) * 0.05;
+                this.y -= (other.y - this.y) * 0.05;
+            }
+        });
     }
 
     die() {
         if(this.type === 'kamikaze') {
-            // Explosão dá dano em inimigos próximos
+            explode(this.x, this.y, '#ff4400', 100);
             enemies.forEach(e => {
-                let d = Math.hypot(this.x - e.x, this.y - e.y);
-                if(d < 120) e.hp -= 10;
+                if(e !== this && Math.hypot(this.x-e.x, this.y-e.y) < 120) e.hp -= 10;
             });
-            createExplosion(this.x, this.y, '#f39c12');
         }
         this.hp = 0;
-        if(Math.random() < 0.15) spawnDrop(this.x, this.y);
-        
         player.vampirismCount++;
-        if(player.vampirismCount >= 10) {
-            player.hp = Math.min(player.maxHp, player.hp + 1);
-            player.vampirismCount = 0;
-        }
+        if(player.vampirismCount >= 10) { player.hp = Math.min(player.maxHp, player.hp + 1); player.vampirismCount = 0; }
+        if(Math.random() < 0.12) spawnDrop(this.x, this.y);
     }
 
     draw() {
         ctx.fillStyle = this.color;
-        if(this.type === 'kamikaze') ctx.strokeStyle = 'red', ctx.lineWidth = 3;
-        ctx.fillRect(this.x - this.w/2, this.y - this.h/2, this.w, this.h);
-        if(this.type === 'kamikaze') ctx.strokeRect(this.x - this.w/2, this.y - this.h/2, this.w, this.h);
-        
-        // Rostos Variados
-        ctx.fillStyle = "white";
-        ctx.fillRect(this.x - 15, this.y - 15, 8, 8);
-        ctx.fillRect(this.x + 7, this.y - 15, 8, 8);
+        if(this.type === 'kamikaze') { ctx.strokeStyle = 'darkred'; ctx.lineWidth = 4; }
+        ctx.fillRect(this.x - 30, this.y - 30, 60, 60);
+        if(this.type === 'kamikaze') ctx.strokeRect(this.x - 30, this.y - 30, 60, 60);
+
+        // Rostos
         ctx.fillStyle = "black";
-        ctx.fillRect(this.x - 10, this.y + 5, 20, 5);
+        if(this.type === 'kamikaze') { // Rosto Vermelho Malvado
+            ctx.fillRect(this.x - 20, this.y - 15, 10, 5); ctx.fillRect(this.x + 10, this.y - 15, 10, 5);
+            ctx.fillRect(this.x - 10, this.y + 10, 20, 4);
+        } else {
+            ctx.fillRect(this.x - 15, this.y - 10, 6, 6); ctx.fillRect(this.x + 9, this.y - 10, 6, 6);
+        }
+        if(this.type === 'dasher') { // Pequenas Asas
+            ctx.fillStyle = "rgba(255,255,255,0.7)";
+            ctx.fillRect(this.x-45, this.y-10, 15, 20); ctx.fillRect(this.x+30, this.y-10, 15, 20);
+        }
+    }
+}
+
+// --- BOSSES ---
+class Boss {
+    constructor(id) {
+        this.name = id === 10 ? "GORGO O ESMAGADOR" : "SOMBRA ANCESTRAL";
+        this.maxHp = 150 + (floor * 50);
+        this.hp = this.maxHp;
+        this.x = canvas.width / 2;
+        this.y = canvas.height / 2;
+        this.timer = 0;
+    }
+    update() {
+        this.timer++;
+        this.x += Math.sin(this.timer * 0.02) * 3; // Movimento flutuante
+        this.y += Math.cos(this.timer * 0.03) * 2;
+
+        if(this.timer % 100 === 0) { // Ataque de Pedras (Sala 10)
+            for(let i=0; i<3; i++) {
+                indicators.push({ x: player.x + (Math.random()-0.5)*150, y: player.y + (Math.random()-0.5)*150, life: 90 });
+            }
+        }
+    }
+    draw() {
+        ctx.fillStyle = "#4b0082";
+        ctx.shadowBlur = 40; ctx.shadowColor = "purple";
+        ctx.fillRect(this.x - 60, this.y - 80, 120, 160);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "red";
+        ctx.beginPath(); ctx.arc(this.x-25, this.y-30, 12, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(this.x+25, this.y-30, 12, 0, Math.PI*2); ctx.fill();
     }
 }
 
 // --- LOOP PRINCIPAL ---
 function update() {
-    if (Game.state === 'PLAYING') {
-        // Movimentação Player
-        let moveX = 0, moveY = 0;
-        if(keys['KeyW']) moveY = -1;
-        if(keys['KeyS']) moveY = 1;
-        if(keys['KeyA']) moveX = -1;
-        if(keys['KeyD']) moveX = 1;
-        
-        player.x += moveX * player.speed;
-        player.y += moveY * player.speed;
+    if(!gameActive || player.hp <= 0) return;
 
-        // Limite do mapa (impedir sair)
-        player.x = Math.max(50, Math.min(canvas.width - 50, player.x));
-        player.y = Math.max(50, Math.min(canvas.height - 50, player.y));
-
-        // Mira (Prioridade para tiro)
-        if(isMobile) {
-            // No mobile a direção é baseada no movimento se não houver toque de ataque
-            if(moveX !== 0 || moveY !== 0) player.angle = Math.atan2(moveY, moveX);
-        } else {
-            player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
-        }
-
-        // Ataque
-        let wp = player.weapons[player.currentWeaponIndex];
-        if ((mouse.down || isMobile) && Date.now() - wp.lastFire > wp.cd) {
-            fireWeapon(wp);
-            wp.lastFire = Date.now();
-        }
-
-        // Atualizar Entidades
-        enemies.forEach((e, i) => {
-            e.update();
-            if(e.hp <= 0) enemies.splice(i, 1);
-        });
-
-        projectiles.forEach((p, i) => {
-            p.x += Math.cos(p.angle) * p.speed;
-            p.y += Math.sin(p.angle) * p.speed;
-            
-            // Colisão Inimigo
-            enemies.forEach(e => {
-                if(Math.hypot(p.x - e.x, p.y - e.y) < 30) {
-                    e.hp -= p.damage;
-                    if(p.burn) e.hp -= p.burn; // Dano extra fogo
-                    projectiles.splice(i, 1);
-                }
-            });
-
-            if(p.x < 0 || p.x > canvas.width || p.y < 0 || p.y > canvas.height) projectiles.splice(i, 1);
-        });
-        
-        // Checar Vitória da Sala
-        if(enemies.length === 0 && Game.room > 0) {
-            // Abrir portas
-        }
+    // Movimentação (Fix bug mobile)
+    let mx = 0, my = 0;
+    if(isMobile) {
+        mx = joystick.x; my = joystick.y;
+    } else {
+        if(keys['KeyW']) my = -1; if(keys['KeyS']) my = 1;
+        if(keys['KeyA']) mx = -1; if(keys['KeyD']) mx = 1;
     }
+    
+    player.x += mx * player.speed;
+    player.y += my * player.speed;
+    
+    // Bounds
+    player.x = Math.max(50, Math.min(canvas.width - 50, player.x));
+    player.y = Math.max(50, Math.min(canvas.height - 50, player.y));
+
+    // Mira e Tiro
+    if(!isMobile) player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+    else if(Math.abs(mx) > 0.1) player.angle = Math.atan2(my, mx);
+
+    let wp = player.weapons[player.curWp];
+    if((mouse.down || (isMobile && Math.abs(mx) > 0.1)) && Date.now() - wp.last > wp.cd) {
+        shoot(wp);
+        wp.last = Date.now();
+    }
+
+    // Entidades
+    projectiles.forEach((p, i) => {
+        p.x += Math.cos(p.angle) * p.v; p.y += Math.sin(p.angle) * p.v;
+        enemies.forEach(e => {
+            if(Math.hypot(p.x-e.x, p.y-e.y) < 40) {
+                e.hp -= p.dmg;
+                if(p.burn) e.hp -= p.burn; // Dano fogo extra
+                projectiles.splice(i, 1);
+            }
+        });
+        if(activeBoss && Math.hypot(p.x-activeBoss.x, p.y-activeBoss.y) < 80) {
+            activeBoss.hp -= p.dmg; projectiles.splice(i, 1);
+            updateBossUI();
+        }
+    });
+
+    enemies.forEach((e, i) => {
+        e.update();
+        if(e.hp <= 0) { e.die(); enemies.splice(i, 1); }
+    });
+
+    if(activeBoss) {
+        activeBoss.update();
+        if(activeBoss.hp <= 0) { activeBoss = null; winRoom(); }
+    }
+
+    indicators.forEach((ind, i) => {
+        ind.life--;
+        if(ind.life <= 0) {
+            if(Math.hypot(player.x-ind.x, player.y-ind.y) < 70) damagePlayer(3);
+            explode(ind.x, ind.y, '#888', 50);
+            indicators.splice(i, 1);
+        }
+    });
+
+    if(player.invul > 0) player.invul--;
 }
 
 function draw() {
-    // Fundo Profissional
-    ctx.fillStyle = "#3d3d3d";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#34495e"; // Cenário Bonito (Não preto)
+    ctx.fillRect(0,0, canvas.width, canvas.height);
     
     // Grid do Chão
-    ctx.strokeStyle = "#4a4a4a";
-    for(let i=0; i<canvas.width; i+=50) {
-        ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i, canvas.height); ctx.stroke();
-    }
-    for(let i=0; i<canvas.height; i+=50) {
-        ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(canvas.width, i); ctx.stroke();
+    ctx.strokeStyle = "rgba(255,255,255,0.1)";
+    for(let i=0; i<canvas.width; i+=60) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i, canvas.height); ctx.stroke(); }
+    for(let i=0; i<canvas.height; i+=60) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(canvas.width, i); ctx.stroke(); }
+
+    // Portal de Cura
+    if(portalLeft) {
+        ctx.fillStyle = "#ff69b4";
+        ctx.beginPath(); ctx.arc(portalLeft.x, portalLeft.y, 40, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "white"; ctx.fillText("SALA DE CURA", portalLeft.x - 40, portalLeft.y - 50);
+        if(Math.hypot(player.x-portalLeft.x, player.y-portalLeft.y) < 50) enterHealRoom();
     }
 
-    if (Game.state === 'MENU') {
-        drawMenu();
-    } else {
-        // Desenhar Player (Lord da Luz com perninhas)
-        drawPlayer();
-
-        enemies.forEach(e => e.draw());
-        projectiles.forEach(p => {
-            ctx.fillStyle = p.color;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size || 5, 0, Math.PI*2);
-            ctx.fill();
-        });
-
-        drawUI();
-        if(Game.minimapOpen) drawMinimap();
-    }
+    // Desenhar Entidades
+    projectiles.forEach(p => { ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI*2); ctx.fill(); });
+    enemies.forEach(e => e.draw());
+    if(activeBoss) activeBoss.draw();
     
-    requestAnimationFrame(() => {
-        update();
-        draw();
+    indicators.forEach(ind => {
+        ctx.strokeStyle = "red"; ctx.beginPath(); ctx.arc(ind.x, ind.y, 60 * (ind.life/90), 0, Math.PI*2); ctx.stroke();
     });
-}
 
-function drawPlayer() {
+    // Player (Lord da Luz)
     ctx.save();
     ctx.translate(player.x, player.y);
-    
-    // Perninhas fofas
-    player.animFrame += 0.15;
-    let legY = Math.sin(player.animFrame) * 5;
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(-15, 20 + legY, 8, 12);
-    ctx.fillRect(7, 20 - legY, 8, 12);
-
-    // Corpo Lord da Luz
-    ctx.fillStyle = "white";
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = "cyan";
-    ctx.fillRect(-20, -30, 40, 55);
-    
-    // Rosto
-    ctx.fillStyle = "black";
-    ctx.fillRect(-10, -15, 5, 5);
-    ctx.fillRect(5, -15, 5, 5);
-    
-    // Arma apontando para a mira
+    let walk = Math.sin(Date.now()*0.01)*8;
+    ctx.fillStyle = "white"; 
+    ctx.fillRect(-12, 35+walk, 10, 15); ctx.fillRect(2, 35-walk, 10, 15); // Perninhas
+    ctx.shadowBlur = 20; ctx.shadowColor = "cyan";
+    ctx.fillRect(-player.w/2, -player.h/2, player.w, player.h); // Corpo
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "black"; ctx.fillRect(-15, -15, 8, 8); ctx.fillRect(7, -15, 8, 8); // Olhos
     ctx.rotate(player.angle);
-    ctx.fillStyle = "#7f8c8d";
-    ctx.fillRect(20, -5, 30, 10);
-    
+    ctx.fillStyle = "#444"; ctx.fillRect(30, -5, 45, 12); // Arma
     ctx.restore();
+
+    drawHUD();
+    requestAnimationFrame(draw);
 }
 
-function drawMenu() {
-    ctx.fillStyle = "rgba(0,0,0,0.8)";
-    ctx.fillRect(0,0, canvas.width, canvas.height);
-    ctx.fillStyle = "white";
-    ctx.font = "60px Georgia";
-    ctx.textAlign = "center";
-    ctx.fillText("DEN OF SHADOW 💀", canvas.width/2, canvas.height/2 - 50);
-    
-    ctx.font = "20px Arial";
-    ctx.fillText("kauadarthofc@gmail.com | YouTube: @kaua_darth", canvas.width/2, canvas.height - 50);
-    ctx.fillText("Plataforma Detectada: " + Game.platform, canvas.width/2, canvas.height/2 + 20);
-    ctx.fillText(Game.platform === "PC" ? "Clique para Iniciar [WASD + Mouse]" : "Toque para Iniciar", canvas.width/2, canvas.height/2 + 60);
-}
+// --- SISTEMAS AUXILIARES ---
+function shoot(wp) {
+    if(wp.ammo <= 0 && wp.ammo !== Infinity) return;
+    if(wp.ammo !== Infinity) wp.ammo--;
 
-function drawMinimap() {
-    let size = 150;
-    ctx.fillStyle = "rgba(0,0,0,0.5)";
-    ctx.fillRect(canvas.width - size - 20, 20, size, size);
-    ctx.strokeStyle = "white";
-    ctx.strokeRect(canvas.width - size - 20, 20, size, size);
-    
-    // Player no minimapa
-    ctx.fillStyle = "cyan";
-    ctx.fillRect(canvas.width - size/2 - 25, 20 + size/2 - 5, 5, 5);
-    
-    // Inimigos no minimapa
-    ctx.fillStyle = "red";
-    enemies.forEach(e => {
-        let relX = (e.x / canvas.width) * size;
-        let relY = (e.y / canvas.height) * size;
-        ctx.fillRect(canvas.width - size - 20 + relX, 20 + relY, 3, 3);
-    });
-}
-
-function fireWeapon(wp) {
-    if(wp.ammo <= 0 && wp.maxAmmo !== Infinity) return;
-    
-    let speed = 10;
-    let damage = wp.damage;
-    
-    if(wp.type === 'flamethrower') {
-        // Baforada (Vários projéteis curtos)
-        for(let i=0; i<5; i++) {
-            projectiles.push({
-                x: player.x, y: player.y,
-                angle: player.angle + (Math.random()-0.5)*0.4,
-                speed: 7 + Math.random()*3,
-                damage: 4, burn: 2,
-                color: 'orange', size: 8
-            });
+    let shots = 1 + (player.tripleShot * 2);
+    for(let i=0; i<shots; i++) {
+        let a = player.angle + (i - (shots-1)/2) * 0.2;
+        if(wp.type === 'fire') { // Baforada
+            for(let j=0; j<4; j++) projectiles.push({ x:player.x, y:player.y, angle: a+(Math.random()-0.5)*0.3, v: 9, dmg: 4, burn: 2, color: 'orange' });
+        } else if(wp.type === 'shotgun') { // Shotgun
+            for(let j=0; j<3; j++) projectiles.push({ x:player.x, y:player.y, angle: a+(j-1)*0.1, v: 14, dmg: 17, color: 'silver' });
+        } else {
+            projectiles.push({ x:player.x, y:player.y, angle: a, v: 15, dmg: wp.dmg, color: wp.color });
         }
-        wp.ammo--;
-    } else if(wp.type === 'shotgun') {
-        for(let i=0; i<3; i++) {
-            projectiles.push({
-                x: player.x, y: player.y,
-                angle: player.angle + (i-1)*0.2,
-                speed: 12, damage: 17, color: 'silver'
-            });
-        }
-    } else {
-        projectiles.push({
-            x: player.x, y: player.y,
-            angle: player.angle,
-            speed: 15, damage: damage, color: wp.color
-        });
     }
 }
 
-function takeDamage(amt) {
-    if(player.isDead) return;
-    player.hp -= amt;
-    player.invincible = true;
-    setTimeout(() => player.invincible = false, 1000);
-    if(player.hp <= 0) {
-        player.isDead = true;
-        alert("GAME OVER! A escuridão te consumiu.");
-        location.reload();
+function damagePlayer(amt) {
+    if(player.invul > 0) return;
+    player.hp -= amt; player.invul = 60;
+    if(player.hp <= 0) { alert("VOCÊ CAIU NAS SOMBRAS!"); location.reload(); }
+}
+
+function drawHUD() {
+    // Mini Mapa
+    let ms = 150; ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(canvas.width-ms-20, 20, ms, ms);
+    ctx.strokeStyle = "#fff"; ctx.strokeRect(canvas.width-ms-20, 20, ms, ms);
+    ctx.fillStyle = "cyan"; ctx.fillRect(canvas.width-ms-20 + (player.x/canvas.width)*ms, 20 + (player.y/canvas.height)*ms, 5, 5);
+    ctx.fillStyle = "red"; enemies.forEach(e => ctx.fillRect(canvas.width-ms-20 + (e.x/canvas.width)*ms, 20 + (e.y/canvas.height)*ms, 3, 3));
+    
+    // Status
+    ctx.fillStyle = "white"; ctx.font = "bold 20px Arial";
+    ctx.fillText(`HP: ${player.hp} | SALA: ${currentRoom} | ${player.weapons[player.curWp].name}: ${player.weapons[player.curWp].ammo}`, 20, 40);
+}
+
+function winRoom() {
+    portalLeft = { x: 100, y: canvas.height / 2 };
+}
+
+function enterHealRoom() {
+    player.hp = Math.min(player.maxHp, player.hp + 5);
+    portalLeft = null;
+    currentRoom++;
+    spawnEnemies();
+    player.x = canvas.width / 2;
+}
+
+function spawnEnemies() {
+    enemies = [];
+    if(currentRoom === 0) return;
+    let count = 2 + floor;
+    for(let i=0; i<count; i++) {
+        enemies.push(new Enemy(canvas.width-100, Math.random()*canvas.height, Math.random() > 0.6 ? 'dasher' : 'kamikaze'));
     }
 }
 
-// Inicialização
-canvas.onclick = () => {
-    if(Game.state === 'MENU') {
-        Game.state = 'PLAYING';
-        startRoom();
-    }
+function explode(x, y, color, n) {
+    for(let i=0; i<n; i++) particles.push({x, y, vx:(Math.random()-0.5)*10, vy:(Math.random()-0.5)*10, life:30, color});
+}
+
+function updateBossUI() {
+    if(!activeBoss) return;
+    document.getElementById('boss-hud').style.display = 'block';
+    document.getElementById('boss-name').innerText = activeBoss.name;
+    document.getElementById('boss-bar-fill').style.width = (activeBoss.hp / activeBoss.maxHp * 100) + "%";
+}
+
+// --- INPUTS ---
+const keys = {};
+const joystick = { x: 0, y: 0 };
+window.onkeydown = e => { keys[e.code] = true; if(e.code === 'KeyQ') swap(); };
+window.onkeyup = e => keys[e.code] = false;
+let mouse = { x: 0, y: 0, down: false };
+canvas.onmousedown = () => mouse.down = true;
+canvas.onmouseup = () => mouse.down = false;
+canvas.onmousemove = e => { mouse.x = e.clientX; mouse.y = e.clientY; };
+
+function swap() { player.curWp = (player.curWp + 1) % player.weapons.length; }
+
+if(isMobile) {
+    const jBase = document.getElementById('joy-base');
+    jBase.ontouchmove = e => {
+        let t = e.touches[0];
+        let r = jBase.getBoundingClientRect();
+        joystick.x = (t.clientX - (r.left + 70)) / 70;
+        joystick.y = (t.clientY - (r.top + 70)) / 70;
+    };
+    jBase.ontouchend = () => { joystick.x = 0; joystick.y = 0; };
+    document.getElementById('btn-swap').onclick = swap;
+}
+
+document.getElementById('play-btn').onclick = () => {
+    document.getElementById('menu').style.display = 'none';
+    gameActive = true;
+    setup();
+    player.x = canvas.width/2; player.y = canvas.height/2;
+    spawnEnemies();
+    draw();
 };
 
-function startRoom() {
-    enemies = [];
-    let count = 3 + Game.room;
-    for(let i=0; i<count; i++) {
-        let ex = Math.random() < 0.5 ? 100 : canvas.width - 100;
-        let ey = Math.random() * canvas.height;
-        enemies.push(new Enemy(ex, ey, Math.random() > 0.7 ? 'dasher' : 'kamikaze'));
-    }
-}
+document.getElementById('fs-btn').onclick = () => {
+    if (!document.fullscreenElement) canvas.parentElement.requestFullscreen();
+    else document.exitFullscreen();
+};
 
-function createExplosion(x, y, color) {
-    for(let i=0; i<20; i++) {
-        particles.push({x, y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, life: 30, color});
-    }
-}
-
-function drawUI() {
-    ctx.fillStyle = "white";
-    ctx.font = "20px Arial";
-    ctx.fillText(`HP: ${player.hp} | Sala: ${Game.room} | Arma: ${player.weapons[player.currentWeaponIndex].name}`, 20, 30);
-}
-
-// Botão Fullscreen
-document.getElementById('fullscreen-btn').addEventListener('click', () => {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-    } else {
-        document.exitFullscreen();
-    }
-});
-
+setInterval(update, 1000/60);
 </script>
 </body>
 </html>
