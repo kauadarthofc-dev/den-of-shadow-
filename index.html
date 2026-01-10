@@ -6,335 +6,295 @@
     <title>Den of Shadow 💀</title>
     <style>
         :root {
-            --ui-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            --rarity-common: #0080ff; --rarity-uncommon: #2ecc71;
-            --rarity-rare: #f1c40f; --rarity-epic: #9b59b6; --rarity-legendary: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
+            --common: #0080ff; --uncommon: #2ecc71; --rare: #f1c40f; 
+            --epic: #9b59b6; --legendary: linear-gradient(45deg, #ff0000, #fffb00);
         }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #1a1a2e; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #2c3e50; font-family: 'Comic Sans MS', cursive; }
         canvas { display: block; image-rendering: pixelated; touch-action: none; }
 
-        /* UI HUD */
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; font-family: var(--ui-font); }
-        .hud-top { position: absolute; top: 20px; left: 20px; color: white; text-shadow: 2px 2px #000; pointer-events: auto; }
+        /* UI HUD FOFA */
+        #hud { position: absolute; top: 15px; left: 15px; pointer-events: none; z-index: 10; }
+        .stat-box { background: rgba(255, 192, 203, 0.8); border: 3px solid #ff69b4; border-radius: 15px; padding: 5px 15px; margin-bottom: 5px; color: #fff; text-shadow: 1px 1px #000; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+
+        /* MENU INICIAL */
+        #start-menu { position: absolute; inset: 0; background: radial-gradient(circle, #ffebf0 0%, #ffc0cb 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; }
+        #start-menu h1 { color: #ff1493; font-size: 50px; margin: 0; text-shadow: 3px 3px 0px #fff, 5px 5px 0px rgba(0,0,0,0.1); }
+        #start-menu h1::after { content: ' 💀'; }
         
+        .save-container { display: flex; gap: 20px; margin: 20px; }
+        .save-slot { width: 80px; height: 80px; background: #fff; border: 4px solid #ff69b4; border-radius: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 24px; position: relative; overflow: hidden; }
+        .save-slot::before { content: '💀'; position: absolute; opacity: 0.1; font-size: 50px; }
+
         /* BOTÕES MOBILE */
-        .mobile-ctrl { position: absolute; pointer-events: auto; display: none; }
-        #btn-fullscreen { top: 10px; left: 50%; transform: translateX(-50%); width: 120px; height: 40px; background: rgba(255,255,255,0.2); border: 2px solid white; color: white; display: block; }
-        #joystick-area { bottom: 40px; left: 40px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); }
-        #btn-swap { bottom: 60px; right: 40px; width: 100px; height: 100px; background: rgba(255,165,0,0.4); border-radius: 50%; border: 3px solid orange; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
+        .mobile-btn { position: absolute; pointer-events: auto; display: none; user-select: none; }
+        #btn-fs { top: 10px; left: 50%; transform: translateX(-50%); background: #ff69b4; color: white; border: 2px solid white; border-radius: 10px; padding: 10px; z-index: 110; }
+        #btn-swap { bottom: 50px; right: 40px; width: 90px; height: 90px; background: rgba(255,255,255,0.4); border: 4px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; }
 
-        /* BOSS BAR */
-        #boss-ui { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); width: 70%; display: none; }
-        #boss-name { color: #ff0040; text-align: center; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
-        #boss-bar-outer { width: 100%; height: 25px; background: #333; border: 3px solid #ff0040; border-radius: 5px; overflow: hidden; }
-        #boss-bar-inner { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0040, #ff5e62); transition: width 0.2s; }
+        /* BOSS UI */
+        #boss-ui { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 80%; display: none; }
+        #boss-name { color: #ff0040; text-align: center; font-weight: bold; font-size: 22px; margin-bottom: 5px; }
+        #boss-hp-bg { width: 100%; height: 20px; background: #444; border: 3px solid #fff; border-radius: 10px; overflow: hidden; }
+        #boss-hp-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0040, #ff8080); }
 
-        /* TELA INICIAL E MENU */
-        #start-screen { position: absolute; inset: 0; background: radial-gradient(circle, #3a4466 0%, #1a1a2e 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; z-index: 100; pointer-events: auto; }
-        #start-screen h1 { font-size: 60px; margin-bottom: 10px; text-shadow: 0 0 20px cyan; }
-        .btn-menu { padding: 15px 40px; margin: 10px; background: #4e5d94; border: none; color: white; font-size: 20px; cursor: pointer; border-radius: 5px; width: 250px; transition: 0.2s; }
-        .btn-menu:hover { background: #6b7cb3; }
-        #footer-links { margin-top: 30px; text-align: center; }
-        #footer-links a { color: #ff0000; text-decoration: none; font-weight: bold; margin: 0 10px; }
-
-        /* UPGRADE CARDS */
-        #upgrade-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 90; pointer-events: auto; }
-        .card { width: 220px; height: 320px; margin: 15px; border-radius: 15px; border: 4px solid; padding: 20px; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; cursor: pointer; }
-        .card::before { content: "💀"; position: absolute; font-size: 120px; opacity: 0.1; top: 50%; transform: translateY(-50%); }
-
-        #minimap-canvas { position: absolute; top: 15px; right: 15px; width: 160px; height: 160px; border: 3px solid white; background: rgba(0,0,0,0.5); border-radius: 10px; }
+        #minimap-ui { position: absolute; top: 15px; right: 15px; width: 150px; height: 150px; background: rgba(0,0,0,0.4); border: 3px solid #fff; border-radius: 10px; }
+        
+        #footer { position: absolute; bottom: 10px; left: 10px; font-size: 14px; color: #ff1493; }
+        #youtube { color: #ff0000; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div id="start-screen">
-    <h1>DEN OF SHADOW 💀</h1>
-    <p>kauadarthofc@gmail.com</p>
-    <button class="btn-menu" onclick="startGame()">JOGAR</button>
-    <button class="btn-menu">CONFIGURAÇÕES</button>
-    <div id="save-slots" style="display: flex; gap: 10px; margin-top: 20px;">
-        <div style="width: 50px; height: 50px; border: 2px solid white;">S1</div>
-        <div style="width: 50px; height: 50px; border: 2px solid white;">S2</div>
-        <div style="width: 50px; height: 50px; border: 2px solid white;">S3</div>
+<div id="start-menu">
+    <h1>Den of Shadow</h1>
+    <p style="color: #ff69b4;">PC: WASD para mover | Clique para Atirar | Q troca Arma</p>
+    <div class="save-container">
+        <div class="save-slot" onclick="startGame(1)">1</div>
+        <div class="save-slot" onclick="startGame(2)">2</div>
+        <div class="save-slot" onclick="startGame(3)">3</div>
     </div>
-    <div id="footer-links">
-        <a href="https://youtube.com/@kaua_darth" target="_blank">📺 YouTube @kaua_darth</a>
+    <button class="save-slot" style="width: 200px; height: 50px;">CONFIGURAÇÕES</button>
+    <div id="footer">
+        kauadarthofc@gmail.com | <a id="youtube" href="https://youtube.com/@kaua_darth" target="_blank">📺 @kaua_darth</a>
     </div>
-    <div style="margin-top: 20px; font-size: 12px; color: #aaa;">PC: WASD para mover | Clique para atirar | Q/E troca arma</div>
 </div>
 
-<div id="ui-layer">
-    <div class="hud-top">
-        <div id="hp-txt">HP: 10/10</div>
-        <div id="ammo-txt">MUNIÇÃO: --</div>
-        <div id="coins-txt">MOEDAS: 0</div>
-        <div id="room-txt">SALA: 0</div>
-    </div>
-    
-    <canvas id="minimap-canvas"></canvas>
+<div id="hud">
+    <div class="stat-box">❤️ <span id="hp-val">10/10</span></div>
+    <div class="stat-box">💰 <span id="coin-val">0</span></div>
+    <div class="stat-box">🔫 <span id="ammo-val">25</span></div>
+    <div class="stat-box">🚪 SALA: <span id="room-val">0</span></div>
+</div>
 
-    <button id="btn-fullscreen" class="mobile-ctrl" onclick="toggleFS()">TELA CHEIA</button>
-    <div id="joystick-area" class="mobile-ctrl"></div>
-    <div id="btn-swap" class="mobile-ctrl">SWAP</div>
+<canvas id="minimap-ui"></canvas>
+<button id="btn-fs" class="mobile-btn" onclick="toggleFS()">TELA CHEIA</button>
+<div id="btn-swap" class="mobile-btn" onclick="swapWeapon()">SWAP</div>
 
-    <div id="boss-ui">
-        <div id="boss-name">O GUARDIÃO</div>
-        <div id="boss-bar-outer"><div id="boss-bar-inner"></div></div>
-    </div>
-
-    <div id="upgrade-screen"></div>
+<div id="boss-ui">
+    <div id="boss-name">BOSS</div>
+    <div id="boss-hp-bg"><div id="boss-hp-bar"></div></div>
 </div>
 
 <canvas id="gameCanvas"></canvas>
 
 <script>
-/** * DEN OF SHADOW - ENGINE PRINCIPAL
- * Focada em performance e suporte multiplataforma.
- */
-
+/** 💀 DEN OF SHADOW - ENGINE PRINCIPAL 💀 **/
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const mCanvas = document.getElementById('minimap-canvas');
+const mCanvas = document.getElementById('minimap-ui');
 const mCtx = mCanvas.getContext('2d');
 
 let gameState = 'MENU';
 let currentRoom = 0;
-let worldSeed = Math.random();
-let platform = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'MOBILE' : 'PC';
+let isMobile = /Android|iPhone/i.test(navigator.userAgent);
 
-// --- CONFIGURAÇÕES DE ARMAS ---
+// CONFIGURAÇÕES DAS ARMAS (Conforme pedido)
 const WEAPONS = [
-    { id: 'magnum', name: 'Magnum', dmg: 10, ammo: Infinity, rate: 400, type: 'bullet', sprite: '🔫' },
-    { id: 'flame', name: 'Lança-Chamas', dmg: 4, burn: 2, ammo: 25, rate: 50, type: 'fire', sprite: '🔥' },
-    { id: 'shotgun', name: 'Shotgun', dmg: 14, pellets: 3, ammo: 12, rate: 1000, range: 150, sprite: '✂️' },
-    { id: 'staff', name: 'Cajado Mágico', dmg: 3, ammo: 20, rate: 600, homing: true, sprite: '🪄' }
+    { name: 'Lança-Chamas', type: 'flame', dmg: 6, burn: 2, ammo: 25, maxAmmo: 25, rate: 60, sprite: '🔥', desc: "Baforada de fogo contínua!" },
+    { name: 'Shotgun', type: 'spread', dmg: 14, pellets: 3, ammo: 8, maxAmmo: 8, rate: 800, range: 150, sprite: '🍕', desc: "Curto alcance, dano massivo." },
+    { name: 'Magnum', type: 'bullet', dmg: 12, ammo: 15, maxAmmo: 15, rate: 400, sprite: '🔫', desc: "Pistola confiável." },
+    { name: 'Cajado Mágico', type: 'homing', dmg: 8, ammo: 20, maxAmmo: 20, rate: 500, sprite: '🔮', desc: "Tiros que perseguem inimigos." }
 ];
 
 const player = {
-    x: 0, y: 0, w: 45, h: 65,
-    hp: 10, maxHp: 10,
-    speed: 5,
-    coins: 0,
-    weaponIdx: 0,
-    weaponsOwned: [0, 1, 2], // Começa com as pedidas
-    ammo: [Infinity, 25, 12, 20],
-    angle: 0,
-    velX: 0, velY: 0,
-    moving: false,
-    vampirismoKills: 0
+    x: 0, y: 0, w: 40, h: 55, hp: 10, maxHp: 10,
+    coins: 0, weaponIdx: 0, weaponsOwned: [0, 1], // Inicia com Lança-chamas e Shotgun
+    velX: 0, velY: 0, speed: 4.5, angle: 0,
+    vampirismoCount: 0, animFrame: 0, moving: false,
+    dead: false
 };
 
 let enemies = [];
 let projectiles = [];
-let drops = [];
 let particles = [];
 let doors = [];
 let boss = null;
-let camX = 0, camY = 0;
+let drops = [];
 
-// --- SISTEMA DE CONTROLE ---
+// CONTROLES
 const keys = {};
-window.onkeydown = (e) => keys[e.code] = true;
-window.onkeyup = (e) => keys[e.code] = false;
+window.onkeydown = e => keys[e.code] = true;
+window.onkeyup = e => keys[e.code] = false;
 
-if(platform === 'MOBILE') {
-    document.querySelectorAll('.mobile-ctrl').forEach(el => el.style.display = 'block');
-    // Implementar lógica de touch para joystick e swap aqui...
+if(isMobile) {
+    document.querySelectorAll('.mobile-btn').forEach(b => b.style.display = 'flex');
 }
 
-function startGame() {
-    document.getElementById('start-screen').style.display = 'none';
+function startGame(slot) {
+    document.getElementById('start-menu').style.display = 'none';
     gameState = 'PLAYING';
-    resize();
     initRoom(0);
+    animate();
 }
-
-function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    mCanvas.width = 160; mCanvas.height = 160;
-}
-window.onresize = resize;
 
 function initRoom(n) {
     currentRoom = n;
     enemies = [];
     projectiles = [];
     doors = [];
-    player.x = 200; player.y = 200;
+    drops = [];
+    player.x = 400; player.y = 300;
     
-    // Gerar portas em locais aleatórios
-    const locations = ['top', 'bottom', 'left', 'right'];
-    let doorCount = (n === 0) ? 1 : 2;
-    for(let i=0; i<doorCount; i++) {
-        doors.push({ side: locations[i], x: Math.random() * 800 + 100, y: Math.random() * 600 + 100, open: false });
+    // Gerar portas aleatórias
+    const sides = ['top', 'bottom', 'left', 'right'];
+    let doorPos = sides[Math.floor(Math.random()*sides.length)];
+    doors.push({ side: doorPos, x: 400, y: 300, open: false, type: 'next' });
+
+    // Sala de Cura à esquerda após Boss
+    if(n > 0 && n % 10 === 1) {
+        doors.push({ side: 'left', x: 50, y: 300, open: true, type: 'heal' });
     }
 
-    if(n > 0 && n % 10 !== 0) {
-        spawnEnemies();
-    } else if (n > 0 && n % 10 === 0) {
-        spawnBoss();
-    }
+    if(n > 0) spawnEnemies();
+    if(n > 0 && n % 10 === 0) spawnBoss();
 }
 
 function spawnEnemies() {
-    let count = 3 + Math.floor(currentRoom/2);
+    let count = 2 + Math.floor(currentRoom / 2);
     for(let i=0; i<count; i++) {
-        let type = (currentRoom > 2 && Math.random() > 0.7) ? 'DASH' : 'KAMIKAZE';
+        let type = (currentRoom > 1) ? (Math.random() > 0.5 ? 'KAMIKAZE' : 'DASH') : 'KAMIKAZE';
+        if(currentRoom === 1) type = 'KAMIKAZE'; // Kamikaze fora da sala 1
+        
         enemies.push({
-            x: Math.random() * 1000 + 500,
-            y: Math.random() * 1000 + 500,
+            x: Math.random() * 1500 + 1000,
+            y: Math.random() * 1500 + 1000,
             type: type,
-            hp: type === 'KAMIKAZE' ? 5 : 12,
-            speed: type === 'KAMIKAZE' ? 1.5 : 3,
-            maxHp: 12,
+            hp: type === 'KAMIKAZE' ? 4 : 15,
+            speed: type === 'KAMIKAZE' ? 1.2 : 2.5,
+            color: type === 'KAMIKAZE' ? '#ff0000' : '#8e44ad',
             dead: false
         });
     }
 }
 
-function spawnBoss() {
-    boss = {
-        name: "O ESMAGADOR",
-        x: 800, y: 400, w: 120, h: 120,
-        hp: 100 + (currentRoom * 5),
-        maxHp: 100 + (currentRoom * 5),
-        state: 'IDLE',
-        timer: 0
-    };
-    document.getElementById('boss-ui').style.display = 'block';
-    document.getElementById('boss-name').innerText = boss.name;
-}
-
-// --- LOOP PRINCIPAL ---
 function update() {
-    if(gameState !== 'PLAYING') return;
+    if(player.hp <= 0) { player.dead = true; return; }
 
-    // Movimentação PC
+    // Movimento do Player (Sem travar ao atirar)
     player.moving = false;
-    if(keys['KeyW']) { player.y -= player.speed; player.moving = true; }
-    if(keys['KeyS']) { player.y += player.speed; player.moving = true; }
-    if(keys['KeyA']) { player.x -= player.speed; player.moving = true; }
-    if(keys['KeyD']) { player.x += player.speed; player.moving = true; }
+    if(keys['KeyW'] || keys['ArrowUp']) { player.y -= player.speed; player.moving = true; }
+    if(keys['KeyS'] || keys['ArrowDown']) { player.y += player.speed; player.moving = true; }
+    if(keys['KeyA'] || keys['ArrowLeft']) { player.x -= player.speed; player.moving = true; }
+    if(keys['KeyD'] || keys['ArrowRight']) { player.x += player.speed; player.moving = true; }
 
-    // Limites do Mapa
-    player.x = Math.max(0, Math.min(2000, player.x));
-    player.y = Math.max(0, Math.min(2000, player.y));
+    // Colisão com bordas
+    player.x = Math.max(50, Math.min(1950, player.x));
+    player.y = Math.max(50, Math.min(1950, player.y));
 
-    // Update Inimigos
-    enemies.forEach(en => {
+    // Inimigos
+    enemies.forEach((en, idx) => {
         if(en.dead) return;
         let dx = player.x - en.x;
         let dy = player.y - en.y;
         let dist = Math.hypot(dx, dy);
-
-        // Kamikaze Lento (Rosto Vermelho)
+        
+        // IA Kamikaze (Lento e Explosivo)
         if(en.type === 'KAMIKAZE') {
             en.x += (dx/dist) * en.speed;
             en.y += (dy/dist) * en.speed;
-            if(dist < 40) explode(en);
-        } else if(en.type === 'DASH') {
-            // Lógica de dash suave com asas
-            en.x += (dx/dist) * en.speed;
-            en.y += (dy/dist) * en.speed;
+            if(dist < 40) { explode(en); en.dead = true; }
+        } else {
+            // Dash Enemy (Com asas visuais no draw)
+            if(dist < 300) {
+                en.x += (dx/dist) * en.speed;
+                en.y += (dy/dist) * en.speed;
+            }
         }
-        
-        // Evitar que inimigos entrem um no outro
-        enemies.forEach(other => {
-            if(en !== other) {
-                let d = Math.hypot(en.x - other.x, en.y - other.y);
-                if(d < 40) {
-                    en.x -= (other.x - en.x) * 0.05;
-                    en.y -= (other.y - en.y) * 0.05;
+
+        // Colisão Player <-> Inimigo (Knockback)
+        if(dist < 35) {
+            player.hp -= 0.05; // Dano de contato leve
+            en.x -= (dx/dist) * 20; // Empurra inimigo
+        }
+    });
+
+    // Projéteis
+    projectiles.forEach((p, pi) => {
+        p.x += p.vx; p.y += p.vy;
+        enemies.forEach(en => {
+            if(!en.dead && Math.hypot(p.x - en.x, p.y - en.y) < 30) {
+                en.hp -= p.dmg;
+                if(p.type === 'flame') en.hp -= 2; // Dano de queimação
+                p.life = 0;
+                if(en.hp <= 0) {
+                    en.dead = true;
+                    player.vampirismoCount++;
+                    if(player.vampirismoCount >= 10) { player.hp = Math.min(player.maxHp, player.hp + 1); player.vampirismoCount = 0; }
+                    if(Math.random() < 0.2) drops.push({x: en.x, y: en.y, type: 'coin'});
                 }
             }
         });
     });
+    projectiles = projectiles.filter(p => p.life-- > 0);
 
-    // Projéteis
-    projectiles.forEach((p, i) => {
-        p.x += p.vx; p.y += p.vy;
-        if(p.homing && enemies.length > 0) {
-            let target = enemies[0];
-            let angle = Math.atan2(target.y - p.y, target.x - p.x);
-            p.vx += Math.cos(angle) * 0.5;
-            p.vy += Math.sin(angle) * 0.5;
-        }
-        // Colisão...
-    });
-
-    // Check Death
-    if(player.hp <= 0) {
-        player.hp = 0;
-        // Game Over logic
-    }
-
-    updateUI();
+    updateHUD();
 }
 
 function explode(en) {
-    en.dead = true;
-    let dist = Math.hypot(player.x - en.x, player.y - en.y);
-    if(dist < 100) player.hp -= 2;
-    // Dano em inimigos próximos
+    // Dano de 2 HP no player e inimigos próximos
+    if(Math.hypot(player.x - en.x, player.y - en.y) < 100) player.hp -= 2;
     enemies.forEach(e => {
-        if(Math.hypot(e.x - en.x, e.y - en.y) < 100) e.hp -= 2;
+        if(!e.dead && Math.hypot(e.x - en.x, e.y - en.y) < 100) e.hp -= 2;
     });
+    // Partículas de explosão
+    for(let i=0; i<10; i++) particles.push({x: en.x, y: en.y, vx: Math.random()*4-2, vy: Math.random()*4-2, life: 30, c: 'orange'});
 }
 
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0,0,canvas.width, canvas.height);
     
     // Câmera
-    camX = player.x - canvas.width/2;
-    camY = player.y - canvas.height/2;
+    let camX = player.x - canvas.width/2;
+    let camY = player.y - canvas.height/2;
     ctx.save();
     ctx.translate(-camX, -camY);
 
-    // Chão (Não Preto)
-    ctx.fillStyle = '#2c3e50';
-    ctx.fillRect(0,0,2000,2000);
-    ctx.strokeStyle = '#34495e';
-    for(let i=0; i<2000; i+=100) {
-        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 2000); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(2000, i); ctx.stroke();
+    // Cenário (Bioma Azul/Verde - Não Preto)
+    ctx.fillStyle = '#34495e';
+    ctx.fillRect(-2000, -2000, 4000, 4000);
+    ctx.strokeStyle = '#5d6d7e';
+    for(let i=-2000; i<2000; i+=100) {
+        ctx.beginPath(); ctx.moveTo(i, -2000); ctx.lineTo(i, 2000); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-2000, i); ctx.lineTo(2000, i); ctx.stroke();
     }
 
-    // Desenhar Portas
-    doors.forEach(d => {
-        ctx.fillStyle = d.open ? '#2ecc71' : '#e74c3c';
-        ctx.fillRect(d.x, d.y, 60, 80);
-    });
-
-    // Desenhar Player (Personagem Feminina Lord da Luz)
-    ctx.fillStyle = "#fff";
-    ctx.shadowBlur = 15; ctx.shadowColor = "cyan";
-    ctx.fillRect(player.x, player.y, player.w, player.h); // Corpo
-    ctx.fillStyle = "#ffccaa"; ctx.fillRect(player.x+5, player.y+5, 35, 20); // Rosto
-    
-    // Perninhas animadas
-    let legY = Math.sin(Date.now()*0.01) * 5;
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(player.x+10, player.y+player.h, 10, 10 + legY);
-    ctx.fillRect(player.x+25, player.y+player.h, 10, 10 - legY);
-    ctx.shadowBlur = 0;
-
-    // Arma (Muda direção do mouse/alvo)
+    // Desenhar Player (Lord da Luz - Feminina)
     ctx.save();
-    ctx.translate(player.x + 22, player.y + 35);
+    ctx.translate(player.x, player.y);
+    // Corpo
+    ctx.fillStyle = '#fff';
+    ctx.shadowBlur = 15; ctx.shadowColor = 'cyan';
+    ctx.fillRect(-15, -40, 30, 40);
+    // Perninhas Fofas
+    let legOffset = player.moving ? Math.sin(Date.now()*0.01)*8 : 0;
+    ctx.fillStyle = '#ffb6c1';
+    ctx.fillRect(-12, 0, 8, 10 + legOffset);
+    ctx.fillRect(4, 0, 8, 10 - legOffset);
+    // Arma
     ctx.rotate(player.angle);
-    ctx.font = "30px Arial";
-    ctx.fillText(WEAPONS[player.weaponIdx].sprite, 10, 10);
+    ctx.font = '30px Arial';
+    ctx.fillText(WEAPONS[player.weaponIdx].sprite, 10, 0);
     ctx.restore();
 
     // Inimigos
     enemies.forEach(en => {
         if(en.dead) return;
-        ctx.fillStyle = en.type === 'KAMIKAZE' ? 'red' : 'purple';
-        ctx.fillRect(en.x, en.y, 40, 40);
+        ctx.fillStyle = en.color;
+        ctx.fillRect(en.x - 20, en.y - 20, 40, 40);
         // Rostos variados
-        ctx.fillStyle = "black";
-        ctx.fillRect(en.x+10, en.y+10, 5, 5); ctx.fillRect(en.x+25, en.y+10, 5, 5);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(en.x-10, en.y-10, 5, 5); ctx.fillRect(en.x+5, en.y-10, 5, 5);
+        if(en.type === 'DASH') { // Asas para o inimigo de dash
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(en.x-35, en.y-10, 15, 5); ctx.fillRect(en.x+20, en.y-10, 15, 5);
+        }
+    });
+
+    // Projéteis (Baforada de fogo ou balas)
+    projectiles.forEach(p => {
+        ctx.fillStyle = p.c;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.type === 'flame' ? 8 : 4, 0, Math.PI*2);
+        ctx.fill();
     });
 
     ctx.restore();
@@ -342,49 +302,83 @@ function draw() {
 }
 
 function drawMinimap() {
-    mCtx.clearRect(0,0,160,160);
-    mCtx.fillStyle = "rgba(255,255,255,0.2)";
-    // Player no centro
-    mCtx.fillStyle = "cyan";
-    mCtx.fillRect(80, 80, 4, 4);
-    // Inimigos no minimapa
+    mCtx.fillStyle = 'rgba(0,0,0,0.5)';
+    mCtx.fillRect(0,0,150,150);
+    // Player
+    mCtx.fillStyle = 'cyan';
+    mCtx.fillRect(75, 75, 4, 4);
+    // Inimigos
     enemies.forEach(en => {
         if(en.dead) return;
-        let mx = 80 + (en.x - player.x) * 0.05;
-        let my = 80 + (en.y - player.y) * 0.05;
-        mCtx.fillStyle = "red";
-        mCtx.fillRect(mx, my, 3, 3);
+        let mx = 75 + (en.x - player.x) * 0.05;
+        let my = 75 + (en.y - player.y) * 0.05;
+        if(mx > 0 && mx < 150 && my > 0 && my < 150) {
+            mCtx.fillStyle = 'red';
+            mCtx.fillRect(mx, my, 3, 3);
+        }
     });
 }
 
-function updateUI() {
-    document.getElementById('hp-txt').innerText = `HP: ${player.hp}/${player.maxHp}`;
-    document.getElementById('ammo-txt').innerText = `MUNIÇÃO: ${player.ammo[player.weaponIdx]}`;
-    document.getElementById('coins-txt').innerText = `MOEDAS: ${player.coins}`;
-    document.getElementById('room-txt').innerText = `SALA: ${currentRoom}`;
-    
-    if(boss) {
-        let pct = (boss.hp / boss.maxHp) * 100;
-        document.getElementById('boss-bar-inner').style.width = pct + "%";
+function updateHUD() {
+    document.getElementById('hp-val').innerText = `${Math.ceil(player.hp)}/${player.maxHp}`;
+    document.getElementById('coin-val').innerText = player.coins;
+    document.getElementById('ammo-val').innerText = WEAPONS[player.weaponIdx].ammo;
+    document.getElementById('room-val').innerText = currentRoom;
+}
+
+// TIRO
+window.onmousedown = e => {
+    if(gameState !== 'PLAYING') return;
+    fire();
+};
+
+function fire() {
+    let w = WEAPONS[player.weaponIdx];
+    if(w.ammo <= 0) return;
+
+    let vx = Math.cos(player.angle) * 8;
+    let vy = Math.sin(player.angle) * 8;
+
+    if(w.type === 'spread') {
+        for(let i=-1; i<=1; i++) {
+            projectiles.push({x: player.x, y: player.y, vx: vx, vy: vy + i*2, life: 20, dmg: w.dmg, c: 'yellow', type: 'bullet'});
+        }
+    } else if(w.type === 'flame') {
+        projectiles.push({x: player.x, y: player.y, vx: vx + (Math.random()-0.5)*4, vy: vy + (Math.random()-0.5)*4, life: 15, dmg: w.dmg, c: 'orange', type: 'flame'});
+    } else {
+        projectiles.push({x: player.x, y: player.y, vx: vx, vy: vy, life: 60, dmg: w.dmg, c: 'white', type: 'bullet'});
     }
+    w.ammo--;
+}
+
+function swapWeapon() {
+    player.weaponIdx = (player.weaponIdx + 1) % player.weaponsOwned.length;
 }
 
 function toggleFS() {
-    if (!document.fullscreenElement) canvas.parentElement.requestFullscreen();
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
     else document.exitFullscreen();
 }
 
-// Loop de jogo
-function loop() {
-    update();
-    draw();
-    requestAnimationFrame(loop);
+function animate() {
+    if(gameState === 'PLAYING') {
+        update();
+        draw();
+    }
+    requestAnimationFrame(animate);
 }
 
-// Iniciar
-resize();
-loop();
+// Listener para direção do player
+window.onmousemove = e => {
+    let rect = canvas.getBoundingClientRect();
+    let dx = e.clientX - canvas.width/2;
+    let dy = e.clientY - canvas.height/2;
+    player.angle = Math.atan2(dy, dx);
+};
 
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+mCanvas.width = 150; mCanvas.height = 150;
 </script>
 </body>
 </html>
