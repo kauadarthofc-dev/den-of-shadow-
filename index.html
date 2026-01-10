@@ -30,11 +30,6 @@
         #swap-mob { position: absolute; bottom: 40px; right: 350px; width: 100px; height: 100px; background: #f1c40f; border: 4px solid #fff; border-radius: 20px; pointer-events: auto; display: flex; align-items: center; justify-content: center; color: #000; font-weight: bold; }
         #fs-mob { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); padding: 10px 25px; background: #333; color: #fff; border: 2px solid #fff; border-radius: 20px; pointer-events: auto; z-index: 2500; font-size: 12px; }
 
-        /* Upgrades */
-        #upgrade-screen { display: none; z-index: 3000; }
-        .card { width: 220px; height: 320px; background: #1a1a2e; border: 6px solid #fff; border-radius: 15px; padding: 15px; cursor: pointer; position: relative; transition: 0.3s; text-align: center; }
-        .card:hover { transform: scale(1.05); }
-        
         #weapon-tag { position: absolute; bottom: 150px; left: 50%; transform: translateX(-50%); background: #000; border: 2px solid #f1c40f; padding: 10px 20px; border-radius: 10px; display: none; z-index: 500; text-align: center; }
     </style>
 </head>
@@ -52,11 +47,6 @@
         <a href="mailto:kauadarthofc@gmail.com" style="color:#bdc3c7; text-decoration:none;">📧 kauadarthofc@gmail.com</a><br><br>
         <a href="https://youtube.com/@kaua_darth" target="_blank" style="color:#ff0000; text-decoration:none; font-weight:bold;">🎬 YouTube: @kaua_darth</a>
     </div>
-</div>
-
-<div id="upgrade-screen" class="ui-screen">
-    <h2 style="color:#f1c40f; font-size:35px; margin-bottom:20px;">UPGRADE ENCONTRADO</h2>
-    <div id="cards-container" style="display:flex; gap:20px;"></div>
 </div>
 
 <div id="death-screen" class="ui-screen" style="display:none;">
@@ -82,22 +72,21 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+// REBALANCEAMENTO GLOBAL
 const G = {
-    play: false, room: 0, mode: 'normal',
-    w: 2000, h: 1500, cx: 0, cy: 0,
-    hp: 10, maxHp: 10, kills: 0,
-    weapon: 'magnum', triple: 0, ric: 0, dual: false, vamp: 0,
-    hasFire: false, hasShot: false, hasStaff: false,
+    play: false, room: 1, 
+    w: 2400, h: 1800, cx: 0, cy: 0,
+    hp: 12, maxHp: 12, kills: 0,
+    weapon: 'magnum', triple: 0, 
     inv: {
-        magnum: { a: 15, m: 15, d: 10, c: "#00eaff", n: "Magnum", cd: 20, info: "Pistola | Dano: 10" },
-        fire: { a: 25, m: 25, d: 4, c: "#ff6a00", n: "Lança-Chamas", cd: 3, info: "Baforada | Dano: 4 + 2 Fogo" },
-        shotgun: { a: 6, m: 6, d: 14, c: "#f1c40f", n: "Shotgun", cd: 65, info: "Curto Alcance | Dano: 14 (x3)" },
-        staff: { a: 12, m: 12, d: 7, c: "#9b59b6", n: "Cajado Místico", cd: 35, info: "Teleguiado | Dano: 7" }
+        magnum: { a: 18, m: 18, d: 15, c: "#00eaff", n: "Magnum", cd: 15 }, // Mais rápida e forte
+        fire: { a: 40, m: 40, d: 5, c: "#ff6a00", n: "Lança-Chamas", cd: 4 }, // Mais munição
+        shotgun: { a: 8, m: 8, d: 22, c: "#f1c40f", n: "Shotgun", cd: 50 }   // Dano massivo
     }
 };
 
-let p = { x: 1000, y: 750, r: 25, iframe: 0, t: 0, leg: 0, rel: false, relT: 0, alive: true, rot: 0 };
-let enemies = [], projectiles = [], drops = [], pedestals = [], warns = [], particles = [];
+let p = { x: 1200, y: 900, r: 25, iframe: 0, t: 0, leg: 0, rel: false, relT: 0, alive: true, rot: 0, speed: 8.5 };
+let enemies = [], projectiles = [], drops = [];
 const keys = new Set();
 const mobAtk = { up: false, down: false, left: false, right: false };
 const joy = { active: false, x: 0, y: 0, sx: 0, sy: 0 };
@@ -105,9 +94,9 @@ const joy = { active: false, x: 0, y: 0, sx: 0, sy: 0 };
 const pInfo = document.getElementById('plat-info');
 if(isMobile) {
     document.getElementById('mobile-hud').style.display = 'block';
-    pInfo.innerText = "📱 MOBILE: Joystick para andar e botões para atirar!";
+    pInfo.innerText = "📱 MOBILE: Use os controles na tela!";
 } else {
-    pInfo.innerText = "💻 PC: WASD para andar | SETAS para atirar | Q para trocar arma";
+    pInfo.innerText = "💻 PC: WASD e SETAS para atirar!";
 }
 
 function fire(dx, dy) {
@@ -115,18 +104,14 @@ function fire(dx, dy) {
     if(p.rel || w.a <= 0) return;
     if(p.t % w.cd === 0) {
         let ang = Math.atan2(dy, dx);
-        p.rot = ang; // PRIORIDADE: Rotaciona para onde atira
-        let n = (1 + G.triple) * (G.dual ? 2 : 1);
-        for(let i=0; i<n; i++) {
-            let a = ang + (i - (n-1)/2) * 0.22;
-            if(G.weapon === 'fire') {
-                projectiles.push({x:p.x, y:p.y, dx:Math.cos(a)*15, dy:Math.sin(a)*15, type:'fire', life:22, dmg:4});
-            } else if(G.weapon === 'shotgun') {
-                for(let j=-1; j<=1; j++) projectiles.push({x:p.x, y:p.y, dx:Math.cos(a+j*0.3)*18, dy:Math.sin(a+j*0.3)*18, type:'shotgun', life:12, dmg:14});
-            } else {
-                projectiles.push({x:p.x, y:p.y, dx:Math.cos(a)*19, dy:Math.sin(a)*19, type:G.weapon, life:90, dmg:w.d});
-            }
+        p.rot = ang; // PRIORIDADE TIRO
+        
+        if(G.weapon === 'shotgun') {
+            for(let j=-2; j<=2; j++) projectiles.push({x:p.x, y:p.y, dx:Math.cos(ang+j*0.2)*22, dy:Math.sin(ang+j*0.2)*22, type:'shotgun', life:15, dmg:w.d});
+        } else {
+            projectiles.push({x:p.x, y:p.y, dx:Math.cos(ang)*24, dy:Math.sin(ang)*24, type:G.weapon, life:100, dmg:w.d});
         }
+        
         w.a--; if(w.a <= 0) p.rel = true;
     }
 }
@@ -134,48 +119,52 @@ function fire(dx, dy) {
 function update() {
     if(!G.play || !p.alive) return;
 
-    // Movimento
+    // Movimento Prioridade Teclado/Joy
     let mx = joy.active ? joy.x : (keys.has('a')?-1:keys.has('d')?1:0);
     let my = joy.active ? joy.y : (keys.has('w')?-1:keys.has('s')?1:0);
-    p.x = Math.max(60, Math.min(G.w-60, p.x + mx * 7.2));
-    p.y = Math.max(60, Math.min(G.h-60, p.y + my * 7.2));
+    p.x = Math.max(60, Math.min(G.w-60, p.x + mx * p.speed));
+    p.y = Math.max(60, Math.min(G.h-60, p.y + my * p.speed));
 
-    // Atirar
     let ax = (keys.has('arrowleft')?-1:keys.has('arrowright')?1:0);
     let ay = (keys.has('arrowup')?-1:keys.has('arrowdown')?1:0);
     if(mobAtk.up) ay=-1; if(mobAtk.down) ay=1; if(mobAtk.left) ax=-1; if(mobAtk.right) ax=1;
 
-    // PRIORIDADE DE ROTAÇÃO: Tiro > Movimento
-    if(ax || ay) {
-        p.rot = Math.atan2(ay, ax);
-        fire(ax, ay);
-    } else if(mx || my) {
-        p.rot = Math.atan2(my, mx);
-    }
+    if(ax || ay) { p.rot = Math.atan2(ay, ax); fire(ax, ay); }
+    else if(mx || my) { p.rot = Math.atan2(my, mx); }
 
-    if(mx||my) p.leg += 0.25;
-    if(p.rel) { p.relT++; if(p.relT > 60){ G.inv[G.weapon].a = G.inv[G.weapon].m; p.rel=false; p.relT=0; }}
+    if(mx||my) p.leg += 0.3;
+    if(p.rel) { p.relT++; if(p.relT > 45){ G.inv[G.weapon].a = G.inv[G.weapon].m; p.rel=false; p.relT=0; }}
 
-    // IA Inimigos Simples (Para teste)
-    enemies.forEach(e => {
+    enemies.forEach((e, i) => {
         let ang = Math.atan2(p.y-e.y, p.x-e.x);
-        e.x += Math.cos(ang) * 2; e.y += Math.sin(ang) * 2;
-        if(Math.hypot(p.x-e.x, p.y-e.y) < p.r + e.r && p.iframe <= 0) { G.hp--; p.iframe=50; }
+        e.x += Math.cos(ang) * e.spd; e.y += Math.sin(ang) * e.spd;
+        if(Math.hypot(p.x-e.x, p.y-e.y) < p.r + e.r && p.iframe <= 0) { G.hp -= e.dmg; p.iframe=40; }
     });
 
-    // Projéteis
     projectiles.forEach((pr, i) => {
         pr.x += pr.dx; pr.y += pr.dy; pr.life--;
         enemies.forEach((e, ei) => {
             if(Math.hypot(pr.x-e.x, pr.y-e.y) < e.r + 20) {
                 e.hp -= pr.dmg; projectiles.splice(i, 1);
-                if(e.hp <= 0) enemies.splice(ei, 1);
+                if(e.hp <= 0) {
+                    if(Math.random() < 0.2) drops.push({x: e.x, y: e.y, type: Math.random() < 0.5 ? 'hp' : 'ammo'});
+                    enemies.splice(ei, 1); G.kills++;
+                }
             }
         });
         if(pr.life <= 0) projectiles.splice(i, 1);
     });
 
+    drops.forEach((d, i) => {
+        if(Math.hypot(p.x-d.x, p.y-d.y) < 50) {
+            if(d.type === 'hp') G.hp = Math.min(G.maxHp, G.hp+2);
+            else G.inv[G.weapon].a = G.inv[G.weapon].m;
+            drops.splice(i,1);
+        }
+    });
+
     if(p.iframe > 0) p.iframe--;
+    if(G.hp <= 0) p.alive = false, document.getElementById('death-screen').style.display='flex';
     p.t++;
 }
 
@@ -184,57 +173,78 @@ function draw() {
     if(!G.play) return;
 
     ctx.save();
-    G.cx += (p.x - canvas.width/2 - G.cx) * 0.15;
-    G.cy += (p.y - canvas.height/2 - G.cy) * 0.15;
+    G.cx += (p.x - canvas.width/2 - G.cx) * 0.1;
+    G.cy += (p.y - canvas.height/2 - G.cy) * 0.1;
     ctx.translate(-G.cx, -G.cy);
 
-    // Chão
-    ctx.fillStyle = "#2c3e50"; ctx.fillRect(0,0, G.w, G.h);
-    ctx.strokeStyle="rgba(255,255,255,0.05)";
-    for(let i=0; i<G.w; i+=100) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,G.h); ctx.stroke(); }
+    // Chão Dungeon
+    ctx.fillStyle = "#1a1a2e"; ctx.fillRect(0,0, G.w, G.h);
+    ctx.strokeStyle="rgba(0,234,255,0.1)";
+    for(let i=0; i<G.w; i+=120) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,G.h); ctx.stroke(); }
 
     // Lorde da Luz
     let ly = Math.sin(p.leg)*10;
-    ctx.fillStyle="#fff"; ctx.fillRect(p.x-15, p.y+20+ly, 8, 10); ctx.fillRect(p.x+7, p.y+20-ly, 8, 10);
-    ctx.shadowBlur = 15; ctx.shadowColor = "#00eaff";
-    ctx.fillStyle = (p.iframe>0) ? "#ff4d6d" : "#fff";
-    ctx.fillRect(p.x-25, p.y-30, 50, 55); 
+    ctx.fillStyle="#fff"; ctx.fillRect(p.x-15, p.y+20+ly, 10, 12); ctx.fillRect(p.x+5, p.y+20-ly, 10, 12);
+    ctx.shadowBlur = 20; ctx.shadowColor = "#00eaff";
+    ctx.fillStyle = (p.iframe>0 && p.t%4<2) ? "#ff0000" : "#fff";
+    ctx.fillRect(p.x-25, p.y-35, 50, 60); 
     ctx.shadowBlur = 0;
+    
+    // Olhos Lorde da Luz
+    ctx.fillStyle="#000"; ctx.fillRect(p.x-15, p.y-15, 8, 8); ctx.fillRect(p.x+7, p.y-15, 8, 8);
 
-    // Arma
-    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
-    ctx.fillStyle="#7f8c8d"; ctx.fillRect(20, -5, 30, 10);
-    ctx.restore();
-
-    // Inimigos
+    // Inimigos com OLHOS DIFERENTES
     enemies.forEach(e => {
-        ctx.fillStyle = "#c0392b"; ctx.fillRect(e.x-30, e.y-30, 60, 60);
+        ctx.fillStyle = e.color; 
+        ctx.fillRect(e.x-e.r, e.y-e.r, e.r*2, e.r*2);
+        
+        ctx.fillStyle = "#fff"; // Fundo do olho
+        if(e.type === 'stalker') { // Olhos redondos simples
+            ctx.beginPath(); ctx.arc(e.x-10, e.y-5, 6, 0, 7); ctx.arc(e.x+10, e.y-5, 6, 0, 7); ctx.fill();
+            ctx.fillStyle="#000"; ctx.beginPath(); ctx.arc(e.x-10, e.y-5, 3, 0, 7); ctx.arc(e.x+10, e.y-5, 3, 0, 7); ctx.fill();
+        } else if(e.type === 'kamikaze') { // Olhos de raiva (v)
+            ctx.fillStyle="yellow";
+            ctx.beginPath(); ctx.moveTo(e.x-15, e.y-10); ctx.lineTo(e.x-5, e.y-2); ctx.lineTo(e.x-15, e.y+2); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(e.x+15, e.y-10); ctx.lineTo(e.x+5, e.y-2); ctx.lineTo(e.x+15, e.y+2); ctx.fill();
+        } else if(e.type === 'tank') { // Um único olho grande central
+            ctx.beginPath(); ctx.arc(e.x, e.y-5, 12, 0, 7); ctx.fill();
+            ctx.fillStyle="red"; ctx.beginPath(); ctx.arc(e.x, e.y-5, 5, 0, 7); ctx.fill();
+        }
     });
 
-    // Balas
     projectiles.forEach(pr => {
-        ctx.fillStyle = G.inv[pr.type]?.c || "#fff";
-        ctx.beginPath(); ctx.arc(pr.x, pr.y, 8, 0, 7); ctx.fill();
+        ctx.fillStyle = G.inv[pr.type]?.c;
+        ctx.beginPath(); ctx.arc(pr.x, pr.y, 10, 0, 7); ctx.fill();
+    });
+
+    drops.forEach(d => {
+        ctx.fillStyle = d.type==='hp'?"#ff4d6d":"#f1c40f";
+        ctx.fillRect(d.x-15, d.y-15, 30, 30);
     });
 
     ctx.restore();
     
-    // HUD Simples
-    ctx.fillStyle="#fff"; ctx.font="20px Arial";
-    ctx.fillText(`HP: ${G.hp} | ARMA: ${G.inv[G.weapon].n} (${G.inv[G.weapon].a})`, 20, 40);
+    // HUD Rebalanceada
+    ctx.fillStyle="rgba(0,0,0,0.5)"; ctx.fillRect(10, 10, 300, 80);
+    ctx.fillStyle="#fff"; ctx.font="bold 20px Arial";
+    ctx.fillText(`HP: ${G.hp} / ${G.maxHp}`, 25, 40);
+    ctx.fillText(`${G.inv[G.weapon].n}: ${G.inv[G.weapon].a}`, 25, 70);
 
     requestAnimationFrame(() => { update(); draw(); });
 }
 
-// Spawner básico para teste
 function spawn() {
-    if(G.play && enemies.length < 5) {
-        enemies.push({x: Math.random()*G.w, y: Math.random()*G.h, r:30, hp: 50});
-    }
+    if(!G.play || enemies.length > 12) return;
+    let type = Math.random() < 0.6 ? 'stalker' : (Math.random() < 0.8 ? 'kamikaze' : 'tank');
+    let e = { type: type, x: Math.random()*G.w, y: Math.random()*G.h, r: 30, hp: 40, spd: 3, dmg: 1, color: "#34495e" };
+    
+    if(type === 'kamikaze') { e.color = "#e67e22"; e.spd = 5.5; e.hp = 20; e.dmg = 3; }
+    if(type === 'tank') { e.color = "#2c3e50"; e.spd = 1.5; e.hp = 150; e.r = 45; e.dmg = 2; }
+    
+    if(Math.hypot(p.x-e.x, p.y-e.y) > 400) enemies.push(e);
 }
-setInterval(spawn, 2000);
+setInterval(spawn, 1500);
 
-// Eventos
 window.onkeydown=e=>{ keys.add(e.key.toLowerCase()); if(e.key==='q') swap(); };
 window.onkeyup=e=>keys.delete(e.key.toLowerCase());
 document.getElementById('btn-play').onclick = () => { G.play=true; document.getElementById('start-screen').style.display='none'; draw(); };
