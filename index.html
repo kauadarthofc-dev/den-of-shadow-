@@ -1,66 +1,265 @@
-// --- ATUALIZAÇÃO DO SISTEMA DE MOVIMENTO E MIRA ---
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Den of Shadow 💀</title>
+    <style>
+        :root {
+            --c-comum: #3498db; --c-incomum: #2ecc71; --c-raro: #f1c40f; 
+            --c-epico: #9b59b6; --c-lendario: linear-gradient(45deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff);
+        }
+        * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
+        body { margin: 0; background: #0f0c29; color: white; font-family: 'Verdana', sans-serif; overflow: hidden; }
+        canvas { display: block; image-rendering: pixelated; }
+
+        /* UI de Menus */
+        .ui-screen { position: absolute; inset: 0; background: rgba(5, 5, 15, 0.98); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .title-box { border: 4px solid #fff; padding: 20px; border-radius: 15px; background: rgba(231, 76, 60, 0.2); }
+        .title-text { font-size: 50px; color: #e74c3c; margin: 0; text-transform: uppercase; }
+        .hint-bar { color: #2ecc71; margin: 15px; font-weight: bold; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 10px; }
+        .btn-main { padding: 15px 40px; background: #2ecc71; border: none; color: white; font-size: 22px; font-weight: bold; border-radius: 30px; cursor: pointer; transition: 0.2s; box-shadow: 0 5px #27ae60; }
+        .btn-main:active { transform: translateY(3px); box-shadow: none; }
+
+        /* Controles Mobile/Console */
+        #mobile-hud { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 1000; }
+        #joy-base { position: absolute; bottom: 40px; left: 40px; width: 140px; height: 140px; background: rgba(255,255,255,0.1); border: 3px solid #fff; border-radius: 50%; pointer-events: auto; }
+        #joy-stick { position: absolute; width: 60px; height: 60px; background: #00eaff; border-radius: 50%; left: 37px; top: 37px; box-shadow: 0 0 15px #00eaff; }
+        #atk-grid { position: absolute; bottom: 30px; right: 30px; display: grid; grid-template-columns: repeat(3, 90px); gap: 10px; pointer-events: auto; }
+        .btn-atk { width: 90px; height: 90px; background: rgba(255,255,255,0.15); border: 4px solid #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 30px; color: white; }
+        #swap-mob { position: absolute; bottom: 40px; right: 350px; width: 100px; height: 100px; background: #f1c40f; border: 4px solid #fff; border-radius: 20px; pointer-events: auto; display: flex; align-items: center; justify-content: center; color: #000; font-weight: bold; }
+        #fs-mob { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); padding: 10px 25px; background: #333; color: #fff; border: 2px solid #fff; border-radius: 20px; pointer-events: auto; z-index: 2500; font-size: 12px; }
+
+        /* Upgrades */
+        #upgrade-screen { display: none; z-index: 3000; }
+        .card { width: 220px; height: 320px; background: #1a1a2e; border: 6px solid #fff; border-radius: 15px; padding: 15px; cursor: pointer; position: relative; transition: 0.3s; text-align: center; }
+        .card:hover { transform: scale(1.05); }
+        
+        #weapon-tag { position: absolute; bottom: 150px; left: 50%; transform: translateX(-50%); background: #000; border: 2px solid #f1c40f; padding: 10px 20px; border-radius: 10px; display: none; z-index: 500; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div id="fs-mob" onclick="toggleFS()">TELA CHEIA</div>
+
+<div id="start-screen" class="ui-screen">
+    <div class="title-box">
+        <h1 class="title-text">Den of Shadow 💀</h1>
+    </div>
+    <div id="plat-info" class="hint-bar"></div>
+    <button class="btn-main" id="btn-play">ENTRAR NA MASMORRA</button>
+    <div style="margin-top:30px; text-align: center;">
+        <a href="mailto:kauadarthofc@gmail.com" style="color:#bdc3c7; text-decoration:none;">📧 kauadarthofc@gmail.com</a><br><br>
+        <a href="https://youtube.com/@kaua_darth" target="_blank" style="color:#ff0000; text-decoration:none; font-weight:bold;">🎬 YouTube: @kaua_darth</a>
+    </div>
+</div>
+
+<div id="upgrade-screen" class="ui-screen">
+    <h2 style="color:#f1c40f; font-size:35px; margin-bottom:20px;">UPGRADE ENCONTRADO</h2>
+    <div id="cards-container" style="display:flex; gap:20px;"></div>
+</div>
+
+<div id="death-screen" class="ui-screen" style="display:none;">
+    <h1 style="color:#e74c3c; font-size:60px;">VOCÊ CAIU</h1>
+    <button class="btn-main" onclick="location.reload()">RENASCER</button>
+</div>
+
+<div id="weapon-tag"></div>
+<canvas id="gameCanvas"></canvas>
+
+<div id="mobile-hud">
+    <div id="joy-base"><div id="joy-stick"></div></div>
+    <div id="atk-grid">
+        <div></div><div class="btn-atk" data-dir="up">▲</div><div></div>
+        <div class="btn-atk" data-dir="left">◀</div><div class="btn-atk" data-dir="down">▼</div><div class="btn-atk" data-dir="right">▶</div>
+    </div>
+    <div id="swap-mob">🔄 SWAP</div>
+</div>
+
+<script>
+/** @type {HTMLCanvasElement} */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+const G = {
+    play: false, room: 0, mode: 'normal',
+    w: 2000, h: 1500, cx: 0, cy: 0,
+    hp: 10, maxHp: 10, kills: 0,
+    weapon: 'magnum', triple: 0, ric: 0, dual: false, vamp: 0,
+    hasFire: false, hasShot: false, hasStaff: false,
+    inv: {
+        magnum: { a: 15, m: 15, d: 10, c: "#00eaff", n: "Magnum", cd: 20, info: "Pistola | Dano: 10" },
+        fire: { a: 25, m: 25, d: 4, c: "#ff6a00", n: "Lança-Chamas", cd: 3, info: "Baforada | Dano: 4 + 2 Fogo" },
+        shotgun: { a: 6, m: 6, d: 14, c: "#f1c40f", n: "Shotgun", cd: 65, info: "Curto Alcance | Dano: 14 (x3)" },
+        staff: { a: 12, m: 12, d: 7, c: "#9b59b6", n: "Cajado Místico", cd: 35, info: "Teleguiado | Dano: 7" }
+    }
+};
+
+let p = { x: 1000, y: 750, r: 25, iframe: 0, t: 0, leg: 0, rel: false, relT: 0, alive: true, rot: 0 };
+let enemies = [], projectiles = [], drops = [], pedestals = [], warns = [], particles = [];
+const keys = new Set();
+const mobAtk = { up: false, down: false, left: false, right: false };
+const joy = { active: false, x: 0, y: 0, sx: 0, sy: 0 };
+
+const pInfo = document.getElementById('plat-info');
+if(isMobile) {
+    document.getElementById('mobile-hud').style.display = 'block';
+    pInfo.innerText = "📱 MOBILE: Joystick para andar e botões para atirar!";
+} else {
+    pInfo.innerText = "💻 PC: WASD para andar | SETAS para atirar | Q para trocar arma";
+}
+
+function fire(dx, dy) {
+    const w = G.inv[G.weapon];
+    if(p.rel || w.a <= 0) return;
+    if(p.t % w.cd === 0) {
+        let ang = Math.atan2(dy, dx);
+        p.rot = ang; // PRIORIDADE: Rotaciona para onde atira
+        let n = (1 + G.triple) * (G.dual ? 2 : 1);
+        for(let i=0; i<n; i++) {
+            let a = ang + (i - (n-1)/2) * 0.22;
+            if(G.weapon === 'fire') {
+                projectiles.push({x:p.x, y:p.y, dx:Math.cos(a)*15, dy:Math.sin(a)*15, type:'fire', life:22, dmg:4});
+            } else if(G.weapon === 'shotgun') {
+                for(let j=-1; j<=1; j++) projectiles.push({x:p.x, y:p.y, dx:Math.cos(a+j*0.3)*18, dy:Math.sin(a+j*0.3)*18, type:'shotgun', life:12, dmg:14});
+            } else {
+                projectiles.push({x:p.x, y:p.y, dx:Math.cos(a)*19, dy:Math.sin(a)*19, type:G.weapon, life:90, dmg:w.d});
+            }
+        }
+        w.a--; if(w.a <= 0) p.rel = true;
+    }
+}
 
 function update() {
     if(!G.play || !p.alive) return;
 
-    // 1. Movimentação Lord da Luz
+    // Movimento
     let mx = joy.active ? joy.x : (keys.has('a')?-1:keys.has('d')?1:0);
     let my = joy.active ? joy.y : (keys.has('w')?-1:keys.has('s')?1:0);
-    
     p.x = Math.max(60, Math.min(G.w-60, p.x + mx * 7.2));
     p.y = Math.max(60, Math.min(G.h-60, p.y + my * 7.2));
 
-    // 2. Verificação de Disparo (Setas ou Mobile)
+    // Atirar
     let ax = (keys.has('arrowleft')?-1:keys.has('arrowright')?1:0);
     let ay = (keys.has('arrowup')?-1:keys.has('arrowdown')?1:0);
-    
-    // Suporte mobile para os botões de ataque
     if(mobAtk.up) ay=-1; if(mobAtk.down) ay=1; if(mobAtk.left) ax=-1; if(mobAtk.right) ax=1;
 
-    // 3. LÓGICA DE PRIORIDADE:
-    // Se estiver atirando (ax ou ay diferente de 0), a rotação foca no tiro.
-    // Se NÃO estiver atirando e estiver se movendo, a rotação foca no movimento.
-    if (ax !== 0 || ay !== 0) {
-        p.rot = Math.atan2(ay, ax); // Prioridade: Direção do Tiro
+    // PRIORIDADE DE ROTAÇÃO: Tiro > Movimento
+    if(ax || ay) {
+        p.rot = Math.atan2(ay, ax);
         fire(ax, ay);
-    } else if (mx !== 0 || my !== 0) {
-        p.rot = Math.atan2(my, mx); // Secundário: Direção do Movimento
+    } else if(mx || my) {
+        p.rot = Math.atan2(my, mx);
     }
 
-    // Animação das pernas baseada no movimento real
-    if(mx !== 0 || my !== 0) {
-        p.leg += 0.25;
-    }
+    if(mx||my) p.leg += 0.25;
+    if(p.rel) { p.relT++; if(p.relT > 60){ G.inv[G.weapon].a = G.inv[G.weapon].m; p.rel=false; p.relT=0; }}
 
-    // Lógica de Recarga
-    if(p.rel) { 
-        p.relT++; 
-        if(p.relT > 60) { 
-            G.inv[G.weapon].a = G.inv[G.weapon].m; 
-            p.rel = false; 
-            p.relT = 0; 
-        }
-    }
-
-    // --- RESTANTE DO CÓDIGO (Inimigos, Projéteis, etc) ---
-    // (Mantenha o resto da função update original abaixo daqui)
-    
-    // Inimigos...
-    enemies.forEach((e, i) => {
-        // ... (código original de IA dos inimigos)
+    // IA Inimigos Simples (Para teste)
+    enemies.forEach(e => {
+        let ang = Math.atan2(p.y-e.y, p.x-e.x);
+        e.x += Math.cos(ang) * 2; e.y += Math.sin(ang) * 2;
+        if(Math.hypot(p.x-e.x, p.y-e.y) < p.r + e.r && p.iframe <= 0) { G.hp--; p.iframe=50; }
     });
 
-    // Projéteis...
+    // Projéteis
     projectiles.forEach((pr, i) => {
-        // ... (código original de colisão)
+        pr.x += pr.dx; pr.y += pr.dy; pr.life--;
+        enemies.forEach((e, ei) => {
+            if(Math.hypot(pr.x-e.x, pr.y-e.y) < e.r + 20) {
+                e.hp -= pr.dmg; projectiles.splice(i, 1);
+                if(e.hp <= 0) enemies.splice(ei, 1);
+            }
+        });
+        if(pr.life <= 0) projectiles.splice(i, 1);
     });
 
-    // ... (restante das detecções de sala e buffs)
-    
     if(p.iframe > 0) p.iframe--;
-    if(G.hp <= 0 && p.alive) { 
-        p.alive = false; 
-        document.getElementById('death-screen').style.display='flex'; 
-    }
     p.t++;
 }
+
+function draw() {
+    ctx.clearRect(0,0, canvas.width, canvas.height);
+    if(!G.play) return;
+
+    ctx.save();
+    G.cx += (p.x - canvas.width/2 - G.cx) * 0.15;
+    G.cy += (p.y - canvas.height/2 - G.cy) * 0.15;
+    ctx.translate(-G.cx, -G.cy);
+
+    // Chão
+    ctx.fillStyle = "#2c3e50"; ctx.fillRect(0,0, G.w, G.h);
+    ctx.strokeStyle="rgba(255,255,255,0.05)";
+    for(let i=0; i<G.w; i+=100) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,G.h); ctx.stroke(); }
+
+    // Lorde da Luz
+    let ly = Math.sin(p.leg)*10;
+    ctx.fillStyle="#fff"; ctx.fillRect(p.x-15, p.y+20+ly, 8, 10); ctx.fillRect(p.x+7, p.y+20-ly, 8, 10);
+    ctx.shadowBlur = 15; ctx.shadowColor = "#00eaff";
+    ctx.fillStyle = (p.iframe>0) ? "#ff4d6d" : "#fff";
+    ctx.fillRect(p.x-25, p.y-30, 50, 55); 
+    ctx.shadowBlur = 0;
+
+    // Arma
+    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+    ctx.fillStyle="#7f8c8d"; ctx.fillRect(20, -5, 30, 10);
+    ctx.restore();
+
+    // Inimigos
+    enemies.forEach(e => {
+        ctx.fillStyle = "#c0392b"; ctx.fillRect(e.x-30, e.y-30, 60, 60);
+    });
+
+    // Balas
+    projectiles.forEach(pr => {
+        ctx.fillStyle = G.inv[pr.type]?.c || "#fff";
+        ctx.beginPath(); ctx.arc(pr.x, pr.y, 8, 0, 7); ctx.fill();
+    });
+
+    ctx.restore();
+    
+    // HUD Simples
+    ctx.fillStyle="#fff"; ctx.font="20px Arial";
+    ctx.fillText(`HP: ${G.hp} | ARMA: ${G.inv[G.weapon].n} (${G.inv[G.weapon].a})`, 20, 40);
+
+    requestAnimationFrame(() => { update(); draw(); });
+}
+
+// Spawner básico para teste
+function spawn() {
+    if(G.play && enemies.length < 5) {
+        enemies.push({x: Math.random()*G.w, y: Math.random()*G.h, r:30, hp: 50});
+    }
+}
+setInterval(spawn, 2000);
+
+// Eventos
+window.onkeydown=e=>{ keys.add(e.key.toLowerCase()); if(e.key==='q') swap(); };
+window.onkeyup=e=>keys.delete(e.key.toLowerCase());
+document.getElementById('btn-play').onclick = () => { G.play=true; document.getElementById('start-screen').style.display='none'; draw(); };
+function swap() {
+    let l = Object.keys(G.inv);
+    G.weapon = l[(l.indexOf(G.weapon)+1)%l.length];
+}
+function toggleFS() { if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+window.onresize = () => { canvas.width=window.innerWidth; canvas.height=window.innerHeight; }; window.onresize();
+
+// Joystick
+const knob=document.getElementById('joy-stick'), base=document.getElementById('joy-base');
+base.ontouchstart = (e) => { joy.active=true; let r=base.getBoundingClientRect(); joy.sx=r.left+70; joy.sy=r.top+70; };
+base.ontouchmove = (e) => {
+    if(!joy.active) return; let t=e.touches[0];
+    let dx=t.clientX-joy.sx, dy=t.clientY-joy.sy;
+    let d=Math.min(Math.hypot(dx,dy), 50); let a=Math.atan2(dy,dx);
+    joy.x=(Math.cos(a)*d)/50; joy.y=(Math.sin(a)*d)/50;
+    knob.style.transform=`translate(${Math.cos(a)*d}px, ${Math.sin(a)*d}px)`;
+};
+base.ontouchend = () => { joy.active=false; joy.x=0; joy.y=0; knob.style.transform='none'; };
+document.querySelectorAll('.btn-atk').forEach(b => {
+    b.ontouchstart=(e)=>{ e.preventDefault(); mobAtk[b.dataset.dir]=true; };
+    b.ontouchend=(e)=>{ e.preventDefault(); mobAtk[b.dataset.dir]=false; };
+});
+</script>
+</body>
+</html>
