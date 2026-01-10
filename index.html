@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 Lord of Light</title>
+    <title>Den of Shadow 💀 Boss Update</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&family=Special+Elite&display=swap');
         
@@ -23,7 +23,7 @@
 
         .lang-select { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 4000; }
         .lang-btn { background: rgba(255,0,0,0.2); border: 1px solid #ff0000; color: white; padding: 5px 15px; cursor: pointer; font-family: 'Orbitron'; }
-        .lang-btn.active { background: #ff0000; box-shadow: 0 0 10px #ff0000; }
+        .lang-btn.active { background: #ff0000; }
 
         #cutscene-screen { background: #000; cursor: pointer; text-align: center; padding: 20px; }
         #cutscene-text { font-family: 'Special Elite', cursive; font-size: 26px; color: #ccc; max-width: 800px; line-height: 1.6; }
@@ -33,8 +33,7 @@
         .bar-bg { width: 100%; height: 6px; background: #222; margin-top: 4px; }
         .bar-fill { height: 100%; transition: width 0.2s; }
 
-        .social-footer { position: absolute; bottom: 30px; text-align: center; }
-        .social-link { color: #ff0000; text-decoration: none; display: block; margin: 5px; font-size: 14px; }
+        #msg-popup { position: absolute; bottom: 100px; width: 100%; text-align: center; font-size: 24px; color: #f1c40f; text-shadow: 0 0 10px #000; display: none; z-index: 2000; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -48,15 +47,10 @@
     <h1>DEN OF SHADOW</h1>
     <p id="subtitle" style="letter-spacing: 5px; color: #ff0000; margin-bottom: 30px;">LORD OF LIGHT</p>
     <button class="btn-main" id="play-btn" onclick="initCutscene()">JOGAR</button>
-    <div class="social-footer">
-        <a href="mailto:kauaderthofc@gmail.com" class="social-link">kauaderthofc@gmail.com</a>
-        <a href="https://youtube.com/@kaua_darth" target="_blank" class="social-link">YouTube: @kaua_darth</a>
-    </div>
 </div>
 
 <div id="cutscene-screen" class="ui-screen" style="display:none;" onclick="nextHistory()">
     <div id="cutscene-text"></div>
-    <div style="margin-top:40px; color:#444; font-size:12px;" id="hint">CLIQUE PARA CONTINUAR / CLICK TO CONTINUE</div>
 </div>
 
 <div id="hud">
@@ -64,6 +58,8 @@
     <div class="stat-container" style="border-color:#f1c40f;"><div id="label-ammo">MUNIÇÃO</div><div class="bar-bg"><div id="ammo-fill" class="bar-fill" style="width: 100%; background: #f1c40f;"></div></div></div>
     <div style="font-weight: bold; color: #ff0000;"><span id="label-room">SALA</span>: <span id="room-txt">0</span></div>
 </div>
+
+<div id="msg-popup"></div>
 
 <canvas id="gameCanvas"></canvas>
 
@@ -74,185 +70,144 @@ const ctx = canvas.getContext('2d');
 const ROOM = { w: 1200, h: 800, wallSize: 60 };
 const G = { 
     play: false, room: 0, hp: 100, ammo: 20, maxAmmo: 20, 
-    reloading: false, enemiesDefeated: false, lang: 'pt' 
+    reloading: false, enemiesDefeated: false, lang: 'pt',
+    hasFireWpn: false, lastShot: 0
 };
 
 const texts = {
-    pt: {
-        sub: "LORDE DA LUZ", play: "JOGAR", hp: "VIDA", ammo: "MUNIÇÃO", room: "SALA",
-        tut: "WASD PARA MOVER | SETAS PARA ATIRAR",
-        history: [
-            "O Lorde da Luz foi traído por sua própria sombra...",
-            "Agora ele está preso no abismo mais profundo.",
-            "Cada sala é um fragmento de sua mente corrompida.",
-            "Tutorial: Use WASD para mover e as SETAS para atirar nas 4 direções."
-        ]
-    },
-    en: {
-        sub: "LORD OF LIGHT", play: "PLAY", hp: "HEALTH", ammo: "AMMO", room: "ROOM",
-        tut: "WASD TO MOVE | ARROWS TO SHOOT",
-        history: [
-            "The Lord of Light was betrayed by his own shadow...",
-            "Now he is trapped in the deepest abyss.",
-            "Every room is a fragment of his corrupted mind.",
-            "Tutorial: Use WASD to move and ARROWS to shoot in 4 directions."
-        ]
-    }
+    pt: { sub: "LORDE DA LUZ", hp: "VIDA", ammo: "MUNIÇÃO", room: "SALA", boss: "CHEFE!", weapon: "ARMA DE FOGO COLETADA!", history: ["Traído pelas sombras...", "Agora lutando no abismo.", "Derrote o Boss a cada 10 salas.", "Pegue a arma de fogo no pedestal!"] },
+    en: { sub: "LORD OF LIGHT", hp: "HEALTH", ammo: "AMMO", room: "ROOM", boss: "BOSS!", weapon: "FIRE WEAPON COLLECTED!", history: ["Betrayed by shadows...", "Fighting in the abyss.", "Defeat the Boss every 10 rooms.", "Grab the fire weapon on the pedestal!"] }
 };
 
-function changeLang(l) {
-    G.lang = l;
-    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase() === l));
-    document.getElementById('subtitle').innerText = texts[l].sub;
-    document.getElementById('play-btn').innerText = texts[l].play;
-    document.getElementById('label-hp').innerText = texts[l].hp;
-    document.getElementById('label-ammo').innerText = texts[l].ammo;
-    document.getElementById('label-room').innerText = texts[l].room;
-}
+function changeLang(l) { G.lang = l; document.getElementById('subtitle').innerText = texts[l].sub; }
+function showPopup(t) { const p = document.getElementById('msg-popup'); p.innerText = t; p.style.display = 'block'; setTimeout(() => p.style.display = 'none', 3000); }
 
 let historyIndex = 0;
-function initCutscene() {
-    document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('lang-area').style.display = 'none';
-    document.getElementById('cutscene-screen').style.display = 'flex';
-    nextHistory();
-}
-
-function nextHistory() {
+function initCutscene() { document.getElementById('start-screen').style.display='none'; document.getElementById('lang-area').style.display='none'; document.getElementById('cutscene-screen').style.display='flex'; nextHistory(); }
+function nextHistory() { 
     const h = texts[G.lang].history;
-    if (historyIndex < h.length) {
-        document.getElementById('cutscene-text').innerText = h[historyIndex];
-        historyIndex++;
-    } else {
-        startGame();
-    }
+    if (historyIndex < h.length) { document.getElementById('cutscene-text').innerText = h[historyIndex++]; } 
+    else { startGame(); }
 }
 
-let player = { x: 600, y: 400, r: 25, spd: 7 };
-let enemies = [], projectiles = [], doors = [];
+let player = { x: 600, y: 700, r: 25, spd: 7 };
+let enemies = [], projectiles = [], doors = [], drops = [], pedestal = null;
 const keys = {};
 
-function startGame() {
-    document.getElementById('cutscene-screen').style.display = 'none';
-    document.getElementById('hud').style.display = 'flex';
-    G.play = true;
-    initRoom();
+function startGame() { 
+    document.getElementById('cutscene-screen').style.display='none'; 
+    document.getElementById('hud').style.display='flex'; 
+    G.play = true; initRoom(); 
 }
 
 function initRoom() {
-    enemies = []; projectiles = []; doors = [];
+    enemies = []; projectiles = []; doors = []; drops = []; pedestal = null;
     G.enemiesDefeated = false;
-    
-    // Posiciona o jogador no centro (ou em baixo se estiver vindo de outra sala)
-    player.x = ROOM.w / 2;
-    player.y = ROOM.h - 150; 
+    player.x = ROOM.w/2; player.y = ROOM.h - 150;
 
     if(G.room > 0) {
-        let count = 2 + Math.floor(G.room * 0.5);
-        for(let i=0; i<count; i++) {
-            enemies.push({ 
-                x: 200 + Math.random()*(ROOM.w-400), 
-                y: 150 + Math.random()*(ROOM.h-400), 
-                hp: 40 + G.room*10, r: 30, spd: 1.5 + (G.room * 0.1) 
-            });
+        if(G.room % 10 === 0) { // BOSS ROOM
+            showPopup(texts[G.lang].boss);
+            enemies.push({ x: ROOM.w/2, y: 200, hp: 500 + (G.room*20), r: 80, spd: 2, isBoss: true });
+        } else {
+            let count = 2 + Math.floor(G.room * 0.4);
+            for(let i=0; i<count; i++) {
+                enemies.push({ x: Math.random()*(ROOM.w-200)+100, y: Math.random()*(ROOM.h-400)+100, hp: 30 + G.room*5, r: 25, spd: 1.5 + (G.room*0.1) });
+            }
         }
-    } else {
-        G.enemiesDefeated = true;
-        spawnDoors();
-    }
+    } else { G.enemiesDefeated = true; spawnDoors(); }
 }
 
-function spawnDoors() {
-    // Porta no centro da parede superior
-    doors.push({ x: ROOM.w/2 - 75, y: 0, w: 150, h: ROOM.wallSize + 10 });
-}
+function spawnDoors() { doors.push({ x: ROOM.w/2 - 75, y: 0, w: 150, h: 70 }); }
 
 function update() {
     if(!G.play) return;
-
+    // Movimento
     let mx = 0, my = 0;
     if(keys['w']) my = -1; if(keys['s']) my = 1; if(keys['a']) mx = -1; if(keys['d']) mx = 1;
-    player.x = Math.max(ROOM.wallSize + player.r, Math.min(ROOM.w - ROOM.wallSize - player.r, player.x + mx * player.spd));
-    player.y = Math.max(ROOM.wallSize + player.r, Math.min(ROOM.h - ROOM.wallSize - player.r, player.y + my * player.spd));
+    player.x = Math.max(ROOM.wallSize+25, Math.min(ROOM.w-ROOM.wallSize-25, player.x + mx*player.spd));
+    player.y = Math.max(ROOM.wallSize+25, Math.min(ROOM.h-ROOM.wallSize-25, player.y + my*player.spd));
 
+    // Tiro
     let ax = 0, ay = 0;
     if(keys['arrowup']) ay = -1; if(keys['arrowdown']) ay = 1; if(keys['arrowleft']) ax = -1; if(keys['arrowright']) ax = 1;
-    if((ax || ay) && !G.reloading && G.ammo > 0) {
-        if(Date.now() - G.lastShot > 200) {
-            projectiles.push({ x: player.x, y: player.y, vx: ax*14, vy: ay*14, r: 8 });
-            G.ammo--;
-            G.lastShot = Date.now();
-            if(G.ammo <= 0) {
-                G.reloading = true;
-                setTimeout(() => { G.ammo = G.maxAmmo; G.reloading = false; }, 1000);
-            }
-        }
+    if((ax || ay) && !G.reloading && G.ammo > 0 && Date.now() - G.lastShot > 200) {
+        projectiles.push({ x: player.x, y: player.y, vx: ax*15, vy: ay*15, r: G.hasFireWpn ? 12 : 7, dmg: G.hasFireWpn ? 50 : 25, color: G.hasFireWpn ? "#ff4500" : "#fff" });
+        G.ammo--; G.lastShot = Date.now();
+        if(G.ammo <= 0) { G.reloading = true; setTimeout(()=> {G.ammo = G.maxAmmo; G.reloading = false}, 1200); }
     }
 
-    projectiles.forEach((p, i) => {
+    // IA Inimigos
+    enemies.forEach((en, i) => {
+        let angle = Math.atan2(player.y - en.y, player.x - en.x);
+        en.x += Math.cos(angle) * en.spd; en.y += Math.sin(angle) * en.spd;
+        if(Math.hypot(player.x-en.x, player.y-en.y) < player.r + en.r) G.hp -= en.isBoss ? 0.5 : 0.2;
+    });
+
+    // Colisão Projéteis
+    projectiles.forEach((p, pi) => {
         p.x += p.vx; p.y += p.vy;
         enemies.forEach((en, ei) => {
             if(Math.hypot(p.x-en.x, p.y-en.y) < en.r) {
-                en.hp -= 20; projectiles.splice(i, 1);
-                if(en.hp <= 0) enemies.splice(ei, 1);
+                en.hp -= p.dmg; projectiles.splice(pi, 1);
+                if(en.hp <= 0) {
+                    if(Math.random() < 0.3) drops.push({x: en.x, y: en.y, type: 'heal'});
+                    enemies.splice(ei, 1);
+                }
             }
         });
     });
 
-    if(enemies.length === 0 && !G.enemiesDefeated) {
-        G.enemiesDefeated = true;
-        spawnDoors();
+    // Itens e Pedestal
+    drops.forEach((d, i) => {
+        if(Math.hypot(player.x-d.x, player.y-d.y) < 40) { G.hp = Math.min(100, G.hp+20); drops.splice(i, 1); }
+    });
+
+    if(pedestal && Math.hypot(player.x-pedestal.x, player.y-pedestal.y) < 50) {
+        G.hasFireWpn = true; pedestal = null; showPopup(texts[G.lang].weapon);
     }
 
-    // DETECÇÃO DE PORTA MELHORADA
-    if(G.enemiesDefeated) {
-        doors.forEach(d => {
-            // Se o jogador entrar na área da porta
-            if(player.x > d.x && player.x < d.x + d.w && player.y < d.y + d.h + 20) {
-                G.room++;
-                initRoom();
-            }
-        });
+    if(enemies.length === 0 && !G.enemiesDefeated) {
+        G.enemiesDefeated = true; spawnDoors();
+        if(G.room % 10 === 0) pedestal = { x: ROOM.w/2, y: ROOM.h/2 };
     }
+
+    // Mudança de sala
+    doors.forEach(d => { if(player.x > d.x && player.x < d.x+d.w && player.y < d.y+d.h) { G.room++; initRoom(); } });
+    if(G.hp <= 0) location.reload();
 }
 
 function draw() {
     ctx.fillStyle = "#000"; ctx.fillRect(0,0,canvas.width, canvas.height);
     if(!G.play) { requestAnimationFrame(draw); return; }
     update();
-
     ctx.save();
     let s = Math.min(canvas.width/ROOM.w, canvas.height/ROOM.h)*0.95;
     ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(s,s); ctx.translate(-ROOM.w/2, -ROOM.h/2);
 
-    // Chão
-    ctx.fillStyle = "#080000"; ctx.fillRect(0,0,ROOM.w,ROOM.h);
+    ctx.fillStyle = "#0a0000"; ctx.fillRect(0,0,ROOM.w,ROOM.h);
+    ctx.fillStyle = "#1a0000"; ctx.fillRect(0,0,ROOM.w,60); ctx.fillRect(0,ROOM.h-60,ROOM.w,60);
     
-    // Tutorial
-    if(G.room === 0) {
-        ctx.fillStyle = "rgba(255,0,0,0.3)"; ctx.font = "20px Orbitron"; ctx.textAlign = "center";
-        ctx.fillText(texts[G.lang].tut, ROOM.w/2, ROOM.h/2);
-        ctx.fillStyle = "#ff0000";
-        ctx.fillText("VÁ PARA O NORTE / GO NORTH ↑", ROOM.w/2, ROOM.h/2 - 150);
+    if(G.enemiesDefeated) { ctx.fillStyle = "#ff0000"; doors.forEach(d => ctx.fillRect(d.x, d.y, d.w, d.h)); }
+
+    if(pedestal) {
+        ctx.fillStyle = "#555"; ctx.fillRect(pedestal.x-30, pedestal.y-20, 60, 40);
+        ctx.fillStyle = "#ff4500"; ctx.font = "30px Arial"; ctx.fillText("🔥", pedestal.x-15, pedestal.y-30);
     }
 
-    // Paredes
-    ctx.fillStyle = "#150000";
-    ctx.fillRect(0,0,ROOM.w,ROOM.wallSize); ctx.fillRect(0,ROOM.h-ROOM.wallSize,ROOM.w,ROOM.wallSize);
-    ctx.fillRect(0,0,ROOM.wallSize,ROOM.h); ctx.fillRect(ROOM.w-ROOM.wallSize,0,ROOM.wallSize,ROOM.h);
+    drops.forEach(d => { ctx.fillStyle = "#fff"; ctx.font = "20px Orbitron"; ctx.fillText("➕", d.x-10, d.y+5); });
+    
+    enemies.forEach(en => { 
+        ctx.fillStyle = en.isBoss ? "#8b0000" : "#ff0000";
+        ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.fillRect(en.x-20, en.y-en.r-10, 40 * (en.hp/(30+G.room*5)), 5);
+    });
 
-    // Portas Ativas com brilho
-    if(G.enemiesDefeated) {
-        ctx.shadowBlur = 20; ctx.shadowColor = "#ff0000";
-        ctx.fillStyle = "#ff0000";
-        doors.forEach(d => ctx.fillRect(d.x, d.y, d.w, d.h));
-        ctx.shadowBlur = 0;
-    }
+    ctx.fillStyle = G.reloading ? "#444" : "#fff";
+    ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
+    if(G.hasFireWpn) { ctx.strokeStyle = "#ff4500"; ctx.lineWidth = 3; ctx.stroke(); }
 
-    // Entidades
-    ctx.fillStyle = "#ff0000"; enemies.forEach(en => { ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill(); });
-    ctx.fillStyle = G.reloading ? "#444" : "#fff"; ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = "#fff"; projectiles.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); });
+    projectiles.forEach(p => { ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); });
 
     ctx.restore();
     document.getElementById('hp-fill').style.width = G.hp + "%";
@@ -261,7 +216,6 @@ function draw() {
     requestAnimationFrame(draw);
 }
 
-G.lastShot = 0;
 window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
 window.addEventListener('keyup', e => delete keys[e.key.toLowerCase()]);
 window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
