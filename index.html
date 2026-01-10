@@ -7,41 +7,51 @@
     <style>
         * { touch-action: none !important; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
         body { background: #000; color: #fff; margin: 0; font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; width: 100vw; display: flex; }
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 200; text-align: center; }
-        .btn-ui { padding: 20px 40px; border: 3px solid #fff; background: #222; color: #fff; cursor: pointer; font-size: 22px; margin: 10px; width: 280px; z-index: 210; pointer-events: auto !important; }
         
-        /* Estilo para as cartas de upgrade */
+        .overlay { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); 
+            display: flex; flex-direction: column; justify-content: center; 
+            align-items: center; z-index: 200; text-align: center; 
+        }
+
+        .btn-ui { 
+            padding: 20px 40px; border: 3px solid #ff4d6d; background: #222; 
+            color: #fff; cursor: pointer; font-size: 22px; margin: 10px; width: 280px; 
+        }
+
         #upgrade-container { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; }
         .upgrade-card { 
-            background: #1a1a1a; border: 2px solid #f1c40f; padding: 20px; 
-            width: 150px; cursor: pointer; transition: 0.2s; pointer-events: auto;
+            background: #111; border: 2px solid #f1c40f; padding: 20px; 
+            width: 140px; cursor: pointer; transition: 0.2s;
         }
         .upgrade-card:hover { background: #f1c40f; color: #000; }
 
         #game-container { position: relative; flex: 1; height: 100%; width: 100%; display: flex; justify-content: center; align-items: center; }
-        canvas { background: #111; image-rendering: pixelated; width: 100%; height: 100%; object-fit: contain; }
+        canvas { background: #0a0a0a; image-rendering: pixelated; width: 100%; height: 100%; object-fit: contain; }
+
         .mobile-ctrl { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 50; }
-        #joy-bound { position: absolute; bottom: 10%; left: 5%; width: 150px; height: 150px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; pointer-events: auto; }
-        #joy-stick { position: absolute; left: 50px; top: 50px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.4; }
-        #shoot-ctrl { position: absolute; bottom: 10%; right: 5%; display: grid; grid-template-columns: repeat(3, 75px); gap: 10px; pointer-events: auto; }
-        .atk-btn { width: 75px; height: 75px; background: rgba(52,152,219,0.15); border: 2px solid #3498db; border-radius: 50%; color: #3498db; display: flex; justify-content: center; align-items: center; font-size: 24px; }
+        #joy-bound { position: absolute; bottom: 10%; left: 5%; width: 140px; height: 140px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 50%; pointer-events: auto; }
+        #joy-stick { position: absolute; left: 45px; top: 45px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.3; }
+        #shoot-ctrl { position: absolute; bottom: 10%; right: 5%; display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; pointer-events: auto; }
+        .atk-btn { width: 70px; height: 70px; background: rgba(52,152,219,0.1); border: 2px solid #3498db; border-radius: 50%; color: #3498db; display: flex; justify-content: center; align-items: center; font-size: 22px; }
     </style>
 </head>
 <body>
 
 <div id="start-screen" class="overlay">
-    <h1 style="color:#ff4d6d">COVIL DAS SOMBRAS</h1>
-    <button class="btn-ui" id="start-btn">INICIAR JOGO</button>
+    <h1 style="color:#ff4d6d; font-size: 40px;">COVIL DAS SOMBRAS</h1>
+    <button class="btn-ui" id="start-btn">ENTRAR NO COVIL</button>
 </div>
 
 <div id="upgrade-screen" class="overlay" style="display:none">
-    <h1 style="color:#f1c40f">SALA CONCLUÍDA! ESCOLHA UM UPGRADE</h1>
+    <h1 style="color:#f1c40f">UPGRADE DISPONÍVEL</h1>
     <div id="upgrade-container"></div>
 </div>
 
 <div id="death-screen" class="overlay" style="display:none">
-    <h1 style="color:red">VOCÊ MORREU</h1>
-    <button class="btn-ui" onclick="location.reload()">RECOMECAR</button>
+    <h1 style="color:#ff4d6d; font-size: 50px;">FIM DA JORNADA</h1>
+    <p>Você sucumbiu às sombras.</p>
+    <button class="btn-ui" onclick="location.reload()">REENCARNAR</button>
 </div>
 
 <div id="game-container">
@@ -64,9 +74,8 @@ function resize() { canvas.width = window.innerWidth / 2; canvas.height = window
 window.addEventListener('resize', resize);
 resize();
 
-// --- ESTADOS DO JOGO ---
-const Game = { started: false, lives: 6, maxLives: 6, room: 0, active: true, roomW: 1000, roomH: 800, camX: 0, camY: 0, paused: false };
-const Stats = { moveSpeed: 5, atkSpeed: 15, damage: 10 };
+const Game = { started: false, lives: 6, maxLives: 6, room: 0, roomW: 1000, roomH: 800, camX: 0, camY: 0, paused: false };
+const Stats = { moveSpeed: 4.8, atkSpeed: 15, damage: 10 };
 const input = { x: 0, y: 0 };
 const attack = { up: false, down: false, left: false, right: false };
 
@@ -78,57 +87,48 @@ document.getElementById('start-btn').onclick = () => {
     loop();
 };
 
-// --- LÓGICA DE UPGRADES ---
 function showUpgradeMenu() {
     Game.paused = true;
     const container = document.getElementById('upgrade-container');
     container.innerHTML = '';
-    
     const pool = [
-        { name: "BOTAS LEVES", desc: "+ Velocidade", effect: () => Stats.moveSpeed += 1.5 },
-        { name: "CAFÉ", desc: "+ Cadência", effect: () => Stats.atkSpeed = Math.max(5, Stats.atkSpeed - 3) },
-        { name: "VITAMINA", desc: "+ 2 Vidas Máx", effect: () => { Game.maxLives += 2; Game.lives = Game.maxLives; } },
-        { name: "PEDRA", desc: "+ Dano", effect: () => Stats.damage += 10 }
+        { n: "AGILIDADE", d: "+ Velocidade", e: () => Stats.moveSpeed += 1.2 },
+        { n: "ADRENALINA", d: "+ Cadência", e: () => Stats.atkSpeed = Math.max(5, Stats.atkSpeed - 3) },
+        { n: "VITALIDADE", d: "+ 2 Corações", e: () => { Game.maxLives += 2; Game.lives = Game.maxLives; } },
+        { n: "FORÇA bruta", d: "+ Dano", e: () => Stats.damage += 10 }
     ];
-
-    // Sorteia 3 opções
     pool.sort(() => Math.random() - 0.5).slice(0, 3).forEach(opt => {
         const card = document.createElement('div');
         card.className = 'upgrade-card';
-        card.innerHTML = `<strong>${opt.name}</strong><br><small>${opt.desc}</small>`;
-        card.onclick = () => {
-            opt.effect();
-            Game.paused = false;
-            document.getElementById('upgrade-screen').style.display = 'none';
-        };
+        card.innerHTML = `<strong>${opt.n}</strong><br><small>${opt.d}</small>`;
+        card.onclick = () => { opt.e(); Game.paused = false; document.getElementById('upgrade-screen').style.display = 'none'; };
         container.appendChild(card);
     });
     document.getElementById('upgrade-screen').style.display = 'flex';
 }
 
-// --- CONTROLES (TOQUE E TECLADO) ---
+// --- CONTROLES ---
 let joyTouchId = null;
 if(isMobile) {
-    window.addEventListener('touchstart', processTouches, { passive: false });
-    window.addEventListener('touchmove', processTouches, { passive: false });
-    window.addEventListener('touchend', endTouch, { passive: false });
+    window.addEventListener('touchstart', (e) => { e.preventDefault(); processTouches(e); }, { passive: false });
+    window.addEventListener('touchmove', (e) => { e.preventDefault(); processTouches(e); }, { passive: false });
+    window.addEventListener('touchend', (e) => { e.preventDefault(); endTouch(e); }, { passive: false });
 }
 
 function processTouches(e) {
     if(!Game.started || Game.paused) return;
-    e.preventDefault();
     let curAtk = { up: false, down: false, left: false, right: false };
     const r = document.getElementById('joy-bound').getBoundingClientRect();
     for (let t of e.touches) {
         if (joyTouchId === t.identifier || (joyTouchId === null && t.clientX >= r.left && t.clientX <= r.right && t.clientY >= r.top && t.clientY <= r.bottom)) {
             joyTouchId = t.identifier;
-            input.x = (t.clientX - (r.left + r.width/2)) / 60;
-            input.y = (t.clientY - (r.top + r.height/2)) / 60;
-            const dist = Math.min(1, Math.hypot(input.x, input.y));
-            const ang = Math.atan2(input.y, input.x);
-            input.x = Math.cos(ang) * dist; input.y = Math.sin(ang) * dist;
-            document.getElementById('joy-stick').style.left = (50 + input.x * 40) + 'px';
-            document.getElementById('joy-stick').style.top = (50 + input.y * 40) + 'px';
+            let dx = (t.clientX - (r.left + r.width/2)) / 60;
+            let dy = (t.clientY - (r.top + r.height/2)) / 60;
+            let d = Math.min(1, Math.hypot(dx, dy));
+            let a = Math.atan2(dy, dx);
+            input.x = Math.cos(a) * d; input.y = Math.sin(a) * d;
+            document.getElementById('joy-stick').style.left = (45 + input.x * 35) + 'px';
+            document.getElementById('joy-stick').style.top = (45 + input.y * 35) + 'px';
         }
         const target = document.elementFromPoint(t.clientX, t.clientY);
         if (target && target.classList.contains('atk-btn')) curAtk[target.getAttribute('data-dir')] = true;
@@ -139,7 +139,7 @@ function processTouches(e) {
 function endTouch(e) {
     for (let t of e.changedTouches) if (t.identifier === joyTouchId) {
         joyTouchId = null; input.x = 0; input.y = 0;
-        document.getElementById('joy-stick').style.left = '50px'; document.getElementById('joy-stick').style.top = '50px';
+        document.getElementById('joy-stick').style.left = '45px'; document.getElementById('joy-stick').style.top = '45px';
     }
 }
 
@@ -155,13 +155,12 @@ window.onkeyup = (e) => {
     if(k=='i'||k=='k'||k=='j'||k=='l'||e.key.includes('Arrow')) { attack.up = attack.down = attack.left = attack.right = false; }
 };
 
-// --- ENTIDADES ---
 class Projectile {
     constructor(x, y, dx, dy, enemy=false) { this.x = x; this.y = y; this.dx = dx; this.dy = dy; this.enemy = enemy; this.active = true; }
     update() {
         this.x += this.dx * (this.enemy ? 3 : 8);
         this.y += this.dy * (this.enemy ? 3 : 8);
-        if(this.x < 0 || this.x > Game.roomW || this.y < 0 || this.y > Game.roomH) this.active = false;
+        if(this.x < 10 || this.x > Game.roomW-10 || this.y < 10 || this.y > Game.roomH-10) this.active = false;
     }
     draw() { ctx.fillStyle = this.enemy ? "#f0f" : "#0ff"; ctx.beginPath(); ctx.arc(this.x, this.y, 4, 0, Math.PI*2); ctx.fill(); }
 }
@@ -176,26 +175,26 @@ class Enemy {
     }
     update() {
         if (this.stun > 0) { this.stun--; return; }
-        let dist = Math.hypot(p.x - this.x, p.y - this.y);
+        let d = Math.hypot(p.x - this.x, p.y - this.y);
         if (this.type === 'bossT') {
             if (--this.timer <= 0) {
                 for(let i=0; i<12; i++) {
                     let a = (Math.PI*2/12)*i;
-                    projectiles.push(new Projectile(this.x+30, this.y+30, Math.cos(a), Math.sin(a), true));
+                    projectiles.push(new Projectile(this.x+40, this.y+40, Math.cos(a), Math.sin(a), true));
                 }
-                this.timer = 100; this.stun = 40;
+                this.timer = 110; this.stun = 30;
             }
         } else if (this.type === 'stalker') {
             let a = Math.atan2(p.y - this.y, p.x - this.x);
-            this.x += Math.cos(a) * 2.2; this.y += Math.sin(a) * 2.2;
+            this.x += Math.cos(a) * 2; this.y += Math.sin(a) * 2;
         } else if (this.type === 'kamikaze') {
             let a = Math.atan2(p.y - this.y, p.x - this.x);
-            this.x += Math.cos(a) * 3.8; this.y += Math.sin(a) * 3.8;
+            this.x += Math.cos(a) * 3.5; this.y += Math.sin(a) * 3.5;
         } else if (this.type === 'assassin') {
-            if (dist < 250) this.seePlayer = true;
+            if (d < 250) this.seePlayer = true;
             if (this.seePlayer) {
                 let a = Math.atan2(p.y - this.y, p.x - this.x);
-                this.x += Math.cos(a) * 4.8; this.y += Math.sin(a) * 4.8;
+                this.x += Math.cos(a) * 4.5; this.y += Math.sin(a) * 4.5;
             }
         } else {
             if (--this.timer <= 0) {
@@ -217,11 +216,10 @@ let enemies = [], projectiles = [];
 
 function initRoom() {
     projectiles = []; enemies = []; 
-    p.x = Game.roomW/2 - 12; p.y = Game.roomH - 100;
-
+    p.x = Game.roomW/2 - 12; p.y = Game.roomH - 120; 
     if (Game.room === 0) return;
     if (Game.room === 20) {
-        enemies.push(new Enemy('bossT', 550, 200));
+        enemies.push(new Enemy('bossT', 460, 200));
     } else {
         let n = 2 + Math.floor(Game.room/3);
         for(let i=0; i<n; i++) {
@@ -232,13 +230,8 @@ function initRoom() {
 }
 
 function loop() {
-    if (!Game.active || !Game.started || Game.paused) return requestAnimationFrame(loop);
-    
-    if (Game.lives <= 0) {
-        Game.active = false;
-        document.getElementById('death-screen').style.display = 'flex';
-        return;
-    }
+    if (!Game.started || Game.paused) return requestAnimationFrame(loop);
+    if (Game.lives <= 0) { document.getElementById('death-screen').style.display = 'flex'; return; }
 
     Game.camX += ((p.x - canvas.width/2) - Game.camX) * 0.1;
     Game.camY += ((p.y - canvas.height/2) - Game.camY) * 0.1;
@@ -246,12 +239,16 @@ function loop() {
     ctx.clearRect(0,0, canvas.width, canvas.height);
     ctx.save(); ctx.translate(-Game.camX, -Game.camY);
     
+    // Parede Limitadora
     ctx.strokeStyle = "#222"; 
     for(let i=0; i<Game.roomW; i+=100) for(let j=0; j<Game.roomH; j+=100) ctx.strokeRect(i, j, 100, 100);
-    ctx.strokeStyle = "#444"; ctx.lineWidth = 10; ctx.strokeRect(0,0, Game.roomW, Game.roomH);
+    ctx.strokeStyle = "#444"; ctx.lineWidth = 20; ctx.strokeRect(0,0, Game.roomW, Game.roomH);
 
+    // Player c/ trava de parede
     p.x += input.x * Stats.moveSpeed; p.y += input.y * Stats.moveSpeed;
-    p.x = Math.max(10, Math.min(Game.roomW-35, p.x)); p.y = Math.max(10, Math.min(Game.roomH-35, p.y));
+    p.x = Math.max(25, Math.min(Game.roomW-50, p.x));
+    p.y = Math.max(25, Math.min(Game.roomH-50, p.y));
+    
     if (p.iframe > 0) p.iframe--;
     ctx.fillStyle = (p.iframe % 4 < 2) ? "#e67e22" : "#fff";
     ctx.fillRect(p.x, p.y, 25, 25);
@@ -265,7 +262,7 @@ function loop() {
     for(let i = projectiles.length-1; i >= 0; i--){
         let pr = projectiles[i]; pr.update(); pr.draw();
         if (pr.enemy) {
-            if (p.iframe <= 0 && Math.hypot(pr.x-p.x-12, pr.y-p.y-12) < 15) { Game.lives--; p.iframe = 60; pr.active = false; }
+            if (p.iframe <= 0 && Math.hypot(pr.x-p.x-12, pr.y-p.y-12) < 16) { Game.lives--; p.iframe = 60; pr.active = false; }
         } else {
             enemies.forEach(e => {
                 if (e.alive && Math.hypot(pr.x-e.x-15, pr.y-e.y-15) < 30) { e.hp -= Stats.damage; pr.active = false; if(e.hp <= 0) e.alive = false; }
@@ -286,8 +283,8 @@ function loop() {
     });
 
     if (enemies.filter(e => e.alive).length === 0) {
-        ctx.fillStyle = "#f1c40f"; ctx.fillRect(Game.roomW/2-50, 0, 100, 30);
-        if (p.y < 35 && Math.abs(p.x - Game.roomW/2 + 25) < 50) { 
+        ctx.fillStyle = "#f1c40f"; ctx.fillRect(Game.roomW/2-40, 0, 80, 25);
+        if (p.y < 40 && Math.abs(p.x - Game.roomW/2 + 20) < 50) { 
             Game.room++; 
             if (Game.room % 10 === 0) showUpgradeMenu();
             initRoom(); 
@@ -295,12 +292,15 @@ function loop() {
     }
 
     ctx.restore();
+    
+    // --- HUD DE QUADRADOS ---
     for(let i=0; i<Game.maxLives; i++) {
-        ctx.strokeStyle = "#333"; ctx.lineWidth = 2; ctx.strokeRect(20 + (i*25), 20, 20, 20);
-        if(i < Game.lives) { ctx.fillStyle = "#ff4d6d"; ctx.fillRect(22 + (i*25), 22, 16, 16); }
+        ctx.fillStyle = "#222"; ctx.fillRect(20 + (i*24), 20, 18, 18);
+        if(i < Game.lives) { ctx.fillStyle = "#ff4d6d"; ctx.fillRect(20 + (i*24), 20, 18, 18); }
     }
-    ctx.fillStyle = "#fff"; ctx.font = "bold 16px Arial";
-    ctx.fillText("SALA " + Game.room, 20, 60);
+    ctx.fillStyle = "#fff"; ctx.font = "bold 14px Arial";
+    ctx.fillText("SALA " + Game.room, 20, 55);
+    
     requestAnimationFrame(loop);
 }
 </script>
