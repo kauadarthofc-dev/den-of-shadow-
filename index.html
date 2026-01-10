@@ -45,7 +45,7 @@ const Game = { started: false, room: 1, roomW: 800, roomH: 600, camX: 0, camY: 0
 const Stats = { moveSpd: 4.0, atkSpd: 18, damage: 10 };
 const input = { x: 0, y: 0 };
 const attack = { up: false, down: false, left: false, right: false };
-let enemies = [], projectiles = [], particles = [], joyId = null;
+let enemies = [], projectiles = [], particles = [], uiParticles = [], joyId = null;
 let p = { x: 400, y: 300, iframe: 0, timer: 0 };
 
 function resize() {
@@ -55,16 +55,16 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// --- SISTEMA DE ANIMAÇÃO (PARTÍCULAS) ---
-function createParticles(x, y, color, count, speed) {
+// --- SISTEMA DE PARTÍCULAS ---
+function createParticles(x, y, color, count, speed, list = particles) {
     for (let i = 0; i < count; i++) {
-        particles.push({
+        list.push({
             x: x, y: y,
             vx: (Math.random() - 0.5) * speed,
             vy: (Math.random() - 0.5) * speed,
             life: 1.0,
             color: color,
-            size: Math.random() * 4 + 2
+            size: Math.random() * 3 + 2
         });
     }
 }
@@ -96,7 +96,7 @@ function initRoom() {
     }
 }
 
-// --- CONTROLES (PC e Mobile mantidos do seu código) ---
+// (Controles PC e Mobile seguem iguais para garantir que você continue se mexendo...)
 window.addEventListener('keydown', e => {
     let k = e.key.toLowerCase();
     if(k==='w') input.y = -1; if(k==='s') input.y = 1;
@@ -128,21 +128,10 @@ if(isMobile) {
             }
         }
     });
-    window.addEventListener('touchend', e => {
-        for(let t of e.changedTouches) {
-            if(t.identifier === joyId) {
-                joyId = null; input.x = 0; input.y = 0;
-                document.getElementById('joy-stick').style.left = '35px'; document.getElementById('joy-stick').style.top = '35px';
-            }
-        }
-    });
-    document.querySelectorAll('.atk-btn').forEach(btn => {
-        btn.addEventListener('touchstart', e => { e.preventDefault(); attack[btn.dataset.dir] = true; });
-        btn.addEventListener('touchend', e => { e.preventDefault(); attack[btn.dataset.dir] = false; });
-    });
+    window.addEventListener('touchend', e => { for(let t of e.changedTouches) { if(t.identifier === joyId) { joyId = null; input.x = 0; input.y = 0; document.getElementById('joy-stick').style.left = '35px'; document.getElementById('joy-stick').style.top = '35px'; } } });
+    document.querySelectorAll('.atk-btn').forEach(btn => { btn.addEventListener('touchstart', e => { e.preventDefault(); attack[btn.dataset.dir] = true; }); btn.addEventListener('touchend', e => { e.preventDefault(); attack[btn.dataset.dir] = false; }); });
 }
 
-// --- RENDERIZAÇÃO E LÓGICA ---
 function loop() {
     if(!Game.started) return;
     if(Game.lives <= 0) { alert("Fim de Jogo! Sala: " + Game.room); location.reload(); return; }
@@ -150,11 +139,7 @@ function loop() {
     ctx.clearRect(0,0, canvas.width, canvas.height);
     ctx.save();
     
-    // Tremedeira de tela na explosão
-    if(Game.shake > 0) {
-        ctx.translate((Math.random()-0.5)*Game.shake, (Math.random()-0.5)*Game.shake);
-        Game.shake *= 0.9;
-    }
+    if(Game.shake > 0) { ctx.translate((Math.random()-0.5)*Game.shake, (Math.random()-0.5)*Game.shake); Game.shake *= 0.9; }
 
     Game.camX += ((p.x - canvas.width/2) - Game.camX) * 0.1;
     Game.camY += ((p.y - canvas.height/2) - Game.camY) * 0.1;
@@ -172,14 +157,14 @@ function loop() {
     ctx.fillRect(-20, -20, Game.roomW+40, 20); ctx.fillRect(-20, Game.roomH, Game.roomW+40, 20);
     ctx.fillRect(-20, 0, 20, Game.roomH); ctx.fillRect(Game.roomW, 0, 20, Game.roomH);
 
-    // Player
+    // Movimento Player
     p.x = Math.max(10, Math.min(Game.roomW-35, p.x + input.x * Stats.moveSpd));
     p.y = Math.max(10, Math.min(Game.roomH-35, p.y + input.y * Stats.moveSpd));
     if(p.iframe > 0) p.iframe--;
     ctx.fillStyle = p.iframe % 4 < 2 ? "#fff" : "#ff4d6d";
     ctx.fillRect(p.x, p.y, 25, 25);
 
-    // Atirar
+    // Atirar e Inimigos
     p.timer++;
     if(p.timer % Stats.atkSpd === 0) {
         let dx=0, dy=0;
@@ -187,7 +172,6 @@ function loop() {
         if(dx||dy) projectiles.push({x: p.x+10, y:p.y+10, dx, dy, enemy:false});
     }
 
-    // Inimigos
     enemies.forEach((e, i) => {
         let ang = Math.atan2(p.y - e.y, p.x - e.x);
         e.x += Math.cos(ang) * (e.type==='kamikaze'?2.5:1.5);
@@ -195,64 +179,68 @@ function loop() {
         ctx.fillStyle = e.type==='kamikaze' ? "#f1c40f" : "#3498db";
         ctx.fillRect(e.x, e.y, 30, 30);
 
-        let dist = Math.hypot(p.x - e.x, p.y - e.y);
-        if(p.iframe <= 0 && dist < 28) {
-            Game.lives -= (e.type==='kamikaze' ? 2 : 1);
+        if(p.iframe <= 0 && Math.hypot(p.x - e.x, p.y - e.y) < 28) {
+            // HIT TOMADO
+            let hitDmg = (e.type==='kamikaze' ? 2 : 1);
+            // Animação Coração Partindo
+            for(let d=0; d<hitDmg; d++) {
+                let heartX = 20 + (Game.lives - 1 - d) * 25;
+                createParticles(heartX + 9, 29, "#ff4d6d", 10, 4, uiParticles);
+            }
+            Game.lives -= hitDmg;
             p.iframe = 60;
+            Game.shake = 8;
             if(e.type==='kamikaze') {
-                Game.shake = 10;
-                createParticles(e.x+15, e.y+15, "#ff4500", 20, 8); // Explosão de fogo
-                createParticles(e.x+15, e.y+15, "#ffff00", 15, 5); // Brilho amarelo
-                enemies.forEach(other => { if(Math.hypot(e.x-other.x, e.y-other.y) < 100) other.hp -= 50; });
+                createParticles(e.x+15, e.y+15, "#ff4500", 25, 8);
                 e.hp = 0;
             }
         }
         if(e.hp <= 0) {
-            // Animação de Morte Comum
-            createParticles(e.x+15, e.y+15, e.type==='kamikaze'?"#f1c40f":"#3498db", 10, 3);
+            createParticles(e.x+15, e.y+15, e.type==='kamikaze'?"#f1c40f":"#3498db", 15, 5);
             enemies.splice(i, 1);
         }
     });
 
-    // Projéteis
     projectiles.forEach((pr, i) => {
         pr.x += pr.dx * 6; pr.y += pr.dy * 6;
         ctx.fillStyle = "#0ff"; ctx.fillRect(pr.x, pr.y, 6, 6);
         enemies.forEach(e => {
             if(Math.hypot(pr.x-e.x-15, pr.y-e.y-15) < 25) { 
-                e.hp -= Stats.damage; 
-                createParticles(pr.x, pr.y, "#0ff", 4, 2); // Impacto do tiro
-                projectiles.splice(i, 1); 
+                e.hp -= Stats.damage; createParticles(pr.x, pr.y, "#0ff", 4, 2); projectiles.splice(i, 1); 
             }
         });
         if(pr.x<0 || pr.x>Game.roomW || pr.y<0 || pr.y>Game.roomH) projectiles.splice(i, 1);
     });
 
-    // Renderizar Partículas
+    // Partículas de Jogo
     particles.forEach((part, i) => {
-        part.x += part.vx;
-        part.y += part.vy;
-        part.life -= 0.02;
-        ctx.globalAlpha = part.life;
-        ctx.fillStyle = part.color;
-        ctx.fillRect(part.x, part.y, part.size, part.size);
+        part.x += part.vx; part.y += part.vy; part.life -= 0.02;
+        ctx.globalAlpha = part.life; ctx.fillStyle = part.color; ctx.fillRect(part.x, part.y, part.size, part.size);
         if (part.life <= 0) particles.splice(i, 1);
     });
-    ctx.globalAlpha = 1.0;
 
-    // Saída da Sala
     if(enemies.length === 0) {
         ctx.fillStyle = "#f1c40f"; ctx.fillRect(Game.roomW/2-40, -10, 80, 20);
         if(p.y < 20 && Math.abs(p.x - Game.roomW/2) < 40) { Game.room++; initRoom(); }
     }
-
     ctx.restore();
 
-    // HUD
+    // --- HUD E PARTÍCULAS DE UI ---
+    ctx.globalAlpha = 1.0;
     for(let i=0; i<Game.maxLives; i++) {
         ctx.fillStyle = i < Game.lives ? "#ff4d6d" : "#333";
         ctx.fillRect(20 + i*25, 20, 18, 18);
     }
+    
+    // Partículas da UI (Corações quebrando)
+    uiParticles.forEach((part, i) => {
+        part.x += part.vx; part.y += part.vy; part.vy += 0.2; // Gravidade
+        part.life -= 0.02;
+        ctx.globalAlpha = part.life; ctx.fillStyle = part.color; ctx.fillRect(part.x, part.y, part.size, part.size);
+        if (part.life <= 0) uiParticles.splice(i, 1);
+    });
+    ctx.globalAlpha = 1.0;
+
     ctx.fillStyle = "#fff"; ctx.font = "bold 14px Arial";
     ctx.fillText("SALA: " + Game.room, canvas.width - 80, 35);
 
