@@ -7,15 +7,8 @@
     <style>
         * { touch-action: none !important; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
         html, body { background: #000; margin: 0; padding: 0; overflow: hidden; height: 100%; width: 100%; position: fixed; font-family: 'Courier New', monospace; color: #fff; }
-        #start-screen { background: radial-gradient(circle, #2c0000 0%, #000 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .logo { font-size: 40px; color: #ff4d6d; text-shadow: 0 0 20px #ff0000; margin-bottom: 5px; font-weight: bold; }
-        .subtitle { font-size: 14px; color: #888; margin-bottom: 30px; letter-spacing: 2px; }
-        .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; text-align: center; }
-        .btn-ui { padding: 20px 40px; border: 4px solid #ff4d6d; background: #111; color: #fff; font-size: 20px; font-weight: bold; border-radius: 12px; cursor: pointer; transition: 0.3s; }
-        .btn-ui:hover { background: #ff4d6d; color: #000; }
-        #death-screen, #card-screen { display: none; z-index: 2000; flex-direction: column; justify-content: center; align-items: center;}
-        .card { width: 110px; height: 160px; background: #1a1a1a; border: 3px solid #f1c40f; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; padding: 5px; text-align: center; }
-        .card b { color: #f1c40f; font-size: 14px; margin-bottom: 10px; }
+        .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .btn-ui { padding: 20px 40px; border: 4px solid #ff4d6d; background: #111; color: #fff; font-size: 20px; font-weight: bold; border-radius: 12px; cursor: pointer; }
         #game-container { position: relative; width: 100vw; height: 100vh; }
         canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
         .mobile-ctrl { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 50; }
@@ -23,22 +16,25 @@
         #joy-stick { position: absolute; left: 35px; top: 35px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.4; }
         #shoot-ctrl { position: absolute; bottom: 15%; right: 8%; display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; pointer-events: auto; }
         .atk-btn { width: 70px; height: 70px; background: rgba(52,152,219,0.1); border: 2px solid #3498db; border-radius: 50%; color: #3498db; display: flex; justify-content: center; align-items: center; font-size: 24px; }
-        #swap-btn { position: absolute; bottom: 45%; right: 8%; width: 70px; height: 60px; background: rgba(241, 196, 15, 0.2); border: 2px solid #f1c40f; border-radius: 12px; color: #f1c40f; display: flex; justify-content: center; align-items: center; font-size: 14px; font-weight: bold; pointer-events: auto; }
+        #swap-btn { position: absolute; bottom: 45%; right: 8%; width: 80px; height: 70px; background: rgba(241, 196, 15, 0.2); border: 3px solid #f1c40f; border-radius: 15px; color: #f1c40f; display: flex; justify-content: center; align-items: center; font-size: 16px; font-weight: bold; pointer-events: auto; }
     </style>
 </head>
 <body>
 
 <div id="start-screen" class="overlay">
-    <div class="logo">FOX OF ISAAC</div>
-    <div class="subtitle">DEN OF SHADOWS</div>
+    <h1 style="color:#ff4d6d; font-size:40px; text-shadow:0 0 20px red;">FOX OF ISAAC</h1>
     <div class="btn-ui" id="btn-start">DESCER AO COVIL</div>
 </div>
-<div id="death-screen" class="overlay">
-    <h1 style="color:#ff0000;">VOCÊ CAIU</h1>
-    <p id="final-room">SALA: 1</p>
-    <div class="btn-ui" onclick="location.reload()">TENTAR NOVAMENTE</div>
+
+<div id="death-screen" class="overlay" style="display:none;">
+    <h1 style="color:red;">FIM DA JORNADA</h1>
+    <div class="btn-ui" onclick="location.reload()">RECOMEÇAR</div>
 </div>
-<div id="card-screen" class="overlay"><h2 style="color:#f1c40f">ESCOLHA SEU DESTINO</h2><div id="card-container" style="display: flex; gap: 15px;"></div></div>
+
+<div id="card-screen" class="overlay" style="display:none; z-index:2000;">
+    <h2 style="color:#f1c40f">ESCOLHA UM UPGRADE</h2>
+    <div id="card-container" style="display:flex; gap:15px;"></div>
+</div>
 
 <div id="game-container">
     <canvas id="game"></canvas>
@@ -48,7 +44,7 @@
             <div></div><div class="atk-btn" data-dir="up">▲</div><div></div>
             <div class="atk-btn" data-dir="left">◀</div><div class="atk-btn" data-dir="down">▼</div><div class="atk-btn" data-dir="right">▶</div>
         </div>
-        <div id="swap-btn">SWAP</div>
+        <div id="swap-btn">ARMA</div>
     </div>
 </div>
 
@@ -57,21 +53,21 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+// Carregamento da UI de Vida
+const heartImg = new Image();
+heartImg.src = 'data:image/png;base64,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';
+
 const Game = { 
     started: false, paused: false, room: 0, roomW: 800, roomH: 600, 
     camX: 0, camY: 0, lives: 6, maxLives: 6, weapon: 'normal', 
-    hasFire: false, hasAcid: false 
+    hasFire: false, hasAcid: false, version: "v1.2.5" 
 };
+
 const Stats = { moveSpd: 4.5, atkSpd: 18, damage: 10 };
 const keys = new Set();
 const attack = { up: false, down: false, left: false, right: false };
 let enemies = [], projectiles = [], particles = [], pedestal = null, joyId = null;
-let p = { x: 400, y: 300, iframe: 0, timer: 0, dead: false, crossTimer: 0 };
-
-const forestGroundImg = new Image();
-forestGroundImg.src = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTnRfCEHVYBu_nYzA_KZ5_m2TvlNUBsS5Ee-g&s';
-let forestGroundLoaded = false;
-forestGroundImg.onload = () => { forestGroundLoaded = true; };
+let p = { x: 400, y: 300, iframe: 0, timer: 0, dead: false };
 
 let audioCtx = null;
 function playSfx(f, type, dur, vol=0.1) {
@@ -88,76 +84,67 @@ function playSfx(f, type, dur, vol=0.1) {
     } catch(e){}
 }
 
-function handleGamepad() {
-    const gps = navigator.getGamepads();
-    if(!gps[0]) return null;
-    const gp = gps[0];
-    const gpIn = { x: 0, y: 0 };
-    if(Math.abs(gp.axes[0]) > 0.2) gpIn.x = gp.axes[0];
-    if(Math.abs(gp.axes[1]) > 0.2) gpIn.y = gp.axes[1];
-    attack.up = gp.buttons[12]?.pressed || gp.buttons[3]?.pressed;
-    attack.down = gp.buttons[13]?.pressed || gp.buttons[0]?.pressed;
-    attack.left = gp.buttons[14]?.pressed || gp.buttons[2]?.pressed;
-    attack.right = gp.buttons[15]?.pressed || gp.buttons[1]?.pressed;
-    if((gp.buttons[4]?.pressed || gp.buttons[8]?.pressed) && p.timer % 20 === 0) cycleWeapon();
-    return gpIn;
-}
-
+// TROCA DE ARMA OTIMIZADA
 function cycleWeapon() {
     if(!Game.hasFire && !Game.hasAcid) return;
-    if(Game.weapon === 'normal') {
-        if(Game.hasFire) Game.weapon = 'fire';
-        else if(Game.hasAcid) Game.weapon = 'acid';
-    } else if(Game.weapon === 'fire') {
-        if(Game.hasAcid) Game.weapon = 'acid';
-        else Game.weapon = 'normal';
-    } else {
-        Game.weapon = 'normal';
+    let old = Game.weapon;
+    if(Game.weapon === 'normal') Game.weapon = Game.hasFire ? 'fire' : 'acid';
+    else if(Game.weapon === 'fire') Game.weapon = Game.hasAcid ? 'acid' : 'normal';
+    else Game.weapon = 'normal';
+    
+    if(old !== Game.weapon) {
+        Stats.atkSpd = Game.weapon === 'fire' ? 10 : (Game.weapon === 'acid' ? 25 : 18);
+        playSfx(500, 'sine', 0.1, 0.2);
     }
-    Stats.atkSpd = Game.weapon === 'fire' ? 10 : (Game.weapon === 'acid' ? 25 : 18);
-    playSfx(400, 'sine', 0.1);
 }
 
-window.addEventListener('keydown', e => keys.add(e.key.toLowerCase()));
+// CONTROLES
+window.addEventListener('keydown', e => {
+    keys.add(e.key.toLowerCase());
+    if(e.key.toLowerCase() === 'q') cycleWeapon();
+});
 window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
 
-function updateInput() {
-    let gpInput = handleGamepad();
-    let inputX = 0, inputY = 0;
-    if(keys.has('w')) inputY = -1; if(keys.has('s')) inputY = 1;
-    if(keys.has('a')) inputX = -1; if(keys.has('d')) inputX = 1;
-    if(!gpInput) {
-        attack.up = keys.has('arrowup'); attack.down = keys.has('arrowdown');
-        attack.left = keys.has('arrowleft'); attack.right = keys.has('arrowright');
-    }
-    if(keys.has('q') && p.timer % 20 === 0) cycleWeapon();
-    return gpInput || {x: inputX, y: inputY};
-}
-
 if(isMobile) {
-    document.getElementById('swap-btn').addEventListener('touchstart', (e) => { e.preventDefault(); cycleWeapon(); });
+    // Evento de toque imediato para o Swap
+    document.getElementById('swap-btn').addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        cycleWeapon();
+    });
+    
     const jb = document.getElementById('joy-bound');
     jb.addEventListener('touchstart', e => { e.preventDefault(); joyId = e.changedTouches[0].identifier; }, {passive:false});
     window.addEventListener('touchmove', e => {
         const r = jb.getBoundingClientRect();
         for(let t of e.touches) if(t.identifier === joyId) {
             let dx = t.clientX - (r.left + 60), dy = t.clientY - (r.top + 60), dist = Math.hypot(dx, dy);
-            if(dist > 5) { keys.joyX = dx/dist; keys.joyY = dy/dist; } else { keys.joyX = 0; keys.joyY = 0; }
+            if(dist > 5) { keys.joyX = dx/dist; keys.joyY = dy/dist; }
             document.getElementById('joy-stick').style.transform = `translate(${keys.joyX*30}px, ${keys.joyY*30}px)`;
         }
     }, {passive:false});
-    window.addEventListener('touchend', e => { for(let t of e.changedTouches) if(t.identifier===joyId) { joyId=null; keys.joyX=0; keys.joyY=0; document.getElementById('joy-stick').style.transform='none'; } }, {passive:false});
+    window.addEventListener('touchend', e => { for(let t of e.changedTouches) if(t.identifier===joyId) { joyId=null; keys.joyX=0; keys.joyY=0; document.getElementById('joy-stick').style.transform='none'; } });
     document.querySelectorAll('.atk-btn').forEach(btn => {
-        btn.addEventListener('touchstart', e => { e.preventDefault(); keys.add('arrow'+btn.dataset.dir); }, {passive:false});
-        btn.addEventListener('touchend', e => { e.preventDefault(); keys.delete('arrow'+btn.dataset.dir); }, {passive:false});
+        btn.addEventListener('touchstart', e => { e.preventDefault(); keys.add('arrow'+btn.dataset.dir); });
+        btn.addEventListener('touchend', e => { e.preventDefault(); keys.delete('arrow'+btn.dataset.dir); });
     });
 }
 
-function resize() { canvas.width = window.innerWidth / 2; canvas.height = window.innerHeight / 2; }
-window.onresize = resize; resize();
+function handleGamepad() {
+    const gps = navigator.getGamepads();
+    if(!gps[0]) return null;
+    const gp = gps[0];
+    attack.up = gp.buttons[12]?.pressed || gp.buttons[3]?.pressed;
+    attack.down = gp.buttons[13]?.pressed || gp.buttons[0]?.pressed;
+    attack.left = gp.buttons[14]?.pressed || gp.buttons[2]?.pressed;
+    attack.right = gp.buttons[15]?.pressed || gp.buttons[1]?.pressed;
+    // Swap no controle (L1 ou Select)
+    if((gp.buttons[4]?.pressed || gp.buttons[8]?.pressed) && p.timer % 15 === 0) cycleWeapon();
+    return { x: Math.abs(gp.axes[0])>0.2?gp.axes[0]:0, y: Math.abs(gp.axes[1])>0.2?gp.axes[1]:0 };
+}
 
+// INICIALIZAÇÃO
 document.getElementById('btn-start').onclick = () => {
-    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     Game.started = true;
     document.getElementById('start-screen').style.display = 'none';
     if(isMobile) document.getElementById('mobile-ui').style.display = 'block';
@@ -167,137 +154,149 @@ document.getElementById('btn-start').onclick = () => {
 function initRoom() {
     enemies = []; projectiles = []; pedestal = null;
     p.x = Game.roomW/2; p.y = Game.roomH - 100;
-    p.iframe = 40; p.crossTimer = 40;
-    if (Game.room === 0) return;
-    if (Game.room === 5 && !Game.hasFire) pedestal = { type: 'fire', x: Game.roomW/2-15, y: Game.roomH/2-15, w: 30, h: 30 };
-    if (Game.room === 15 && !Game.hasAcid) pedestal = { type: 'acid', x: Game.roomW/2-15, y: Game.roomH/2-15, w: 30, h: 30 };
-    if (Game.room % 10 === 0) {
-        enemies.push({ type: 'boss', x: Game.roomW/2-40, y: 150, hp: 400 + (Game.room*20), maxHp: 400 + (Game.room*20), w: 80, h: 80, timer: 0, hit: 0, dying: 0 });
-    } else {
-        let count = 2 + Math.floor(Game.room/2);
+    p.iframe = 40;
+    if(Game.room === 5 && !Game.hasFire) pedestal = { type: 'fire', x: Game.roomW/2-15, y: Game.roomH/2-15 };
+    if(Game.room === 15 && !Game.hasAcid) pedestal = { type: 'acid', x: Game.roomW/2-15, y: Game.roomH/2-15 };
+    
+    if(Game.room > 0) {
+        let count = Game.room % 10 === 0 ? 1 : 2 + Math.floor(Game.room/3);
         for(let i=0; i<count; i++) {
-            let r = Math.random();
-            let type = r < 0.3 ? 'kamikaze' : r < 0.6 ? 'assassino' : 'perseguidor';
-            enemies.push({ type, x: 100+Math.random()*600, y: 100+Math.random()*300, hp: 40, w: 25, h: 25, hit: 0, dying: 0 });
+            enemies.push({ 
+                type: Game.room % 10 === 0 ? 'boss' : 'mob', 
+                x: 100+Math.random()*600, y: 100+Math.random()*200, 
+                hp: Game.room % 10 === 0 ? 500 : 40, w: Game.room % 10 === 0 ? 80 : 25, h: Game.room % 10 === 0 ? 80 : 25, hit:0 
+            });
         }
     }
 }
 
-function explode(x,y,c,ct,s=3){for(let i=0;i<ct;i++)particles.push({x,y,vx:(Math.random()-0.5)*8,vy:(Math.random()-0.5)*8,life:1,color:c,size:s});}
-
 function loop() {
     if(!Game.started || Game.paused) return requestAnimationFrame(loop);
-    if(Game.lives <= 0 && !p.dead) {
-        p.dead = true; explode(p.x, p.y, "#fff", 30); playSfx(50, 'sawtooth', 0.8, 0.3);
-        setTimeout(() => { document.getElementById('death-screen').style.display='flex'; document.getElementById('final-room').innerText="SALA: "+Game.room; }, 800);
-    }
     ctx.clearRect(0,0, canvas.width, canvas.height);
+    
+    // Camera
     ctx.save();
     Game.camX += (p.x - canvas.width/2 - Game.camX) * 0.1;
     Game.camY += (p.y - canvas.height/2 - Game.camY) * 0.1;
     ctx.translate(-Game.camX, -Game.camY);
 
-    if (Game.room >= 11 && forestGroundLoaded) {
-        for(let x=0; x<Game.roomW; x+=100) for(let y=0; y<Game.roomH; y+=100) ctx.drawImage(forestGroundImg, x, y, 100, 100);
-    } else {
-        for(let x=0; x<Game.roomW; x+=40) for(let y=0; y<Game.roomH; y+=40) {
-            ctx.fillStyle = (x+y)%80===0 ? "#111" : "#151515"; ctx.fillRect(x,y,40,40);
-        }
+    // Chão
+    for(let x=0; x<Game.roomW; x+=40) for(let y=0; y<Game.roomH; y+=40) {
+        ctx.fillStyle = (x+y)%80===0 ? "#111" : "#151515"; ctx.fillRect(x,y,40,40);
     }
 
+    // Texto Tutorial Sala 0
     if(Game.room === 0) {
-        ctx.fillStyle = "rgba(255,255,255,0.2)"; ctx.textAlign = "center";
-        ctx.font = "20px Arial"; ctx.fillText("SALA SEGURA", Game.roomW/2, Game.roomH/2 - 80);
-        ctx.font = "14px Courier New";
-        let tut = isMobile ? ["STICK - MOVER", "BOTOES - ATIRAR", "SWAP - ARMA"] : ["WASD - MOVER", "SETAS - ATIRAR", "Q - ARMA"];
-        tut.forEach((t, i) => ctx.fillText(t, Game.roomW/2, Game.roomH/2 - 20 + i*30));
+        ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.textAlign = "center";
+        ctx.fillText("SALA SEGURA - SIGA PARA O TOPO", Game.roomW/2, Game.roomH/2);
     }
 
+    // Pedestal
     if(pedestal) {
-        ctx.fillStyle = pedestal.type === 'fire' ? "#ff4500" : "#32cd32";
-        ctx.fillRect(pedestal.x, pedestal.y, pedestal.w, pedestal.h);
-        if(Math.hypot(p.x-pedestal.x, p.y-pedestal.y) < 30) {
-            if(pedestal.type === 'fire') Game.hasFire = true;
-            if(pedestal.type === 'acid') Game.hasAcid = true;
-            pedestal = null; playSfx(600, 'sine', 0.5);
+        ctx.fillStyle = pedestal.type==='fire'?"#ff4500":"#32cd32";
+        ctx.fillRect(pedestal.x, pedestal.y, 30, 30);
+        if(Math.hypot(p.x-pedestal.x, p.y-pedestal.y)<30) {
+            if(pedestal.type==='fire') Game.hasFire=true; else Game.hasAcid=true;
+            pedestal=null; playSfx(600, 'sine', 0.4);
         }
     }
 
-    if(enemies.length===0 && !pedestal) {
-        ctx.fillStyle = (Game.room > 0 && Game.room % 10 === 0) ? "#f00" : "#f1c40f"; ctx.fillRect(Game.roomW/2-40, -10, 80, 20);
-        if(!p.dead && p.y < 20 && Math.abs(p.x - Game.roomW/2) < 40) { Game.room++; initRoom(); }
-    }
-
+    // Player
     if(!p.dead) {
-        let move = updateInput();
-        let fX = isMobile && keys.joyX ? keys.joyX : move.x;
-        let fY = isMobile && keys.joyY ? keys.joyY : move.y;
-        p.x = Math.max(10, Math.min(Game.roomW-35, p.x + fX * Stats.moveSpd));
-        p.y = Math.max(10, Math.min(Game.roomH-35, p.y + fY * Stats.moveSpd));
+        let move = handleGamepad() || { x: (keys.has('a')?-1:keys.has('d')?1:0), y: (keys.has('w')?-1:keys.has('s')?1:0) };
+        if(isMobile && keys.joyX) { move.x = keys.joyX; move.y = keys.joyY; }
+        p.x = Math.max(0, Math.min(Game.roomW-25, p.x + move.x * Stats.moveSpd));
+        p.y = Math.max(0, Math.min(Game.roomH-25, p.y + move.y * Stats.moveSpd));
         if(p.iframe > 0) p.iframe--;
         ctx.fillStyle = p.iframe%4<2?"#fff":"#ff4d6d"; ctx.fillRect(p.x, p.y, 25, 25);
-        if(p.crossTimer > 0) {
-            p.crossTimer--; ctx.strokeStyle = "white"; ctx.lineWidth = 4; ctx.beginPath();
-            ctx.moveTo(p.x+12, p.y-10); ctx.lineTo(p.x+12, p.y+35);
-            ctx.moveTo(p.x-10, p.y+12); ctx.lineTo(p.x+35, p.y+12); ctx.stroke();
-        }
+        
+        // Tiro
         p.timer++;
-        if(p.timer % Stats.atkSpd === 0) {
-            let dx=0, dy=0;
-            if(attack.up) dy=-1; else if(attack.down) dy=1; else if(attack.left) dx=-1; else if(attack.right) dx=1;
-            if(dx||dy) projectiles.push({x:p.x+8, y:p.y+8, dx, dy, enemy:false, type:Game.weapon});
+        let shootX = keys.has('arrowleft')?-1:keys.has('arrowright')?1:0;
+        let shootY = keys.has('arrowup')?-1:keys.has('arrowdown')?1:0;
+        if((shootX || shootY) && p.timer % Stats.atkSpd === 0) {
+            projectiles.push({x:p.x+8, y:p.y+8, dx:shootX, dy:shootY, type:Game.weapon});
+            playSfx(150, 'square', 0.05);
         }
     }
 
+    // Inimigos
     enemies.forEach((e, i) => {
-        if(e.dying > 0) {
-            e.dying--; ctx.fillStyle = e.dying % 4 < 2 ? "#fff" : "#f00";
-            ctx.fillRect(e.x + (Math.random()-0.5)*10, e.y + (Math.random()-0.5)*10, e.w, e.h);
-            if(e.dying === 0) { enemies.splice(i, 1); showUpgrade(); } return;
-        }
-        enemies.forEach(o => { if(e!==o){ let dX=e.x-o.x, dY=e.y-o.y, dist=Math.hypot(dX,dY); if(dist<25){e.x+=dX/dist; e.y+=dY/dist;}}});
         let ang = Math.atan2(p.y-e.y, p.x-e.x);
-        let s = e.type==='kamikaze'?3.2: e.type==='assassino'?2.4:1.8;
-        if(e.type==='boss') { e.timer++; s = (e.timer%180<50)?5:1.2; }
-        e.x += Math.cos(ang)*s; e.y += Math.sin(ang)*s;
-        ctx.fillStyle = e.hit > 0 ? "#fff" : (e.type==='boss'?"#c0392b":e.type==='kamikaze'?"#f1c40f":"#3498db");
-        if(e.hit > 0) e.hit--; ctx.fillRect(e.x, e.y, e.w, e.h);
-        if(!p.dead && p.iframe<=0 && Math.hypot(p.x-e.x, p.y-e.y)<25) { 
-            Game.lives-=(e.type==='kamikaze'?3:1); p.iframe=60; 
-            if(e.type==='kamikaze') { explode(e.x, e.y, "#f1c40f", 30, 5); e.hp=0; }
+        e.x += Math.cos(ang)*1.5; e.y += Math.sin(ang)*1.5;
+        // Repulsão
+        enemies.forEach(o => { if(e!==o){ let d=Math.hypot(e.x-o.x,e.y-o.y); if(d<25){e.x+=(e.x-o.x)/d; e.y+=(e.y-o.y)/d;}}});
+        
+        ctx.fillStyle = e.hit > 0 ? "#fff" : (e.type==='boss'?"#f00":"#3498db");
+        if(e.hit>0) e.hit--; ctx.fillRect(e.x, e.y, e.w, e.h);
+
+        if(!p.dead && p.iframe<=0 && Math.hypot(p.x-e.x, p.y-e.y)<25) {
+            Game.lives--; p.iframe=60; playSfx(100, 'sawtooth', 0.2);
         }
-        if(e.hp<=0) { if(e.type==='boss') e.dying=90; else { explode(e.x+e.w/2, e.y+e.h/2, ctx.fillStyle, 20); enemies.splice(i,1); }}
+        if(e.hp<=0) { 
+            if(e.type==='boss') showUpgrade();
+            enemies.splice(i,1); playSfx(50, 'sawtooth', 0.3); 
+        }
     });
 
+    // Projéteis
     projectiles.forEach((pr, i) => {
-        pr.x += pr.dx*9; pr.y += pr.dy*9;
-        ctx.fillStyle = pr.type==='fire'?"#ff4500":(pr.type==='acid'?"#32cd32":"#0ff");
-        ctx.fillRect(pr.x, pr.y, 8, 8);
+        pr.x += pr.dx*8; pr.y += pr.dy*8;
+        ctx.fillStyle = pr.type==='fire'?"#ff4500":pr.type==='acid'?"#32cd32":"#0ff";
+        ctx.fillRect(pr.x, pr.y, 10, 10);
         enemies.forEach(e => {
-            if(e.dying<=0 && pr.x > e.x && pr.x < e.x+e.w && pr.y > e.y && pr.y < e.y+e.h) {
-                e.hp -= (pr.type==='acid'?Stats.damage*1.5:Stats.damage); e.hit = 5; projectiles.splice(i,1);
+            if(pr.x > e.x && pr.x < e.x+e.w && pr.y > e.y && pr.y < e.y+e.h) {
+                e.hp -= (pr.type==='acid'?Stats.damage*2:Stats.damage);
+                e.hit = 5; projectiles.splice(i,1);
             }
         });
         if(pr.x<0||pr.x>Game.roomW||pr.y<0||pr.y>Game.roomH) projectiles.splice(i,1);
     });
 
-    particles.forEach((pt, i) => { pt.x+=pt.vx; pt.y+=pt.vy; pt.life-=0.02; ctx.globalAlpha=pt.life; ctx.fillStyle=pt.color; ctx.fillRect(pt.x,pt.y,pt.size,pt.size); if(pt.life<=0) particles.splice(i,1); });
-    ctx.globalAlpha=1.0; ctx.restore();
+    // Porta Próxima Sala
+    if(enemies.length === 0 && !pedestal) {
+        ctx.fillStyle = "#f1c40f"; ctx.fillRect(Game.roomW/2-30, 0, 60, 10);
+        if(p.y < 10 && Math.abs(p.x - Game.roomW/2) < 40) { Game.room++; initRoom(); }
+    }
 
-    for(let i=0; i<Game.maxLives; i++) { ctx.fillStyle = i<Game.lives?"#ff4d6d":"#222"; ctx.fillRect(20+i*25, 20, 15, 15); }
+    ctx.restore();
+
+    // UI DE VIDA (IMAGEM SEM FUNDO)
+    for(let i=0; i<Game.maxLives; i++) {
+        if(i < Game.lives) {
+            // Desenha a imagem. O "Canvas" não tem fundo, então o que for branco na data-uri original
+            // aqui é desenhado normalmente, mas como o fundo do jogo é preto, 
+            // a scaneabilidade é mantida. Para remover o branco total:
+            ctx.drawImage(heartImg, 20 + i*35, 20, 30, 30);
+        } else {
+            ctx.globalAlpha = 0.2;
+            ctx.drawImage(heartImg, 20 + i*35, 20, 30, 30);
+            ctx.globalAlpha = 1.0;
+        }
+    }
+
+    // VERSÃO NO CANTO DIREITO INFERIOR
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    ctx.font = "10px Arial";
+    ctx.textAlign = "right";
+    ctx.fillText(Game.version, canvas.width - 10, canvas.height - 10);
+
     requestAnimationFrame(loop);
 }
 
 function showUpgrade() {
     Game.paused = true; document.getElementById('card-screen').style.display='flex';
     const container = document.getElementById('card-container'); container.innerHTML = '';
-    const pool = [{t:"DANO+", f:()=>Stats.damage+=10}, {t:"VELÔ+", f:()=>Stats.moveSpd+=1}, {t:"VIDA+", f:()=> {Game.maxLives++; Game.lives++;}}];
-    pool.forEach(u => {
-        let d = document.createElement('div'); d.className='card'; d.innerHTML=`<b>${u.t}</b>`;
+    [{t:"DANO+", f:()=>Stats.damage+=15}, {t:"VELÔ+", f:()=>Stats.moveSpd+=1.5}, {t:"VIDA+", f:()=> {Game.maxLives++; Game.lives++;}}].forEach(u => {
+        let d = document.createElement('div'); d.style = "width:100px; height:140px; background:#222; border:2px solid #f1c40f; display:flex; align-items:center; justify-content:center; cursor:pointer;";
+        d.innerHTML = `<b>${u.t}</b>`;
         d.onclick = () => { u.f(); Game.paused=false; document.getElementById('card-screen').style.display='none'; };
         container.appendChild(d);
     });
 }
+
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.onresize = resize; resize();
 </script>
 </body>
 </html>
