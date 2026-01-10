@@ -2,205 +2,233 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Den of Shadow 💀</title>
     <style>
         :root {
-            --ui-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            --rarity-common: #0080ff; --rarity-uncommon: #2ecc71;
-            --rarity-rare: #f1c40f; --rarity-epic: #9b59b6; --rarity-legendary: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
+            --raridade-comum: #3498db; --raridade-incomum: #2ecc71;
+            --raridade-raro: #f1c40f; --raridade-epico: #9b59b6;
+            --raridade-lendario: linear-gradient(45deg, #ff00ff, #00ffff);
+            --primary: #ff4757; --accent: #00eaff; --bg: #1e293b;
         }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #1a1a2e; }
-        canvas { display: block; image-rendering: pixelated; touch-action: none; }
+        * { touch-action: none; user-select: none; box-sizing: border-box; }
+        body { margin: 0; background: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        canvas { display: block; image-rendering: pixelated; }
 
-        /* UI HUD */
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; font-family: var(--ui-font); }
-        .hud-top { position: absolute; top: 20px; left: 20px; color: white; text-shadow: 2px 2px #000; pointer-events: auto; }
+        /* TELA INICIAL PROFISSIONAL */
+        #start-screen {
+            position: fixed; inset: 0; z-index: 9999;
+            background: radial-gradient(circle, #1e293b 0%, #020617 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .title-area h1 { 
+            font-size: clamp(40px, 8vw, 80px); margin: 0; text-shadow: 0 0 20px var(--primary); 
+            animation: float 3s ease-in-out infinite;
+        }
+        .title-area h1 span { color: var(--primary); }
+        .tips { font-size: 14px; color: var(--accent); margin-bottom: 20px; height: 20px; }
+
+        .save-slots { display: flex; gap: 15px; margin: 30px 0; }
+        .slot {
+            width: 100px; height: 120px; background: rgba(255,255,255,0.05);
+            border: 3px solid #334155; border-radius: 15px; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: 0.3s;
+        }
+        .slot.active { border-color: var(--accent); box-shadow: 0 0 15px var(--accent); background: rgba(0,234,255,0.1); }
         
-        /* BOTÕES MOBILE */
-        .mobile-ctrl { position: absolute; pointer-events: auto; display: none; }
-        #btn-fullscreen { top: 10px; left: 50%; transform: translateX(-50%); width: 120px; height: 40px; background: rgba(255,255,255,0.2); border: 2px solid white; color: white; display: block; }
-        #joystick-area { bottom: 40px; left: 40px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); }
-        #btn-swap { bottom: 60px; right: 40px; width: 100px; height: 100px; background: rgba(255,165,0,0.4); border-radius: 50%; border: 3px solid orange; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
+        .btn-play {
+            padding: 15px 60px; font-size: 24px; font-weight: bold; border-radius: 50px;
+            background: var(--primary); border: none; cursor: pointer; color: white;
+            box-shadow: 0 6px 0 #b91c1c; transition: 0.1s;
+        }
+        .btn-play:active { transform: translateY(4px); box-shadow: 0 2px 0 #b91c1c; }
+
+        /* HUD */
+        #hud { position: absolute; top: 15px; left: 15px; z-index: 100; pointer-events: none; }
+        .hp-container { width: 250px; height: 30px; background: #334155; border: 3px solid #fff; border-radius: 8px; overflow: hidden; }
+        .hp-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff4d4d, #ff9494); transition: 0.4s; }
+        .weapon-info { background: rgba(0,0,0,0.6); padding: 8px; border-radius: 8px; margin-top: 10px; border-left: 4px solid var(--accent); }
 
         /* BOSS BAR */
-        #boss-ui { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); width: 70%; display: none; }
-        #boss-name { color: #ff0040; text-align: center; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
-        #boss-bar-outer { width: 100%; height: 25px; background: #333; border: 3px solid #ff0040; border-radius: 5px; overflow: hidden; }
-        #boss-bar-inner { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0040, #ff5e62); transition: width 0.2s; }
-
-        /* TELA INICIAL E MENU */
-        #start-screen { position: absolute; inset: 0; background: radial-gradient(circle, #3a4466 0%, #1a1a2e 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; z-index: 100; pointer-events: auto; }
-        #start-screen h1 { font-size: 60px; margin-bottom: 10px; text-shadow: 0 0 20px cyan; }
-        .btn-menu { padding: 15px 40px; margin: 10px; background: #4e5d94; border: none; color: white; font-size: 20px; cursor: pointer; border-radius: 5px; width: 250px; transition: 0.2s; }
-        .btn-menu:hover { background: #6b7cb3; }
-        #footer-links { margin-top: 30px; text-align: center; }
-        #footer-links a { color: #ff0000; text-decoration: none; font-weight: bold; margin: 0 10px; }
+        #boss-ui { 
+            position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); 
+            width: 70%; display: none; text-align: center;
+        }
+        .boss-hp-outer { height: 15px; background: #000; border: 2px solid #fff; border-radius: 5px; }
+        .boss-hp-inner { height: 100%; background: #e11d48; width: 100%; transition: 0.2s; }
 
         /* UPGRADE CARDS */
-        #upgrade-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 90; pointer-events: auto; }
-        .card { width: 220px; height: 320px; margin: 15px; border-radius: 15px; border: 4px solid; padding: 20px; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; cursor: pointer; }
-        .card::before { content: "💀"; position: absolute; font-size: 120px; opacity: 0.1; top: 50%; transform: translateY(-50%); }
+        #card-screen {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10000;
+            display: none; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap;
+        }
+        .card {
+            width: 220px; height: 320px; border: 4px solid #fff; border-radius: 15px;
+            padding: 20px; text-align: center; cursor: pointer; position: relative;
+            background: #1e293b; overflow: hidden; transition: 0.3s;
+        }
+        .card:hover { transform: scale(1.05) translateY(-10px); }
+        .card-bg-skull { position: absolute; font-size: 150px; opacity: 0.1; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
 
-        #minimap-canvas { position: absolute; top: 15px; right: 15px; width: 160px; height: 160px; border: 3px solid white; background: rgba(0,0,0,0.5); border-radius: 10px; }
+        /* MOBILE CONTROLS */
+        #mobile-ui { position: absolute; inset: 0; pointer-events: none; display: none; }
+        .btn-fs { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); pointer-events: auto; padding: 10px 20px; background: #fff; border-radius: 10px; color: #000; font-weight: bold; }
+        .joy-base { position: absolute; bottom: 40px; left: 40px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border: 3px solid #fff; border-radius: 50%; pointer-events: auto; }
+        .joy-stick { position: absolute; width: 70px; height: 70px; background: #fff; border-radius: 50%; top: 40px; left: 40px; }
+        .mobile-btn { position: absolute; pointer-events: auto; background: var(--primary); border: 4px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        #btn-shoot { width: 110px; height: 110px; bottom: 50px; right: 40px; font-size: 40px; }
+        #btn-swap { width: 80px; height: 80px; bottom: 50px; right: 180px; font-size: 20px; background: var(--accent); }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
     </style>
 </head>
 <body>
 
 <div id="start-screen">
-    <h1>DEN OF SHADOW 💀</h1>
-    <p>kauadarthofc@gmail.com</p>
-    <button class="btn-menu" onclick="startGame()">JOGAR</button>
-    <button class="btn-menu">CONFIGURAÇÕES</button>
-    <div id="save-slots" style="display: flex; gap: 10px; margin-top: 20px;">
-        <div style="width: 50px; height: 50px; border: 2px solid white;">S1</div>
-        <div style="width: 50px; height: 50px; border: 2px solid white;">S2</div>
-        <div style="width: 50px; height: 50px; border: 2px solid white;">S3</div>
+    <div class="title-area">
+        <h1>DEN OF <span>SHADOW</span> 💀</h1>
+        <div id="pc-tips" class="tips"></div>
     </div>
-    <div id="footer-links">
-        <a href="https://youtube.com/@kaua_darth" target="_blank">📺 YouTube @kaua_darth</a>
+    <div class="save-slots">
+        <div class="slot active" onclick="selectSlot(0)"><i>💾</i><span>SAVE 1</span></div>
+        <div class="slot" onclick="selectSlot(1)"><i>💾</i><span>SAVE 2</span></div>
+        <div class="slot" onclick="selectSlot(2)"><i>💾</i><span>SAVE 3</span></div>
     </div>
-    <div style="margin-top: 20px; font-size: 12px; color: #aaa;">PC: WASD para mover | Clique para atirar | Q/E troca arma</div>
+    <button class="btn-play" onclick="initGame()">JOGAR</button>
+    <div style="margin-top: 30px;">
+        <a href="mailto:kauadarthofc@gmail.com" style="color: #fff; text-decoration: none;">kauadarthofc@gmail.com</a><br>
+        <a href="https://youtube.com/@kaua_darth" style="color: var(--primary); text-decoration: none; font-weight: bold;">📺 @kaua_darth</a>
+    </div>
 </div>
 
-<div id="ui-layer">
-    <div class="hud-top">
-        <div id="hp-txt">HP: 10/10</div>
-        <div id="ammo-txt">MUNIÇÃO: --</div>
-        <div id="coins-txt">MOEDAS: 0</div>
-        <div id="room-txt">SALA: 0</div>
+<div id="hud">
+    <div class="hp-container"><div id="hp-bar" class="hp-fill"></div></div>
+    <div class="weapon-info">
+        💰 <span id="coin-val">0</span> | SALA <span id="room-val">0</span><br>
+        <span id="weapon-name" style="font-weight: bold; color: var(--accent);">Magnum</span>: <span id="ammo-val">15</span>
     </div>
-    
-    <canvas id="minimap-canvas"></canvas>
-
-    <button id="btn-fullscreen" class="mobile-ctrl" onclick="toggleFS()">TELA CHEIA</button>
-    <div id="joystick-area" class="mobile-ctrl"></div>
-    <div id="btn-swap" class="mobile-ctrl">SWAP</div>
-
-    <div id="boss-ui">
-        <div id="boss-name">O GUARDIÃO</div>
-        <div id="boss-bar-outer"><div id="boss-bar-inner"></div></div>
-    </div>
-
-    <div id="upgrade-screen"></div>
 </div>
 
-<canvas id="gameCanvas"></canvas>
+<div id="boss-ui">
+    <div id="boss-name" style="font-weight: bold; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px;">BOSS</div>
+    <div class="boss-hp-outer"><div id="boss-hp-bar" class="boss-hp-inner"></div></div>
+</div>
+
+<div id="card-screen"></div>
+
+<div id="mobile-ui">
+    <div class="btn-fs" onclick="toggleFS()">TELA CHEIA</div>
+    <div class="joy-base" id="joy-base"><div class="joy-stick" id="joy-stick"></div></div>
+    <div class="mobile-btn" id="btn-shoot">🔥</div>
+    <div class="mobile-btn" id="btn-swap">🔄</div>
+</div>
+
+<canvas id="game"></canvas>
 
 <script>
-/** * DEN OF SHADOW - ENGINE PRINCIPAL
- * Focada em performance e suporte multiplataforma.
- */
-
-const canvas = document.getElementById('gameCanvas');
+const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
-const mCanvas = document.getElementById('minimap-canvas');
-const mCtx = mCanvas.getContext('2d');
+const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
 
-let gameState = 'MENU';
-let currentRoom = 0;
-let worldSeed = Math.random();
-let platform = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'MOBILE' : 'PC';
-
-// --- CONFIGURAÇÕES DE ARMAS ---
-const WEAPONS = [
-    { id: 'magnum', name: 'Magnum', dmg: 10, ammo: Infinity, rate: 400, type: 'bullet', sprite: '🔫' },
-    { id: 'flame', name: 'Lança-Chamas', dmg: 4, burn: 2, ammo: 25, rate: 50, type: 'fire', sprite: '🔥' },
-    { id: 'shotgun', name: 'Shotgun', dmg: 14, pellets: 3, ammo: 12, rate: 1000, range: 150, sprite: '✂️' },
-    { id: 'staff', name: 'Cajado Mágico', dmg: 3, ammo: 20, rate: 600, homing: true, sprite: '🪄' }
-];
-
-const player = {
-    x: 0, y: 0, w: 45, h: 65,
-    hp: 10, maxHp: 10,
-    speed: 5,
-    coins: 0,
-    weaponIdx: 0,
-    weaponsOwned: [0, 1, 2], // Começa com as pedidas
-    ammo: [Infinity, 25, 12, 20],
-    angle: 0,
-    velX: 0, velY: 0,
-    moving: false,
-    vampirismoKills: 0
+// --- CONFIGURAÇÃO DE ARMAS ---
+const WEAPONS = {
+    magnum: { n: "Magnum", d: 10, a: 15, m: 15, cd: 25, spd: 22, color: '#fff', type: 'pistol' },
+    flame: { n: "Lança-Chamas", d: 4, fireDmg: 2, a: 25, m: 25, cd: 3, spd: 15, color: '#ff4500', type: 'flame' },
+    shotgun: { n: "Shotgun", d: 10, a: 8, m: 8, cd: 60, spd: 18, color: '#f1c40f', type: 'shotgun', count: 3 },
+    staff: { n: "Cajado Mágico", d: 8, a: 20, m: 20, cd: 30, spd: 14, color: '#00eaff', type: 'homing' },
+    minigun: { n: "Minigun", d: 3, a: 100, m: 100, cd: 2, spd: 30, color: '#fff', type: 'pistol' },
+    sniper: { n: "AWP", d: 80, a: 5, m: 5, cd: 100, spd: 50, color: '#fff', type: 'pistol' },
+    // Adicione as outras variantes conforme necessário...
 };
 
-let enemies = [];
-let projectiles = [];
-let drops = [];
-let particles = [];
-let doors = [];
-let boss = null;
-let camX = 0, camY = 0;
+// --- ESTADO DO JOGO ---
+let state = {
+    running: false, slot: 0, coins: 0, room: 0, 
+    hp: 12, maxHp: 12, weapon: 'magnum', inventory: ['magnum'],
+    upgrades: { triple: 0, ricochet: false, vamp: 0, mythicTwin: false },
+    kills: 0, worldSize: 2500
+};
 
-// --- SISTEMA DE CONTROLE ---
-const keys = {};
-window.onkeydown = (e) => keys[e.code] = true;
-window.onkeyup = (e) => keys[e.code] = false;
+let p = { x: 1250, y: 1250, r: 45, spd: 7, rot: 0, leg: 0, iframe: 0, cd: 0, anim: 0 };
+let enemies = [], bullets = [], doors = [], particles = [], drops = [], boss = null;
+let keys = {};
+let joystick = { active: false, x: 0, y: 0 };
+let isShooting = false;
 
-if(platform === 'MOBILE') {
-    document.querySelectorAll('.mobile-ctrl').forEach(el => el.style.display = 'block');
-    // Implementar lógica de touch para joystick e swap aqui...
+// --- INICIALIZAÇÃO ---
+if(!isMobile) {
+    document.getElementById('pc-tips').innerText = "WASD: Mover | SETAS: Atirar | Q: Trocar Arma | E: Interagir";
 }
 
-function startGame() {
+function selectSlot(i) {
+    state.slot = i;
+    document.querySelectorAll('.slot').forEach((s, idx) => s.classList.toggle('active', idx === i));
+}
+
+function initGame() {
     document.getElementById('start-screen').style.display = 'none';
-    gameState = 'PLAYING';
-    resize();
-    initRoom(0);
+    if(isMobile) document.getElementById('mobile-ui').style.display = 'block';
+    state.running = true;
+    nextRoom(0);
+    loop();
 }
 
-function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    mCanvas.width = 160; mCanvas.height = 160;
-}
-window.onresize = resize;
+function nextRoom(targetRoom) {
+    state.room = targetRoom !== undefined ? targetRoom : state.room + 1;
+    enemies = []; bullets = []; doors = []; drops = []; boss = null;
+    p.x = state.worldSize/2; p.y = state.worldSize/2;
 
-function initRoom(n) {
-    currentRoom = n;
-    enemies = [];
-    projectiles = [];
-    doors = [];
-    player.x = 200; player.y = 200;
-    
-    // Gerar portas em locais aleatórios
-    const locations = ['top', 'bottom', 'left', 'right'];
-    let doorCount = (n === 0) ? 1 : 2;
-    for(let i=0; i<doorCount; i++) {
-        doors.push({ side: locations[i], x: Math.random() * 800 + 100, y: Math.random() * 600 + 100, open: false });
+    // Sala de Tutorial (0)
+    if(state.room === 0) {
+        doors.push({ x: state.worldSize/2, y: 200, type: 'next', open: true });
+        return;
     }
 
-    if(n > 0 && n % 10 !== 0) {
-        spawnEnemies();
-    } else if (n > 0 && n % 10 === 0) {
+    // Sala de Cura (pós Boss)
+    if(state.room % 11 === 1 && state.room > 1) {
+        doors.push({ x: state.worldSize/2, y: 200, type: 'next', open: true });
+        drops.push({ x: state.worldSize/2, y: state.worldSize/2, type: 'hp_full' });
+        return;
+    }
+
+    // Spawn Inimigos (Longe do Player)
+    if(state.room % 10 !== 0) {
+        let count = 3 + Math.floor(state.room/3);
+        for(let i=0; i<count; i++) {
+            spawnEnemy();
+        }
+    } else {
         spawnBoss();
     }
+
+    // Porta Aleatória
+    let pos = [{x: state.worldSize/2, y: 150}, {x: state.worldSize/2, y: state.worldSize-150}, {x: 150, y: state.worldSize/2}];
+    let choice = pos[Math.floor(Math.random()*pos.length)];
+    doors.push({ x: choice.x, y: choice.y, type: 'next', open: false });
 }
 
-function spawnEnemies() {
-    let count = 3 + Math.floor(currentRoom/2);
-    for(let i=0; i<count; i++) {
-        let type = (currentRoom > 2 && Math.random() > 0.7) ? 'DASH' : 'KAMIKAZE';
-        enemies.push({
-            x: Math.random() * 1000 + 500,
-            y: Math.random() * 1000 + 500,
-            type: type,
-            hp: type === 'KAMIKAZE' ? 5 : 12,
-            speed: type === 'KAMIKAZE' ? 1.5 : 3,
-            maxHp: 12,
-            dead: false
-        });
-    }
+function spawnEnemy() {
+    let ex, ey;
+    do { ex = Math.random()*(state.worldSize-400)+200; ey = Math.random()*(state.worldSize-400)+200; }
+    while(Math.hypot(ex-p.x, ey-p.y) < 700);
+    
+    let type = 'stalker';
+    if(state.room > 1 && Math.random() > 0.7) type = 'dasher';
+    if(state.room > 2 && Math.random() > 0.8) type = 'kamikaze';
+
+    enemies.push({
+        x: ex, y: ey, r: 50, hp: 30 + state.room*5, spd: 2 + Math.random()*2, 
+        type: type, color: type==='kamikaze'?'#ff4757':'#64748b',
+        dashCd: 100, face: Math.random() > 0.5 ? 'ò_ó' : 'u_u'
+    });
 }
 
 function spawnBoss() {
     boss = {
-        name: "O ESMAGADOR",
-        x: 800, y: 400, w: 120, h: 120,
-        hp: 100 + (currentRoom * 5),
-        maxHp: 100 + (currentRoom * 5),
-        state: 'IDLE',
-        timer: 0
+        name: "Guardião de Pedra", x: state.worldSize/2, y: 300, r: 120,
+        hp: 500 + state.room*100, maxHp: 500 + state.room*100,
+        state: 'idle', timer: 0, markers: []
     };
     document.getElementById('boss-ui').style.display = 'block';
     document.getElementById('boss-name').innerText = boss.name;
@@ -208,182 +236,383 @@ function spawnBoss() {
 
 // --- LOOP PRINCIPAL ---
 function update() {
-    if(gameState !== 'PLAYING') return;
+    if(!state.running) return;
 
-    // Movimentação PC
-    player.moving = false;
-    if(keys['KeyW']) { player.y -= player.speed; player.moving = true; }
-    if(keys['KeyS']) { player.y += player.speed; player.moving = true; }
-    if(keys['KeyA']) { player.x -= player.speed; player.moving = true; }
-    if(keys['KeyD']) { player.x += player.speed; player.moving = true; }
+    // Movimentação
+    let vx = 0, vy = 0;
+    if(keys['KeyW']) vy = -1; if(keys['KeyS']) vy = 1;
+    if(keys['KeyA']) vx = -1; if(keys['KeyD']) vx = 1;
+    if(joystick.active) { vx = joystick.x; vy = joystick.y; }
 
-    // Limites do Mapa
-    player.x = Math.max(0, Math.min(2000, player.x));
-    player.y = Math.max(0, Math.min(2000, player.y));
-
-    // Update Inimigos
-    enemies.forEach(en => {
-        if(en.dead) return;
-        let dx = player.x - en.x;
-        let dy = player.y - en.y;
-        let dist = Math.hypot(dx, dy);
-
-        // Kamikaze Lento (Rosto Vermelho)
-        if(en.type === 'KAMIKAZE') {
-            en.x += (dx/dist) * en.speed;
-            en.y += (dy/dist) * en.speed;
-            if(dist < 40) explode(en);
-        } else if(en.type === 'DASH') {
-            // Lógica de dash suave com asas
-            en.x += (dx/dist) * en.speed;
-            en.y += (dy/dist) * en.speed;
-        }
-        
-        // Evitar que inimigos entrem um no outro
-        enemies.forEach(other => {
-            if(en !== other) {
-                let d = Math.hypot(en.x - other.x, en.y - other.y);
-                if(d < 40) {
-                    en.x -= (other.x - en.x) * 0.05;
-                    en.y -= (other.y - en.y) * 0.05;
-                }
-            }
-        });
-    });
-
-    // Projéteis
-    projectiles.forEach((p, i) => {
-        p.x += p.vx; p.y += p.vy;
-        if(p.homing && enemies.length > 0) {
-            let target = enemies[0];
-            let angle = Math.atan2(target.y - p.y, target.x - p.x);
-            p.vx += Math.cos(angle) * 0.5;
-            p.vy += Math.sin(angle) * 0.5;
-        }
-        // Colisão...
-    });
-
-    // Check Death
-    if(player.hp <= 0) {
-        player.hp = 0;
-        // Game Over logic
+    if(vx !== 0 || vy !== 0) {
+        p.x += vx * p.spd; p.y += vy * p.spd;
+        p.leg += 0.2;
+        p.anim = 1; // Andando
+        // Prioridade de rotação: tiro > movimento
+        if(!isShooting) p.rot = Math.atan2(vy, vx);
+    } else {
+        p.anim = 0;
     }
 
-    updateUI();
+    // Ataque
+    if(p.cd > 0) p.cd--;
+    let shootInput = isShooting || keys['ArrowUp'] || keys['ArrowDown'] || keys['ArrowLeft'] || keys['ArrowRight'] || keys['Space'];
+    
+    if(shootInput && p.cd <= 0) {
+        let w = WEAPONS[state.weapon];
+        if(w.a > 0) {
+            fire(w);
+            p.cd = w.cd;
+            w.a--;
+        }
+    }
+
+    // Lógica de Inimigos e Colisão entre eles (evitar sobreposição)
+    enemies.forEach((en, i) => {
+        let dist = Math.hypot(p.x-en.x, p.y-en.y);
+        let ang = Math.atan2(p.y-en.y, p.x-en.x);
+        
+        // IA Variada
+        if(en.type === 'dasher') {
+            en.dashCd--;
+            if(en.dashCd <= 0) { en.x += Math.cos(ang)*200; en.y += Math.sin(ang)*200; en.dashCd = 120; }
+        }
+        en.x += Math.cos(ang) * en.spd;
+        en.y += Math.sin(ang) * en.spd;
+
+        // Colisão entre inimigos
+        enemies.forEach(other => {
+            if(en === other) return;
+            let d = Math.hypot(en.x-other.x, en.y-other.y);
+            if(d < en.r*2) {
+                en.x -= Math.cos(Math.atan2(other.y-en.y, other.x-en.x)) * 2;
+                en.y -= Math.sin(Math.atan2(other.y-en.y, other.x-en.x)) * 2;
+            }
+        });
+
+        if(dist < p.r + en.r && p.iframe <= 0) {
+            state.hp -= (en.type === 'kamikaze' ? 2 : 1);
+            p.iframe = 60;
+            // Knockback
+            p.x += Math.cos(ang) * 50; p.y += Math.sin(ang) * 50;
+            if(en.type === 'kamikaze') en.hp = 0;
+        }
+
+        if(en.hp <= 0) {
+            if(en.type === 'kamikaze') explode(en.x, en.y);
+            if(Math.random() < 0.4) drops.push({x: en.x, y: en.y, type: Math.random()>0.8?'hp':'coin'});
+            enemies.splice(i, 1);
+            state.kills++;
+            if(state.kills % 10 === 0) state.hp = Math.min(state.maxHp, state.hp + 1);
+            if(enemies.length === 0 && !boss) doors.forEach(d => d.open = true);
+        }
+    });
+
+    // Boss IA
+    if(boss) {
+        boss.timer++;
+        let dist = Math.hypot(p.x-boss.x, p.y-boss.y);
+        // Boss se move
+        let ang = Math.atan2(p.y-boss.y, p.x-boss.x);
+        boss.x += Math.cos(ang) * 1.5; boss.y += Math.sin(ang) * 1.5;
+
+        if(boss.timer % 150 === 0) {
+            // Ataque de Pedras (RNG)
+            boss.markers = [];
+            for(let i=0; i<5; i++) {
+                boss.markers.push({x: p.x + (Math.random()-0.5)*400, y: p.y + (Math.random()-0.5)*400, t: 90});
+            }
+        }
+        boss.markers.forEach((m, i) => {
+            m.t--;
+            if(m.t === 0) {
+                if(Math.hypot(p.x-m.x, p.y-m.y) < 80) state.hp -= 2;
+                boss.markers.splice(i, 1);
+            }
+        });
+
+        if(boss.hp <= 0) {
+            boss = null;
+            document.getElementById('boss-ui').style.display = 'none';
+            doors.forEach(d => d.open = true);
+            showUpgradeCards();
+        }
+    }
+
+    // Balas
+    bullets.forEach((b, i) => {
+        if(b.type === 'homing') {
+            let target = enemies[0] || boss;
+            if(target) {
+                let ang = Math.atan2(target.y-b.y, target.x-b.x);
+                b.vx += Math.cos(ang)*0.5; b.vy += Math.sin(ang)*0.5;
+            }
+        }
+        b.x += b.vx; b.y += b.vy; b.life--;
+        
+        let targets = [...enemies]; if(boss) targets.push(boss);
+        targets.forEach(en => {
+            if(Math.hypot(b.x-en.x, b.y-en.y) < en.r) {
+                en.hp -= b.dmg;
+                if(b.fire) { en.hp -= 2; createParticles(en.x, en.y, '#ff4500'); }
+                b.life = 0;
+            }
+        });
+        if(b.life <= 0) bullets.splice(i, 1);
+    });
+
+    // Drops
+    drops.forEach((d, i) => {
+        if(Math.hypot(p.x-d.x, p.y-d.y) < 60) {
+            if(d.type === 'coin') state.coins++;
+            if(d.type === 'hp') state.hp = Math.min(state.maxHp, state.hp + 2);
+            if(d.type === 'hp_full') state.hp = state.maxHp;
+            drops.splice(i, 1);
+        }
+    });
+
+    // Limites
+    p.x = Math.max(100, Math.min(state.worldSize-100, p.x));
+    p.y = Math.max(100, Math.min(state.worldSize-100, p.y));
+
+    if(p.iframe > 0) p.iframe--;
+    if(state.hp <= 0) location.reload();
+
+    updateHUD();
 }
 
-function explode(en) {
-    en.dead = true;
-    let dist = Math.hypot(player.x - en.x, player.y - en.y);
-    if(dist < 100) player.hp -= 2;
-    // Dano em inimigos próximos
-    enemies.forEach(e => {
-        if(Math.hypot(e.x - en.x, e.y - en.y) < 100) e.hp -= 2;
+function fire(w) {
+    let angle = p.rot;
+    if(keys['ArrowUp']) angle = -Math.PI/2;
+    if(keys['ArrowDown']) angle = Math.PI/2;
+    if(keys['ArrowLeft']) angle = Math.PI;
+    if(keys['ArrowRight']) angle = 0;
+    p.rot = angle;
+
+    if(w.type === 'shotgun') {
+        for(let i=0; i<w.count; i++) {
+            bullets.push({ x: p.x, y: p.y, vx: Math.cos(angle+(i-1)*0.2)*w.spd, vy: Math.sin(angle+(i-1)*0.2)*w.spd, dmg: w.d, life: 25, color: w.color });
+        }
+    } else if(w.type === 'flame') {
+        for(let i=0; i<5; i++) {
+            bullets.push({ x: p.x, y: p.y, vx: Math.cos(angle+(Math.random()-0.5)*0.4)*w.spd, vy: Math.sin(angle+(Math.random()-0.5)*0.4)*w.spd, dmg: w.d, fire: true, life: 15, color: w.color });
+        }
+    } else {
+        bullets.push({ x: p.x, y: p.y, vx: Math.cos(angle)*w.spd, vy: Math.sin(angle)*w.spd, dmg: w.d, type: w.type, life: 60, color: w.color });
+    }
+}
+
+function explode(x, y) {
+    createParticles(x, y, 'orange', 20);
+    enemies.forEach(en => {
+        if(Math.hypot(x-en.x, y-en.y) < 200) en.hp -= 50;
     });
+    if(Math.hypot(x-p.x, y-p.y) < 200 && p.iframe <= 0) { state.hp -= 2; p.iframe = 30; }
+}
+
+function createParticles(x, y, color, n=5) {
+    for(let i=0; i<n; i++) particles.push({x, y, vx:(Math.random()-0.5)*10, vy:(Math.random()-0.5)*10, life:20, color});
 }
 
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Câmera
-    camX = player.x - canvas.width/2;
-    camY = player.y - canvas.height/2;
-    ctx.save();
-    ctx.translate(-camX, -camY);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0,0,canvas.width, canvas.height);
 
-    // Chão (Não Preto)
-    ctx.fillStyle = '#2c3e50';
-    ctx.fillRect(0,0,2000,2000);
-    ctx.strokeStyle = '#34495e';
-    for(let i=0; i<2000; i+=100) {
-        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 2000); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(2000, i); ctx.stroke();
+    ctx.save();
+    ctx.translate(-p.x + canvas.width/2, -p.y + canvas.height/2);
+
+    // Chao Stone
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(0, 0, state.worldSize, state.worldSize);
+    ctx.strokeStyle = '#334155'; ctx.lineWidth = 4;
+    for(let i=0; i<=state.worldSize; i+=150) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, state.worldSize); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(state.worldSize, i); ctx.stroke();
     }
 
-    // Desenhar Portas
+    // Portas
     doors.forEach(d => {
-        ctx.fillStyle = d.open ? '#2ecc71' : '#e74c3c';
-        ctx.fillRect(d.x, d.y, 60, 80);
+        ctx.fillStyle = d.open ? '#2ecc71' : '#475569';
+        ctx.fillRect(d.x-75, d.y-75, 150, 150);
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 30px Arial';
+        ctx.fillText(d.open ? "SAIDA" : "BLOQUEADO", d.x-60, d.y+10);
     });
 
-    // Desenhar Player (Personagem Feminina Lord da Luz)
-    ctx.fillStyle = "#fff";
-    ctx.shadowBlur = 15; ctx.shadowColor = "cyan";
-    ctx.fillRect(player.x, player.y, player.w, player.h); // Corpo
-    ctx.fillStyle = "#ffccaa"; ctx.fillRect(player.x+5, player.y+5, 35, 20); // Rosto
-    
-    // Perninhas animadas
-    let legY = Math.sin(Date.now()*0.01) * 5;
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(player.x+10, player.y+player.h, 10, 10 + legY);
-    ctx.fillRect(player.x+25, player.y+player.h, 10, 10 - legY);
-    ctx.shadowBlur = 0;
+    // Boss Markers
+    if(boss) {
+        boss.markers.forEach(m => {
+            ctx.strokeStyle = 'red'; ctx.beginPath(); ctx.arc(m.x, m.y, 80, 0, 7); ctx.stroke();
+            ctx.fillStyle = 'rgba(255,0,0,0.2)'; ctx.fill();
+        });
+    }
 
-    // Arma (Muda direção do mouse/alvo)
-    ctx.save();
-    ctx.translate(player.x + 22, player.y + 35);
-    ctx.rotate(player.angle);
-    ctx.font = "30px Arial";
-    ctx.fillText(WEAPONS[player.weaponIdx].sprite, 10, 10);
-    ctx.restore();
+    // Drops
+    drops.forEach(d => {
+        ctx.fillStyle = d.type==='coin'?'#f1c40f':'#ff4757';
+        ctx.beginPath(); ctx.arc(d.x, d.y, 20, 0, 7); ctx.fill();
+    });
 
     // Inimigos
     enemies.forEach(en => {
-        if(en.dead) return;
-        ctx.fillStyle = en.type === 'KAMIKAZE' ? 'red' : 'purple';
-        ctx.fillRect(en.x, en.y, 40, 40);
-        // Rostos variados
-        ctx.fillStyle = "black";
-        ctx.fillRect(en.x+10, en.y+10, 5, 5); ctx.fillRect(en.x+25, en.y+10, 5, 5);
+        ctx.fillStyle = en.color;
+        ctx.fillRect(en.x-en.r, en.y-en.r, en.r*2, en.r*2);
+        ctx.fillStyle = '#fff'; ctx.font = '30px Arial';
+        ctx.fillText(en.face, en.x-25, en.y+10);
+        if(en.type === 'dasher') { ctx.fillStyle='white'; ctx.fillRect(en.x-en.r, en.y-en.r, 10, 40); ctx.fillRect(en.x+en.r-10, en.y-en.r, 10, 40); }
     });
+
+    // Boss
+    if(boss) {
+        ctx.fillStyle = '#475569';
+        ctx.beginPath(); ctx.arc(boss.x, boss.y, boss.r, 0, 7); ctx.fill();
+        ctx.strokeStyle = '#fff'; ctx.stroke();
+    }
+
+    // Balas e Particulas
+    bullets.forEach(b => { ctx.fillStyle=b.color; ctx.beginPath(); ctx.arc(b.x, b.y, 12, 0, 7); ctx.fill(); });
+    particles.forEach((pt, i) => { 
+        ctx.fillStyle=pt.color; ctx.fillRect(pt.x, pt.y, 5, 5); pt.x+=pt.vx; pt.y+=pt.vy; pt.life--;
+        if(pt.life<=0) particles.splice(i,1);
+    });
+
+    // Player (Lord da Luz)
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    // Pernas
+    ctx.fillStyle = '#f8fafc';
+    let legOffset = Math.sin(p.leg)*15;
+    if(p.anim === 1) {
+        ctx.fillRect(-20, 25+legOffset, 15, 25);
+        ctx.fillRect(5, 25-legOffset, 15, 25);
+    } else {
+        ctx.fillRect(-20, 25, 15, 25); ctx.fillRect(5, 25, 15, 25);
+    }
+    // Corpo
+    ctx.rotate(p.rot);
+    ctx.shadowBlur = 20; ctx.shadowColor = '#00eaff';
+    ctx.fillStyle = (p.iframe > 0 && Math.floor(Date.now()/100)%2) ? 'red' : 'white';
+    ctx.beginPath(); ctx.moveTo(50, 0); ctx.lineTo(-40, 45); ctx.lineTo(-40, -45); ctx.closePath(); ctx.fill();
+    // Sprite da Arma
+    ctx.fillStyle = '#334155'; ctx.fillRect(20, -10, 40, 20); // Placeholder arma
+    ctx.restore();
 
     ctx.restore();
+
+    // Minimapa (Canto Superior Direito)
     drawMinimap();
-}
 
-function drawMinimap() {
-    mCtx.clearRect(0,0,160,160);
-    mCtx.fillStyle = "rgba(255,255,255,0.2)";
-    // Player no centro
-    mCtx.fillStyle = "cyan";
-    mCtx.fillRect(80, 80, 4, 4);
-    // Inimigos no minimapa
-    enemies.forEach(en => {
-        if(en.dead) return;
-        let mx = 80 + (en.x - player.x) * 0.05;
-        let my = 80 + (en.y - player.y) * 0.05;
-        mCtx.fillStyle = "red";
-        mCtx.fillRect(mx, my, 3, 3);
-    });
-}
-
-function updateUI() {
-    document.getElementById('hp-txt').innerText = `HP: ${player.hp}/${player.maxHp}`;
-    document.getElementById('ammo-txt').innerText = `MUNIÇÃO: ${player.ammo[player.weaponIdx]}`;
-    document.getElementById('coins-txt').innerText = `MOEDAS: ${player.coins}`;
-    document.getElementById('room-txt').innerText = `SALA: ${currentRoom}`;
-    
-    if(boss) {
-        let pct = (boss.hp / boss.maxHp) * 100;
-        document.getElementById('boss-bar-inner').style.width = pct + "%";
+    if(state.running) {
+        update();
+        requestAnimationFrame(draw);
     }
 }
 
+function drawMinimap() {
+    let size = 150;
+    let mx = canvas.width - size - 20;
+    let my = 20;
+    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    ctx.fillRect(mx, my, size, size);
+    ctx.strokeStyle = '#fff'; ctx.strokeRect(mx, my, size, size);
+
+    let s = size / state.worldSize;
+    // Portas
+    doors.forEach(d => { ctx.fillStyle='green'; ctx.fillRect(mx + d.x*s-5, my + d.y*s-5, 10, 10); });
+    // Inimigos
+    ctx.fillStyle = 'red';
+    enemies.forEach(en => { ctx.fillRect(mx + en.x*s-2, my + en.y*s-2, 4, 4); });
+    // Player
+    ctx.fillStyle = '#00eaff';
+    ctx.fillRect(mx + p.x*s-3, my + p.y*s-3, 6, 6);
+}
+
+function updateHUD() {
+    document.getElementById('hp-bar').style.width = (state.hp/state.maxHp)*100 + "%";
+    document.getElementById('coin-val').innerText = state.coins;
+    document.getElementById('room-val').innerText = state.room;
+    let w = WEAPONS[state.weapon];
+    document.getElementById('weapon-name').innerText = w.n;
+    document.getElementById('ammo-val').innerText = `${w.a}/${w.m}`;
+    if(boss) document.getElementById('boss-hp-bar').style.width = (boss.hp/boss.maxHp)*100 + "%";
+}
+
+// --- CARTAS E UPGRADES ---
+function showUpgradeCards() {
+    state.running = false;
+    const screen = document.getElementById('card-screen');
+    screen.style.display = 'flex';
+    screen.innerHTML = '';
+    
+    for(let i=0; i<3; i++) {
+        let rarity = Math.random();
+        let rData = { name: "Comum", color: "var(--raridade-comum)" };
+        if(rarity > 0.99) rData = { name: "LENDÁRIO", color: "gold" };
+        else if(rarity > 0.95) rData = { name: "Épico", color: "var(--raridade-epico)" };
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.borderColor = rData.color;
+        card.innerHTML = `
+            <div class="card-bg-skull">💀</div>
+            <h3 style="color:${rData.color}">${rData.name}</h3>
+            <p>Upgrade Aleatório #${Math.floor(Math.random()*50)}</p>
+            <small>Melhora seus status base drasticamente.</small>
+        `;
+        card.onclick = () => {
+            state.maxHp += 2; state.hp = state.maxHp;
+            screen.style.display = 'none';
+            state.running = true;
+            nextRoom();
+            requestAnimationFrame(draw);
+        };
+        screen.appendChild(card);
+    }
+}
+
+// --- CONTROLES ---
+window.addEventListener('keydown', e => {
+    keys[e.code] = true;
+    if(e.code === 'KeyQ') swapWeapon();
+});
+window.addEventListener('keyup', e => keys[e.code] = false);
+
+function swapWeapon() {
+    let wKeys = Object.keys(WEAPONS);
+    let curIdx = wKeys.indexOf(state.weapon);
+    state.weapon = wKeys[(curIdx + 1) % wKeys.length];
+}
+
+if(isMobile) {
+    const joyBase = document.getElementById('joy-base');
+    const joyStick = document.getElementById('joy-stick');
+    joyBase.addEventListener('touchstart', () => joystick.active = true);
+    window.addEventListener('touchmove', e => {
+        if(!joystick.active) return;
+        let t = e.touches[0];
+        let r = joyBase.getBoundingClientRect();
+        let dx = t.clientX - (r.left + 75), dy = t.clientY - (r.top + 75);
+        let d = Math.min(Math.hypot(dx, dy), 50);
+        let a = Math.atan2(dy, dx);
+        joystick.x = (Math.cos(a)*d)/50; joystick.y = (Math.sin(a)*d)/50;
+        joyStick.style.transform = `translate(${Math.cos(a)*d}px, ${Math.sin(a)*d}px)`;
+    });
+    window.addEventListener('touchend', () => {
+        joystick.active = false; joystick.x = 0; joystick.y = 0;
+        joyStick.style.transform = `translate(0,0)`;
+    });
+    document.getElementById('btn-shoot').onpointerdown = () => isShooting = true;
+    document.getElementById('btn-shoot').onpointerup = () => isShooting = false;
+    document.getElementById('btn-swap').onclick = swapWeapon;
+}
+
 function toggleFS() {
-    if (!document.fullscreenElement) canvas.parentElement.requestFullscreen();
+    if(!document.fullscreenElement) document.documentElement.requestFullscreen();
     else document.exitFullscreen();
 }
 
-// Loop de jogo
-function loop() {
-    update();
-    draw();
-    requestAnimationFrame(loop);
-}
-
-// Iniciar
-resize();
-loop();
+function loop() { draw(); }
+window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+window.onresize();
 
 </script>
 </body>
