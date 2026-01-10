@@ -5,60 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Den of Shadow 💀 Lord of Light</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&display=swap');
+        
         * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
-        body { margin: 0; background: #05050a; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; }
-        canvas { display: block; background: #000; }
+        body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; }
+        canvas { display: block; }
+
+        /* TELA INICIAL INSPIRADA NO LINK */
+        .ui-screen { 
+            position: absolute; inset: 0; 
+            background: radial-gradient(circle at center, #4a0404 0%, #000000 100%);
+            z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        }
+        
+        #start-screen h1 { 
+            font-family: 'Nosifer', cursive; font-size: clamp(40px, 10vw, 80px); 
+            color: #ff0000; text-shadow: 0 0 30px #ff0000; margin-bottom: 10px;
+        }
+
+        .btn-main { 
+            padding: 20px 60px; font-size: 22px; background: transparent; 
+            border: 2px solid #ff0000; color: #fff; border-radius: 5px; cursor: pointer;
+            box-shadow: 0 0 15px #ff0000; transition: 0.3s; font-family: 'Orbitron', sans-serif;
+        }
+        .btn-main:hover { background: #ff0000; box-shadow: 0 0 40px #ff0000; transform: scale(1.1); }
+
+        /* CRÉDITOS E REDES SOCIAIS */
+        .social-footer { position: absolute; bottom: 30px; text-align: center; color: rgba(255,255,255,0.7); font-size: 14px; }
+        .social-item { margin: 5px 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .yt-icon { color: #ff0000; font-weight: bold; border: 1px solid #ff0000; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
 
         /* HUD */
         #hud { position: absolute; top: 20px; left: 20px; z-index: 1000; display: none; flex-direction: column; gap: 10px; }
-        .stat-container { background: rgba(0,0,0,0.8); padding: 8px; border-left: 4px solid #00eaff; border-radius: 5px; width: 220px; }
-        .bar-bg { width: 100%; height: 10px; background: #222; border-radius: 5px; overflow: hidden; margin-top: 5px; }
+        .stat-container { background: rgba(0,0,0,0.8); padding: 8px; border-left: 4px solid #ff0000; width: 220px; }
+        .bar-bg { width: 100%; height: 8px; background: #222; margin-top: 5px; }
         .bar-fill { height: 100%; transition: width 0.3s; }
-        #hp-fill { background: #ff0040; box-shadow: 0 0 10px #ff0040; }
-        #ammo-fill { background: #00eaff; box-shadow: 0 0 10px #00eaff; }
+        #hp-fill { background: #ff0000; box-shadow: 0 0 10px #ff0000; }
+        #ammo-fill { background: #f1c40f; box-shadow: 0 0 10px #f1c40f; }
 
-        /* Telas */
-        .ui-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        
-        /* Loading Block */
-        .loader-container { width: 300px; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; position: relative; overflow: hidden; margin-top: 20px; }
-        .loading-block { position: absolute; width: 40px; height: 100%; background: #00eaff; box-shadow: 0 0 15px #00eaff; animation: moveBlock 2s linear infinite; }
-        @keyframes moveBlock { 0% { left: -50px; } 100% { left: 350px; } }
-
-        /* Mobile Controls */
-        #mobile-hud { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 2000; }
-        #joy-base { position: absolute; bottom: 50px; left: 50px; width: 130px; height: 130px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; pointer-events: auto; }
-        #joy-stick { position: absolute; width: 60px; height: 60px; background: #00eaff; border-radius: 50%; left: 35px; top: 35px; box-shadow: 0 0 20px #00eaff; }
-        #atk-grid { position: absolute; bottom: 40px; right: 40px; display: grid; grid-template-columns: repeat(3, 85px); gap: 10px; pointer-events: auto; }
-        .btn-atk { width: 85px; height: 85px; background: rgba(255,255,255,0.1); border: 2px solid #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 30px; }
+        /* MOBILE */
+        #mobile-controls { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 2000; }
+        .joy-area { position: absolute; bottom: 50px; left: 50px; width: 120px; height: 120px; background: rgba(255,0,0,0.1); border: 1px solid #ff0000; border-radius: 50%; pointer-events: auto; }
+        .atk-area { position: absolute; bottom: 40px; right: 40px; display: grid; grid-template-columns: repeat(3, 75px); gap: 10px; pointer-events: auto; }
+        .btn-atk { width: 75px; height: 75px; background: rgba(0,0,0,0.5); border: 2px solid #ff0000; border-radius: 50%; color: #ff0000; display: flex; justify-content: center; align-items: center; font-size: 25px; }
     </style>
 </head>
 <body>
 
 <div id="start-screen" class="ui-screen">
-    <h1 style="color: #e74c3c; font-size: 50px; text-shadow: 0 0 20px #e74c3c;">DEN OF SHADOW</h1>
-    <button id="btn-play" style="padding: 20px 60px; font-size: 25px; background: #2ecc71; color: #fff; border: none; border-radius: 50px; cursor: pointer;">INICIAR JORNADA</button>
-</div>
-
-<div id="loading-screen" class="ui-screen" style="display:none;">
-    <h2 style="color: #00eaff;">CARREGANDO...</h2>
-    <div class="loader-container"><div class="loading-block"></div></div>
+    <h1>DEN OF SHADOW</h1>
+    <p style="letter-spacing: 5px; color: #ff0000; margin-bottom: 40px;">LORD OF LIGHT</p>
+    <button class="btn-main" id="btn-play">INICIAR</button>
+    
+    <div class="social-footer">
+        <div class="social-item">kauaderthofc@gmail.com</div>
+        <div class="social-item"><span class="yt-icon">YouTube</span> @kaua_darth</div>
+    </div>
 </div>
 
 <div id="hud">
-    <div class="stat-container"><div>VIDA</div><div class="bar-bg"><div id="hp-fill" class="bar-fill" style="width: 100%;"></div></div></div>
-    <div class="stat-container" style="border-color:#f1c40f;"><div>MUNIÇÃO</div><div class="bar-bg"><div id="ammo-fill" class="bar-fill" style="width: 100%;"></div></div></div>
-    <div style="font-weight: bold; font-size: 20px; color: #00eaff;">SALA: <span id="room-txt">0</span></div>
+    <div class="stat-container"><div>HEALTH</div><div class="bar-bg"><div id="hp-fill" class="bar-fill" style="width: 100%;"></div></div></div>
+    <div class="stat-container" style="border-color:#f1c40f;"><div>AMMO</div><div class="bar-bg"><div id="ammo-fill" class="bar-fill" style="width: 100%;"></div></div></div>
+    <div style="font-weight: bold; color: #ff0000;">FLOOR: <span id="room-txt">0</span></div>
 </div>
 
 <canvas id="gameCanvas"></canvas>
 
-<div id="mobile-hud">
-    <div id="joy-base"><div id="joy-stick"></div></div>
-    <div id="atk-grid">
-        <div></div><div class="btn-atk" data-dir="up">▲</div><div></div>
-        <div class="btn-atk" data-dir="left">◀</div><div class="btn-atk" data-dir="down">▼</div><div class="btn-atk" data-dir="right">▶</div>
+<div id="mobile-controls">
+    <div id="joy-base" class="joy-area"><div id="joy-stick" style="width:50px; height:50px; background:#ff0000; border-radius:50%; position:absolute; left:35px; top:35px;"></div></div>
+    <div class="atk-area">
+        <div></div><div class="btn-atk" id="atk-up">▲</div><div></div>
+        <div class="btn-atk" id="atk-left">◀</div><div class="btn-atk" id="atk-down">▼</div><div class="btn-atk" id="atk-right">▶</div>
     </div>
 </div>
 
@@ -67,191 +84,133 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
 
-// Configuração da Sala e Jogo
-const ROOM = { w: 1400, h: 900, wallSize: 60 };
-const G = {
-    play: false, room: 0,
-    hp: 100, maxHp: 100, ammo: 100, maxAmmo: 100,
-    enemiesDefeated: false
+const ROOM = { w: 1200, h: 800, wallSize: 50 };
+const G = { 
+    play: false, room: 0, hp: 100, ammo: 100, 
+    enemiesDefeated: false, lastShot: 0 
 };
 
-// Player e Inputs
-let player = { x: ROOM.w/2, y: ROOM.h/2, r: 25, spd: 7, iframe: 0 };
+let player = { x: 600, y: 400, r: 25, spd: 6 };
 let enemies = [], projectiles = [], doors = [];
-const keys = {}; // Objeto para múltiplas teclas
-const mobAtk = { up: false, down: false, left: false, right: false };
-const joy = { active: false, x: 0, y: 0, sx: 0, sy: 0 };
+const keys = {};
 
 function initRoom() {
     enemies = []; projectiles = []; doors = [];
     G.enemiesDefeated = false;
     player.x = ROOM.w/2; player.y = ROOM.h/2;
-
-    if (G.room === 0) {
-        G.enemiesDefeated = true; 
-        spawnDoors();
-    } else {
-        spawnEnemies();
-    }
+    if(G.room === 0) { G.enemiesDefeated = true; spawnDoors(); } 
+    else { spawnEnemies(); }
 }
 
 function spawnEnemies() {
-    let count = 4 + G.room;
-    for(let i=0; i<count; i++) {
+    for(let i=0; i < 3 + G.room; i++) {
         enemies.push({
-            x: 200 + Math.random() * (ROOM.w - 400),
-            y: 200 + Math.random() * (ROOM.h - 400),
-            hp: 50 + G.room * 10, r: 30, spd: 2 + Math.random()
+            x: 200 + Math.random()*(ROOM.w-400),
+            y: 200 + Math.random()*(ROOM.h-400),
+            hp: 50 + G.room*10, r: 30, spd: 2
         });
     }
 }
 
 function spawnDoors() {
-    doors = [{ x: ROOM.w/2 - 60, y: 0, w: 120, h: 60 }]; // Porta Norte
+    doors.push({ x: ROOM.w/2-60, y: 0, w: 120, h: 50 }); // Norte
 }
 
 function update() {
     if(!G.play) return;
 
-    // MOVIMENTO (PC + Console + Mobile)
+    // MOVIMENTAÇÃO WASD
     let mx = 0, my = 0;
-    
-    // PC (Teclado)
-    if(keys['w'] || keys['arrowup']) my = -1;
-    if(keys['s'] || keys['arrowdown']) my = 1;
-    if(keys['a'] || keys['arrowleft']) mx = -1;
-    if(keys['d'] || keys['arrowright']) mx = 1;
+    if(keys['w']) my = -1; if(keys['s']) my = 1;
+    if(keys['a']) mx = -1; if(keys['d']) mx = 1;
+    player.x = Math.max(ROOM.wallSize+25, Math.min(ROOM.w-ROOM.wallSize-25, player.x + mx*player.spd));
+    player.y = Math.max(ROOM.wallSize+25, Math.min(ROOM.h-ROOM.wallSize-25, player.y + my*player.spd));
 
-    // Mobile (Joystick)
-    if(joy.active) { mx = joy.x; my = joy.y; }
+    // ATAQUE SETAS
+    let ax = 0, ay = 0;
+    if(keys['arrowup']) ay = -1; if(keys['arrowdown']) ay = 1;
+    if(keys['arrowleft']) ax = -1; if(keys['arrowright']) ax = 1;
 
-    // Aplica movimento com trava nas paredes
-    player.x = Math.max(ROOM.wallSize + player.r, Math.min(ROOM.w - ROOM.wallSize - player.r, player.x + mx * player.spd));
-    player.y = Math.max(ROOM.wallSize + player.r, Math.min(ROOM.h - ROOM.wallSize - player.r, player.y + my * player.spd));
-
-    // Lógica de portas
-    if(G.enemiesDefeated) {
-        doors.forEach(d => {
-            if(player.x > d.x && player.x < d.x + d.w && player.y < d.y + d.h + 20) {
-                G.room++;
-                initRoom();
-            }
-        });
+    if((ax || ay) && Date.now() - G.lastShot > 200 && G.ammo > 0) {
+        projectiles.push({ x: player.x, y: player.y, vx: ax*12, vy: ay*12, r: 8 });
+        G.lastShot = Date.now();
+        G.ammo -= 1;
     }
 
-    // Checar morte de inimigos
+    // Colisões e Lógica de Jogo
+    projectiles.forEach((p, pi) => {
+        p.x += p.vx; p.y += p.vy;
+        enemies.forEach((en, ei) => {
+            if(Math.hypot(p.x-en.x, p.y-en.y) < en.r) {
+                en.hp -= 25; projectiles.splice(pi, 1);
+                if(en.hp <= 0) enemies.splice(ei, 1);
+            }
+        });
+    });
+
     if(enemies.length === 0 && !G.enemiesDefeated) {
         G.enemiesDefeated = true;
         spawnDoors();
     }
+
+    doors.forEach(d => {
+        if(player.x > d.x && player.x < d.x+d.w && player.y < d.y+d.h+20) {
+            G.room++; initRoom();
+        }
+    });
 }
 
 function draw() {
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+    ctx.fillStyle = "#000"; ctx.fillRect(0,0,canvas.width, canvas.height);
     if(!G.play) { requestAnimationFrame(draw); return; }
     update();
 
     ctx.save();
-    let scale = Math.min(canvas.width/ROOM.w, canvas.height/ROOM.h) * 0.95;
-    ctx.translate(canvas.width/2, canvas.height/2);
-    ctx.scale(scale, scale);
-    ctx.translate(-ROOM.w/2, -ROOM.h/2);
+    let s = Math.min(canvas.width/ROOM.w, canvas.height/ROOM.h)*0.9;
+    ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(s,s); ctx.translate(-ROOM.w/2, -ROOM.h/2);
 
-    // Piso
-    ctx.fillStyle = "#111";
-    ctx.fillRect(0, 0, ROOM.w, ROOM.h);
-
-    // Tutorial no Chão
+    // Piso e Tutorial
+    ctx.fillStyle = "#0a0000"; ctx.fillRect(0,0,ROOM.w,ROOM.h);
     if(G.room === 0) {
-        ctx.fillStyle = "rgba(255,255,255,0.1)";
-        ctx.font = "bold 30px Orbitron";
-        ctx.textAlign = "center";
-        ctx.fillText("USE WASD OU JOYSTICK PARA MOVER", ROOM.w/2, ROOM.h/2 - 50);
-        ctx.fillText("VÁ PARA O NORTE PARA COMEÇAR", ROOM.w/2, ROOM.h/2 + 50);
+        ctx.fillStyle = "rgba(255,0,0,0.3)"; ctx.textAlign = "center"; ctx.font = "bold 25px Orbitron";
+        ctx.fillText("WASD PARA MOVER", ROOM.w/2, ROOM.h/2 - 80);
+        ctx.fillText("SETAS PARA ATIRAR", ROOM.w/2, ROOM.h/2 + 80);
     }
 
-    // Paredes
-    ctx.fillStyle = "#050505";
-    ctx.fillRect(0,0,ROOM.w,ROOM.wallSize); // Top
-    ctx.fillRect(0,ROOM.h-ROOM.wallSize,ROOM.w,ROOM.wallSize); // Bottom
-    ctx.fillRect(0,0,ROOM.wallSize,ROOM.h); // Left
-    ctx.fillRect(ROOM.w-ROOM.wallSize,0,ROOM.wallSize,ROOM.h); // Right
-
-    // Portas
+    // Paredes e Portas
+    ctx.fillStyle = "#1a0000";
+    ctx.fillRect(0,0,ROOM.w,ROOM.wallSize); ctx.fillRect(0,ROOM.h-ROOM.wallSize,ROOM.w,ROOM.wallSize);
     if(G.enemiesDefeated) {
-        ctx.fillStyle = "#00eaff";
-        ctx.shadowBlur = 20; ctx.shadowColor = "#00eaff";
+        ctx.fillStyle = "#ff0000"; ctx.shadowBlur = 20; ctx.shadowColor = "#ff0000";
         doors.forEach(d => ctx.fillRect(d.x, d.y, d.w, d.h));
-        ctx.shadowBlur = 0;
     }
 
-    // Player
-    ctx.fillStyle = "#00eaff";
-    ctx.shadowBlur = 15; ctx.shadowColor = "#00eaff";
+    // Entidades
+    ctx.shadowBlur = 10; ctx.shadowColor = "#ff0000"; ctx.fillStyle = "#ff0000";
+    enemies.forEach(en => { ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill(); });
+    
+    ctx.fillStyle = "#fff"; ctx.shadowColor = "#fff";
     ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
-    ctx.shadowBlur = 0;
-
-    // Inimigos
-    ctx.fillStyle = "#e74c3c";
-    enemies.forEach(en => {
-        ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill();
-    });
-
+    
+    projectiles.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); });
     ctx.restore();
 
-    // HUD
     document.getElementById('hp-fill').style.width = G.hp + "%";
     document.getElementById('ammo-fill').style.width = G.ammo + "%";
     document.getElementById('room-txt').innerText = G.room;
-
     requestAnimationFrame(draw);
 }
 
-// Eventos de Teclado
 window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
 window.addEventListener('keyup', e => delete keys[e.key.toLowerCase()]);
-
-// Eventos Mobile (Joystick)
-const knob = document.getElementById('joy-stick'), base = document.getElementById('joy-base');
-base.addEventListener('touchstart', (e) => {
-    joy.active = true;
-    let r = base.getBoundingClientRect();
-    joy.sx = r.left + r.width/2;
-    joy.sy = r.top + r.height/2;
-});
-base.addEventListener('touchmove', (e) => {
-    if(!joy.active) return;
-    let t = e.touches[0];
-    let dx = t.clientX - joy.sx, dy = t.clientY - joy.sy;
-    let dist = Math.min(Math.hypot(dx, dy), 50);
-    let ang = Math.atan2(dy, dx);
-    joy.x = (Math.cos(ang) * dist) / 50;
-    joy.y = (Math.sin(ang) * dist) / 50;
-    knob.style.transform = `translate(${Math.cos(ang)*dist}px, ${Math.sin(ang)*dist}px)`;
-});
-base.addEventListener('touchend', () => {
-    joy.active = false; joy.x = 0; joy.y = 0;
-    knob.style.transform = `translate(0,0)`;
-});
-
-// Botão Jogar
 document.getElementById('btn-play').onclick = () => {
     document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('loading-screen').style.display = 'flex';
-    setTimeout(() => {
-        document.getElementById('loading-screen').style.display = 'none';
-        document.getElementById('hud').style.display = 'flex';
-        if(isMobile) document.getElementById('mobile-hud').style.display = 'block';
-        G.play = true;
-        initRoom();
-    }, 2000);
+    document.getElementById('hud').style.display = 'flex';
+    if(isMobile) document.getElementById('mobile-controls').style.display = 'block';
+    G.play = true; initRoom();
 };
-
 window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-window.onresize();
-draw();
+window.onresize(); draw();
 </script>
 </body>
 </html>
