@@ -132,7 +132,8 @@ const G = {
     play: false, pause: false, room: 0, hp: 100, maxHp: 100, 
     ammo: 25, maxAmmo: 25, dmgMult: 1, spdMult: 1,
     enemiesDefeated: false, lastShot: 0, 
-    dashCooldown: 0, dashMaxCooldown: 60, inCutscene: false
+    dashCooldown: 0, dashMaxCooldown: 60, inCutscene: false,
+    godMode: false, inputHistory: ""
 };
 
 const STORY = {
@@ -265,10 +266,17 @@ function update() {
 
     let ax = 0, ay = 0;
     if (keys['arrowup']) ay = -1; if (keys['arrowdown']) ay = 1; if (keys['arrowleft']) ax = -1; if (keys['arrowright']) ax = 1;
-    if ((ax || ay) && G.ammo > 0 && Date.now() - G.lastShot > 180) {
-        projectiles.push({ x: player.x, y: player.y, vx: ax*18, vy: ay*18, dmg: 50 * G.dmgMult });
-        G.ammo--; G.lastShot = Date.now();
-        if(G.ammo <= 0) setTimeout(() => G.ammo = G.maxAmmo, 1000);
+    
+    // Tiro e Recarga
+    if (ax || ay) {
+        if (G.ammo > 0 && Date.now() - G.lastShot > 180) {
+            let damage = G.godMode ? 9999 : 50 * G.dmgMult;
+            projectiles.push({ x: player.x, y: player.y, vx: ax*18, vy: ay*18, dmg: damage });
+            G.ammo--; G.lastShot = Date.now();
+        }
+    } else if (mx === 0 && my === 0 && Date.now() - G.lastShot > 2000) {
+        // Recarrega se estiver parado (movimento e tiro) por 2 segundos
+        if (G.ammo < G.maxAmmo) G.ammo = G.maxAmmo;
     }
 
     if (G.enemiesDefeated && player.y <= ROOM.wallSize + player.r + 5 && player.x > ROOM.w/2-120 && player.x < ROOM.w/2+120) {
@@ -282,7 +290,9 @@ function update() {
     enemies.forEach((en, i) => {
         let ang = Math.atan2(player.y - en.y, player.x - en.x);
         en.x += Math.cos(ang) * en.spd; en.y += Math.sin(ang) * en.spd;
-        if (Math.hypot(player.x - en.x, player.y - en.y) < player.r + en.r && player.dashTimer <= 0) G.hp -= 1.2;
+        if (Math.hypot(player.x - en.x, player.y - en.y) < player.r + en.r && player.dashTimer <= 0) {
+            if (!G.godMode) G.hp -= 1.2;
+        }
         if ((en.isShooter || en.isBoss) && Date.now() - en.lastShot > (en.isBoss ? 1000 : 2000)) {
             enemyProjectiles.push({ x: en.x, y: en.y, vx: Math.cos(ang)*8.5, vy: Math.sin(ang)*8.5 });
             en.lastShot = Date.now();
@@ -312,11 +322,12 @@ function update() {
     enemyProjectiles.forEach((ep, epi) => {
         ep.x += ep.vx; ep.y += ep.vy;
         if (Math.hypot(player.x - ep.x, player.y - ep.y) < player.r && player.dashTimer <= 0) {
-            G.hp -= 15; enemyProjectiles.splice(epi, 1);
+            if (!G.godMode) G.hp -= 15;
+            enemyProjectiles.splice(epi, 1);
         }
     });
 
-    if (G.hp <= 0) location.reload();
+    if (G.hp <= 0 && !G.godMode) location.reload();
 }
 
 function draw() {
@@ -347,12 +358,15 @@ function draw() {
         ctx.shadowBlur = 0;
     });
 
-    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
+    // Brilho dourado se o Modo Dev estiver ativo
+    ctx.fillStyle = G.godMode ? "#ffd700" : "#fff"; 
+    ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
+    
     enemies.forEach(en => {
         ctx.fillStyle = en.isBoss ? "#600" : "#400";
         ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill();
     });
-    projectiles.forEach(p => { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI*2); ctx.fill(); });
+    projectiles.forEach(p => { ctx.fillStyle = G.godMode ? "#0ff" : "#fff"; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI*2); ctx.fill(); });
     enemyProjectiles.forEach(ep => { ctx.fillStyle = "#f00"; ctx.beginPath(); ctx.arc(ep.x, ep.y, 8, 0, Math.PI*2); ctx.fill(); });
 
     ctx.restore();
@@ -362,7 +376,20 @@ function draw() {
     requestAnimationFrame(draw);
 }
 
-window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; if (e.key === "Escape") togglePause(); });
+window.addEventListener('keydown', e => { 
+    let key = e.key.toLowerCase();
+    keys[key] = true; 
+    if (e.key === "Escape") togglePause(); 
+    
+    // Lógica do código Dev: ippiik
+    G.inputHistory += key;
+    if (G.inputHistory.endsWith("ippiik")) {
+        G.godMode = !G.godMode;
+        if(G.godMode) { G.hp = G.maxHp; G.ammo = G.maxAmmo; }
+        console.log("Dev Mode: " + G.godMode);
+    }
+    if (G.inputHistory.length > 10) G.inputHistory = G.inputHistory.slice(-10);
+});
 window.addEventListener('keyup', e => delete keys[e.key.toLowerCase()]);
 
 draw();
