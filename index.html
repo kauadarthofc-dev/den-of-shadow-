@@ -74,7 +74,7 @@
         .btn-main { padding: 15px 40px; font-size: 18px; background: transparent; border: 2px solid #ff0000; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 10px; transition: 0.3s; z-index: 3100; }
         .social-links a { color: #ff0000; text-decoration: none; font-size: 12px; display: block; margin: 5px; }
         #cutscene-screen { background: #000; text-align: center; padding: 20px; display: none; }
-        #msg-popup { position: absolute; top: 25%; width: 100%; text-align: center; font-size: 24px; color: #ff0000; display: none; z-index: 2000; font-family: 'Nosifer'; pointer-events: none; }
+        #msg-popup { position: absolute; top: 25%; width: 100%; text-align: center; font-size: 24px; color: #ff0000; display: none; z-index: 2000; font-family: 'Nosifer'; pointer-events: none; text-shadow: 0 0 10px #000; }
 
         /* TELA DE UPGRADE */
         #upgrade-screen {
@@ -84,14 +84,15 @@
         }
         .cards-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; padding: 20px; }
         .upg-card {
-            width: 200px; height: 280px; background: #111;
+            width: 200px; height: 300px; background: #111;
             border: 2px solid #444; border-radius: 10px;
             display: flex; flex-direction: column; align-items: center; justify-content: space-between;
             padding: 15px; cursor: pointer; text-align: center; transition: 0.2s;
             box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            position: relative; overflow: hidden;
         }
         .upg-card:hover { transform: scale(1.05); }
-        .upg-rarity { font-size: 12px; text-transform: uppercase; margin-bottom: 5px; }
+        .upg-rarity { font-size: 12px; text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
         .upg-name { font-size: 16px; font-weight: bold; margin-bottom: 10px; color: #fff; }
         .upg-desc { font-size: 12px; color: #ccc; }
         
@@ -99,7 +100,9 @@
         .common { border-color: #999; box-shadow: 0 0 10px #999; } .common .upg-rarity { color: #999; }
         .rare { border-color: #00aaff; box-shadow: 0 0 10px #00aaff; } .rare .upg-rarity { color: #00aaff; }
         .epic { border-color: #a0f; box-shadow: 0 0 10px #a0f; } .epic .upg-rarity { color: #a0f; }
-        .legendary { border-color: #ffd700; box-shadow: 0 0 20px #ffd700; } .legendary .upg-rarity { color: #ffd700; }
+        .legendary { border-color: #ffd700; box-shadow: 0 0 20px #ffd700; animation: glow 2s infinite alternate; } .legendary .upg-rarity { color: #ffd700; }
+
+        @keyframes glow { from { box-shadow: 0 0 20px #ffd700; } to { box-shadow: 0 0 40px #ff4500; } }
 
     </style>
 </head>
@@ -168,42 +171,42 @@ const ctx = canvas.getContext('2d');
 const mCanvas = document.getElementById('minimap-canvas');
 const mCtx = mCanvas.getContext('2d');
 
-const ROOM = { w: 1600, h: 1000, wallSize: 70 };
+// Gerenciamento de Tamanho da Sala
+let ROOM_W = 1600;
+let ROOM_H = 1000;
+const WALL_SIZE = 70;
 
-// --- BANCO DE DADOS DE UPGRADES (25 ITENS) ---
+// --- BANCO DE DADOS DE UPGRADES (REBALANCEADO) ---
 const UPGRADES_DB = [
-    // COMUM (50%)
+    // COMUM (60%)
     { id: 'hp1', name: 'Vitalidade Menor', desc: '+20 Max HP', rarity: 'common', apply: p => G.maxHp += 20 },
     { id: 'dmg1', name: 'Força Bruta', desc: '+10% Dano', rarity: 'common', apply: p => p.dmgMult += 0.1 },
     { id: 'spd1', name: 'Botas Leves', desc: '+5% Velocidade', rarity: 'common', apply: p => player.spd *= 1.05 },
-    { id: 'ammo1', name: 'Cartucheira', desc: '+5 Munição Max', rarity: 'common', apply: p => { G.maxAmmo += 5; G.ammo += 5; } },
+    { id: 'ammo1', name: 'Cartucheira', desc: '+10 Munição Max', rarity: 'common', apply: p => { G.maxAmmo += 10; G.ammo += 10; } },
     { id: 'rl1', name: 'Mãos Ágeis', desc: '-10% Tempo Recarga', rarity: 'common', apply: p => G.reloadTime *= 0.9 },
-    { id: 'size1', name: 'Projétil Denso', desc: '+15% Tamanho do Tiro', rarity: 'common', apply: p => p.sizeMult += 0.15 },
-    { id: 'pspd1', name: 'Aerodinâmica', desc: '+10% Vel. Projétil', rarity: 'common', apply: p => p.projSpdMult += 0.1 },
     { id: 'heal1', name: 'Curativo', desc: 'Recupera 50 HP Agora', rarity: 'common', apply: p => G.hp = Math.min(G.maxHp, G.hp + 50) },
     
-    // RARO (34%)
+    // RARO (30%)
     { id: 'hp2', name: 'Coração de Pedra', desc: '+50 Max HP', rarity: 'rare', apply: p => G.maxHp += 50 },
     { id: 'dmg2', name: 'Lâmina Sombria', desc: '+25% Dano', rarity: 'rare', apply: p => p.dmgMult += 0.25 },
     { id: 'spd2', name: 'Passo Fantasma', desc: '+15% Velocidade', rarity: 'rare', apply: p => player.spd *= 1.15 },
-    { id: 'fr1', name: 'Gatilho Rápido', desc: '+20% Cadência de Tiro', rarity: 'rare', apply: p => p.fireRateMult *= 0.8 },
-    { id: 'ammo2', name: 'Caixa de Munição', desc: '+15 Munição Max', rarity: 'rare', apply: p => { G.maxAmmo += 15; G.ammo += 15; } },
-    { id: 'vamp1', name: 'Sede de Sangue', desc: '1% Chance de Cura ao matar', rarity: 'rare', apply: p => p.lifesteal += 0.01 },
-    { id: 'crt1', name: 'Olho Preciso', desc: '+10% Chance Crítico', rarity: 'rare', apply: p => p.critChance += 0.1 },
+    { id: 'fr1', name: 'Gatilho Rápido', desc: '+20% Cadência', rarity: 'rare', apply: p => p.fireRateMult *= 0.8 },
+    { id: 'crt1', name: 'Olho Preciso', desc: '+15% Chance Crítico', rarity: 'rare', apply: p => p.critChance += 0.15 },
+    { id: 'vamp1', name: 'Sede de Sangue', desc: '2% Cura ao matar', rarity: 'rare', apply: p => p.lifesteal += 0.02 },
 
-    // ÉPICO (15%)
+    // ÉPICO (8%)
     { id: 'dmg3', name: 'Poder do Lorde', desc: '+50% Dano', rarity: 'epic', apply: p => p.dmgMult += 0.5 },
-    { id: 'pierce', name: 'Balas Perfurantes', desc: 'Tiros atravessam 1 inimigo', rarity: 'epic', apply: p => p.pierce += 1 },
-    { id: 'regen', name: 'Regeneração', desc: 'Recupera 1 HP a cada 5s', rarity: 'epic', apply: p => p.regen = true },
-    { id: 'explode', name: 'Munição Explosiva', desc: 'Inimigos explodem ao morrer', rarity: 'epic', apply: p => p.explode = true },
-    { id: 'shield', name: 'Escudo Arcano', desc: 'Reduz dano recebido em 20%', rarity: 'epic', apply: p => p.dmgRed += 0.2 },
+    { id: 'pierce', name: 'Balas Perfurantes', desc: 'Tiros atravessam inimigos', rarity: 'epic', apply: p => p.pierce += 2 },
+    { id: 'regen', name: 'Regeneração', desc: 'Recupera HP lentamente', rarity: 'epic', apply: p => p.regen = true },
+    { id: 'explode', name: 'Detonação', desc: 'Inimigos explodem ao morrer', rarity: 'epic', apply: p => p.explode = true },
+    { id: 'shield', name: 'Escudo Arcano', desc: '-20% Dano Recebido', rarity: 'epic', apply: p => p.dmgRed += 0.2 },
     
-    // LENDÁRIO (1%)
+    // LENDÁRIO (2%)
     { id: 'multi', name: 'Tiro Duplo', desc: 'Dispara +1 projétil extra', rarity: 'legendary', apply: p => p.multishot += 1 },
-    { id: 'god', name: 'Imortalidade Menor', desc: '+100 Max HP e +30% Dano', rarity: 'legendary', apply: p => { G.maxHp += 100; p.dmgMult += 0.3; G.hp = G.maxHp; } },
-    { id: 'minigun', name: 'Minigun', desc: 'Munição Infinita, Dano Reduzido', rarity: 'legendary', apply: p => { G.infiniteAmmo = true; p.dmgMult *= 0.6; } },
-    { id: 'sniper', name: 'Rifle de Elite', desc: 'Dano x3, Cadência lenta', rarity: 'legendary', apply: p => { p.dmgMult *= 3; p.fireRateMult *= 2; } },
-    { id: 'nuke', name: 'Toque da Morte', desc: 'Inimigos morrem com 1 tiro (Boss sofre dano massivo)', rarity: 'legendary', apply: p => p.instakill = true }
+    { id: 'god', name: 'Imortalidade Menor', desc: '+100 HP, Full Heal, +30% Dano', rarity: 'legendary', apply: p => { G.maxHp += 100; p.dmgMult += 0.3; G.hp = G.maxHp; } },
+    { id: 'minigun', name: 'Minigun', desc: 'Munição Infinita, Dano -30%', rarity: 'legendary', apply: p => { G.infiniteAmmo = true; p.dmgMult *= 0.7; } },
+    { id: 'sniper', name: 'Rifle de Elite', desc: 'Dano x3, Cadência lenta', rarity: 'legendary', apply: p => { p.dmgMult *= 3; p.fireRateMult *= 1.8; } },
+    { id: 'sword_king', name: 'Mestre da Espada', desc: 'Espada do Rei reflete tiros e é maior', rarity: 'legendary', apply: p => p.swordMaster = true }
 ];
 
 const G = { 
@@ -211,17 +214,19 @@ const G = {
     reloading: false, enemiesDefeated: false, 
     lastShot: 0,
     clearedRooms: new Set(),
+    savedRooms: {}, // Salva itens deixados na sala
     reloadTime: 1000,
     infiniteAmmo: false,
     // Player Mods
-    mods: { dmgMult: 1, sizeMult: 1, projSpdMult: 1, fireRateMult: 1, lifesteal: 0, critChance: 0, pierce: 0, multishot: 0, dmgRed: 0, instakill: false },
+    mods: { dmgMult: 1, sizeMult: 1, projSpdMult: 1, fireRateMult: 1, lifesteal: 0, critChance: 0, pierce: 0, multishot: 0, dmgRed: 0, instakill: false, regen: false, explode: false, swordMaster: false },
     // Weapons
     weapons: [
-        { name: "LUZ", dmg: 40, spd: 20, rate: 200, color: "#fff", size: 10 },
-        { name: "FOGO", dmg: 90, spd: 25, rate: 400, color: "#ff4500", size: 18 } // Desbloqueia sala 5
+        { name: "LUZ", type: 'range', dmg: 40, spd: 20, rate: 200, color: "#fff", size: 10 },
+        { name: "FOGO", type: 'range', dmg: 90, spd: 25, rate: 400, color: "#ff4500", size: 18 },
+        { name: "REI", type: 'melee', dmg: 120, spd: 0, rate: 500, color: "#9932CC", size: 60 }
     ],
     curWpn: 0,
-    hasFireWpn: false
+    unlockedWeapons: [0] // Índices desbloqueados
 };
 
 // Controles Touch
@@ -230,25 +235,24 @@ let touchShoot = { x: 0, y: 0, active: false, startX:0, startY:0 };
 
 const texts = {
     pt: {
-        sub: "LORDE DA LUZ", boss: "GUARDIÃO!", weapon: "RELÍQUIA OBTIDA!", upgrade: "PODER OBTIDO!",
+        sub: "LORDE DA LUZ", boss: "GUARDIÃO!", weapon: "ARMA NOVA!", sword: "ESPADA DO REI!", upgrade: "PODER OBTIDO!",
         history: [
             "O Lorde da Luz foi traído por sua própria sombra...",
             "Agora ele rasteja no Den of Shadow para recuperar seu poder.",
-            "Na Sala 5, uma arma de fogo antiga o espera.",
-            "Use o lado esquerdo para andar e o direito para atirar."
+            "Rumores dizem que a Espada do Rei está perdida aqui.",
+            "Use o lado esquerdo para andar e o direito para atacar."
         ]
     }
 };
 
-let player = { x: 800, y: 800, r: 25, spd: 9 };
-let enemies = [], projectiles = [], drops = [], objects = [];
+let player = { x: 800, y: 800, r: 25, spd: 9, angle: 0 };
+let enemies = [], projectiles = [], drops = [], objects = [], visuals = [];
 const keys = {};
 
 function initCutscene() {
     document.getElementById('start-screen').style.display='none';
     document.getElementById('cutscene-screen').style.display='flex';
     nextHistory();
-    // Detecta mobile para mostrar botão de troca
     if('ontouchstart' in window) document.getElementById('mobile-swap-btn').style.display = 'flex';
 }
 
@@ -266,56 +270,128 @@ function startGame() {
     document.getElementById('hud-container').style.display='block';
     G.play = true;
     G.clearedRooms.add(0);
+    // Adicionar Espada do Rei na lista de desbloqueio para testar ou como drop
+    // Vamos deixar como drop na sala 3
     initRoom('bottom');
-    // Regeneração passiva
-    setInterval(() => { if(G.mods.regen && G.play && G.hp < G.maxHp) G.hp++; }, 5000);
+    setInterval(() => { if(G.mods.regen && G.play && G.hp < G.maxHp) G.hp++; }, 2000);
+}
+
+function saveRoomState() {
+    // Salva drops e objetos atuais para a sala atual
+    G.savedRooms[G.room] = {
+        drops: [...drops],
+        objects: [...objects]
+    };
+}
+
+function loadRoomState() {
+    if (G.savedRooms[G.room]) {
+        drops = [...G.savedRooms[G.room].drops];
+        objects = [...G.savedRooms[G.room].objects];
+    }
 }
 
 function initRoom(entrySide) {
-    enemies = []; projectiles = []; drops = []; objects = [];
-    
+    saveRoomState(); // Salva a sala anterior antes de mudar
+
+    // Redimensionar sala se for Boss
+    let isBoss = (G.room > 0 && G.room % 10 === 0);
+    if (isBoss) { ROOM_W = 2400; ROOM_H = 1600; } 
+    else { ROOM_W = 1600; ROOM_H = 1000; }
+
+    enemies = []; projectiles = []; visuals = [];
+    drops = []; objects = []; // Limpa temporariamente, depois carrega
+
     if (entrySide === 'bottom') {
-        player.x = ROOM.w / 2; player.y = ROOM.h - ROOM.wallSize - 60;
+        player.x = ROOM_W / 2; player.y = ROOM_H - WALL_SIZE - 80;
     } else {
-        player.x = ROOM.w / 2; player.y = ROOM.wallSize + 60;
+        player.x = ROOM_W / 2; player.y = WALL_SIZE + 80;
     }
 
     if (G.clearedRooms.has(G.room)) {
         G.enemiesDefeated = true;
+        loadRoomState(); // Carrega itens deixados
     } else {
         G.enemiesDefeated = false;
         if (G.room > 0) {
-            let isBoss = G.room % 10 === 0;
             if (isBoss) {
-                enemies.push({ x: ROOM.w/2, y: 300, hp: 1000 + (G.room * 100), maxHp: 1000+(G.room*100), r: 90, spd: 3, isBoss: true, offset: 0 });
+                // BOSS SPAWN
+                enemies.push({ 
+                    x: ROOM_W/2, y: 300, 
+                    hp: 1500 + (G.room * 200), maxHp: 1500+(G.room*200), 
+                    r: 120, spd: 4, isBoss: true, 
+                    state: 'idle', timer: 100, phase: 1 
+                });
                 showPopup(texts.pt.boss);
             } else {
-                let count = 4 + Math.floor(G.room * 0.8);
+                // INIMIGOS NORMAIS (Menos quantidade, mais IA)
+                let count = 3 + Math.floor(G.room * 0.6); 
                 for(let i=0; i<count; i++) {
                     enemies.push({ 
-                        x: Math.random()*(ROOM.w-300)+150, y: Math.random()*(ROOM.h-500)+150, 
-                        hp: 70 + G.room*20, maxHp: 70+G.room*20, r: 32, spd: 2 + (G.room*0.15), offset: Math.random()*10
+                        x: Math.random()*(ROOM_W-300)+150, y: Math.random()*(ROOM_H-500)+150, 
+                        hp: 90 + G.room*25, maxHp: 90+G.room*25, r: 35, spd: 2 + Math.random(), 
+                        behavior: Math.random() < 0.5 ? 'chase' : 'flank',
+                        flankAngle: Math.random() * Math.PI * 2
                     });
                 }
             }
         } else { G.enemiesDefeated = true; }
-    }
-
-    // Arma Sala 5
-    if (G.room === 5 && !G.hasFireWpn && G.enemiesDefeated) {
-        objects.push({ type: 'weapon', x: ROOM.w/2, y: ROOM.h/2, r: 40 });
     }
 }
 
 function showPopup(t) {
     const p = document.getElementById('msg-popup');
     p.innerText = t; p.style.display = 'block';
-    setTimeout(() => p.style.display = 'none', 2000);
+    p.style.opacity = 1;
+    setTimeout(() => p.style.display = 'none', 2500);
 }
 
-// --- LÓGICA DE UPGRADE ---
+// --- LOGICA BOSS & IA ---
+function updateBoss(boss) {
+    boss.timer--;
+    
+    // Troca de Estado
+    if (boss.timer <= 0) {
+        let r = Math.random();
+        if (r < 0.4) { boss.state = 'charge'; boss.timer = 120; }
+        else if (r < 0.8) { boss.state = 'shoot'; boss.timer = 180; }
+        else { boss.state = 'summon'; boss.timer = 100; }
+    }
+
+    // Comportamento
+    if (boss.state === 'idle') {
+        // Move lentamente para o centro
+        let dx = (ROOM_W/2) - boss.x;
+        boss.x += dx * 0.01;
+    } else if (boss.state === 'charge') {
+        let dx = player.x - boss.x, dy = player.y - boss.y;
+        let dist = Math.hypot(dx, dy);
+        boss.x += (dx/dist) * (boss.spd * 2.5);
+        boss.y += (dy/dist) * (boss.spd * 2.5);
+        // Cria rastro de dano
+        if (boss.timer % 5 === 0) visuals.push({x: boss.x, y: boss.y, r: boss.r, life: 20, type: 'dust'});
+    } else if (boss.state === 'shoot') {
+        if (boss.timer % 15 === 0) {
+            for(let i=0; i<8; i++) {
+                let ang = (i / 8) * Math.PI * 2 + (boss.timer * 0.1);
+                // Projéteis inimigos (simples, usam a mesma lista mas com flag isEnemy)
+                projectiles.push({
+                    x: boss.x, y: boss.y, vx: Math.cos(ang)*7, vy: Math.sin(ang)*7,
+                    r: 15, dmg: 15, color: '#f0f', isEnemy: true, life: 200
+                });
+            }
+        }
+    } else if (boss.state === 'summon') {
+        if (boss.timer === 50) {
+            enemies.push({ x: boss.x + 100, y: boss.y, hp: 50, maxHp: 50, r: 20, spd: 4, behavior: 'chase' });
+            enemies.push({ x: boss.x - 100, y: boss.y, hp: 50, maxHp: 50, r: 20, spd: 4, behavior: 'chase' });
+        }
+    }
+}
+
+// --- UPGRADES ---
 function spawnUpgradeCrystal() {
-    objects.push({ type: 'crystal', x: ROOM.w/2, y: ROOM.h/2, r: 40, angle: 0 });
+    objects.push({ type: 'crystal', x: ROOM_W/2, y: ROOM_H/2, r: 40, angle: 0 });
 }
 
 function openUpgradeMenu() {
@@ -323,7 +399,6 @@ function openUpgradeMenu() {
     const container = document.getElementById('upgrade-cards-area');
     container.innerHTML = '';
     
-    // Gerar 3 opções
     let options = [];
     for(let i=0; i<3; i++) options.push(getWeightedUpgrade());
 
@@ -332,8 +407,8 @@ function openUpgradeMenu() {
         div.className = `upg-card ${upg.rarity}`;
         div.innerHTML = `
             <div class="upg-rarity">${upg.rarity}</div>
+            <div style="flex:1; display:flex; align-items:center; justify-content:center; font-size:40px;">🔮</div>
             <div class="upg-name">${upg.name}</div>
-            <div style="font-size:30px; margin:10px;">🔮</div>
             <div class="upg-desc">${upg.desc}</div>
         `;
         div.onclick = () => selectUpgrade(upg);
@@ -345,16 +420,13 @@ function openUpgradeMenu() {
 
 function getWeightedUpgrade() {
     const r = Math.random() * 100;
-    let pool = [];
     let rarity = 'common';
-    
-    if (r <= 50) rarity = 'common';
-    else if (r <= 84) rarity = 'rare';
-    else if (r <= 99) rarity = 'epic';
-    else rarity = 'legendary';
+    if (r > 60) rarity = 'rare';
+    if (r > 90) rarity = 'epic';
+    if (r > 98) rarity = 'legendary';
 
-    pool = UPGRADES_DB.filter(u => u.rarity === rarity);
-    if(pool.length === 0) pool = UPGRADES_DB.filter(u => u.rarity === 'common'); // Fallback
+    let pool = UPGRADES_DB.filter(u => u.rarity === rarity);
+    if(pool.length === 0) pool = UPGRADES_DB.filter(u => u.rarity === 'common');
     return pool[Math.floor(Math.random() * pool.length)];
 }
 
@@ -363,15 +435,22 @@ function selectUpgrade(upg) {
     document.getElementById('upgrade-screen').style.display = 'none';
     G.play = true;
     showPopup(texts.pt.upgrade);
-    requestAnimationFrame(draw); // Resume loop
+    requestAnimationFrame(draw);
 }
 
 function swapWeapon() {
-    if(!G.hasFireWpn) return;
-    G.curWpn = (G.curWpn === 0) ? 1 : 0;
+    if (G.unlockedWeapons.length <= 1) return;
+    
+    let currentIdx = G.unlockedWeapons.indexOf(G.curWpn);
+    let nextIdx = (currentIdx + 1) % G.unlockedWeapons.length;
+    G.curWpn = G.unlockedWeapons[nextIdx];
+
     const w = G.weapons[G.curWpn];
     document.getElementById('weapon-txt').innerText = w.name;
     document.getElementById('weapon-txt').style.color = w.color;
+    
+    // Feedback visual
+    player.swapAnim = 10;
 }
 
 // --- INPUTS ---
@@ -384,17 +463,14 @@ function updateJoystickVisual(id, obj, joyId) {
         base.style.left = obj.startX + 'px';
         base.style.top = obj.startY + 'px';
         
-        // Limitar movimento visual do stick
-        let dx = obj.x; 
-        let dy = obj.y;
+        let dx = obj.x, dy = obj.y;
         let dist = Math.hypot(dx, dy);
-        let maxDist = 50; // Raio da base
+        let maxDist = 50;
         
         if (dist > maxDist) {
             dx = (dx / dist) * maxDist;
             dy = (dy / dist) * maxDist;
         }
-        
         stick.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
     } else {
         base.style.display = 'none';
@@ -413,13 +489,10 @@ const setupTouch = (id, obj, joyId) => {
     });
     el.addEventListener('touchmove', e => {
         e.preventDefault();
-        // Encontrar o toque correto pelo ID se possível, ou area
         for (let i=0; i<e.touches.length; i++) {
             const t = e.touches[i];
-            // Lógica simples de zona
             let inZone = (id === 'left-zone' && t.clientX < window.innerWidth/2) || 
                          (id === 'right-zone' && t.clientX > window.innerWidth/2);
-            
             if(inZone) {
                 obj.x = t.clientX - obj.startX;
                 obj.y = t.clientY - obj.startY;
@@ -439,22 +512,25 @@ setupTouch('right-zone', touchShoot, 'joy-right');
 function update() {
     if(!G.play) return;
 
-    // Tecla Q ou Space para trocar arma
     if(keys['q'] || keys[' ']) {
         if(!keys.blockSwap) { swapWeapon(); keys.blockSwap = true; }
     } else { keys.blockSwap = false; }
 
-    // Movimento
+    // Movimento Player
     let mx = 0, my = 0;
     if(keys['w']) my = -1; if(keys['s']) my = 1; if(keys['a']) mx = -1; if(keys['d']) mx = 1;
     if(touchMove.active) {
         let dist = Math.hypot(touchMove.x, touchMove.y);
         if(dist > 10) { mx = touchMove.x/dist; my = touchMove.y/dist; }
     }
-    player.x = Math.max(ROOM.wallSize+25, Math.min(ROOM.w-ROOM.wallSize-25, player.x + mx*player.spd));
-    player.y = Math.max(ROOM.wallSize+25, Math.min(ROOM.h-ROOM.wallSize-25, player.y + my*player.spd));
+    
+    // Normalizar diagonal
+    if(mx !== 0 || my !== 0) {
+        player.x = Math.max(WALL_SIZE+25, Math.min(ROOM_W-WALL_SIZE-25, player.x + mx*player.spd));
+        player.y = Math.max(WALL_SIZE+25, Math.min(ROOM_H-WALL_SIZE-25, player.y + my*player.spd));
+    }
 
-    // Tiro
+    // Ataque
     let ax = 0, ay = 0;
     if(keys['arrowup']) ay = -1; if(keys['arrowdown']) ay = 1; if(keys['arrowleft']) ax = -1; if(keys['arrowright']) ax = 1;
     if(touchShoot.active) {
@@ -462,106 +538,192 @@ function update() {
         if(dist > 20) { ax = touchShoot.x/dist; ay = touchShoot.y/dist; }
     }
 
-    if((ax || ay) && !G.reloading) {
-        if(G.ammo > 0 || G.infiniteAmmo) {
-            const wpn = G.weapons[G.curWpn];
-            const fireDelay = wpn.rate * G.mods.fireRateMult;
-            
-            if(Date.now() - G.lastShot > fireDelay) {
-                const baseDmg = wpn.dmg * G.mods.dmgMult;
-                const baseSize = wpn.size * G.mods.sizeMult;
-                const baseSpd = wpn.spd * G.mods.projSpdMult;
+    if(ax || ay) {
+        player.angle = Math.atan2(ay, ax);
+        const wpn = G.weapons[G.curWpn];
+        
+        // Lógica de Melee (Espada)
+        if (wpn.type === 'melee') {
+            if (Date.now() - G.lastShot > wpn.rate * (G.mods.fireRateMult * 0.8)) {
+                // Cria área de dano
+                let swingSize = wpn.size * (G.mods.swordMaster ? 2 : 1.5);
+                let swingDist = 60;
+                
+                // Visual
+                visuals.push({ 
+                    type: 'swing', x: player.x, y: player.y, angle: player.angle, 
+                    life: 10, color: wpn.color, size: swingSize 
+                });
 
-                const shoot = (vx, vy) => {
-                    projectiles.push({ 
-                        x: player.x, y: player.y, vx: vx, vy: vy, 
-                        r: baseSize, dmg: baseDmg, color: wpn.color,
-                        pierce: G.mods.pierce 
+                // Hitbox Melee
+                let hitX = player.x + Math.cos(player.angle) * swingDist;
+                let hitY = player.y + Math.sin(player.angle) * swingDist;
+
+                enemies.forEach(en => {
+                    if (Math.hypot(en.x - hitX, en.y - hitY) < swingSize + en.r) {
+                        let dmg = wpn.dmg * G.mods.dmgMult;
+                        if(Math.random() < G.mods.critChance) dmg *= 2;
+                        en.hp -= dmg;
+                        // Empurrão
+                        en.x += Math.cos(player.angle) * 30;
+                        en.y += Math.sin(player.angle) * 30;
+                        
+                        if(en.hp <= 0 && Math.random() < G.mods.lifesteal) G.hp = Math.min(G.maxHp, G.hp + 5);
+                    }
+                });
+                
+                // Refletir Projéteis (Espada Lendária)
+                if (G.mods.swordMaster) {
+                    projectiles.forEach(p => {
+                        if (p.isEnemy && Math.hypot(p.x - hitX, p.y - hitY) < swingSize + p.r) {
+                            p.vx *= -2; p.vy *= -2; p.isEnemy = false; p.color = '#fff';
+                        }
                     });
-                };
-
-                shoot(ax*baseSpd, ay*baseSpd);
-                if(G.mods.multishot > 0) {
-                    shoot((ax*0.9 - ay*0.2)*baseSpd, (ay*0.9 + ax*0.2)*baseSpd); // +Tiro torto
                 }
                 
-                if(!G.infiniteAmmo) G.ammo--;
                 G.lastShot = Date.now();
             }
-        } else {
-            G.reloading = true;
-            setTimeout(() => { G.ammo = G.maxAmmo; G.reloading = false; }, G.reloadTime);
+        } 
+        // Lógica de Tiro (Range)
+        else if (!G.reloading) {
+            if(G.ammo > 0 || G.infiniteAmmo) {
+                if(Date.now() - G.lastShot > wpn.rate * G.mods.fireRateMult) {
+                    const baseDmg = wpn.dmg * G.mods.dmgMult;
+                    const baseSize = wpn.size * G.mods.sizeMult;
+                    const baseSpd = wpn.spd * G.mods.projSpdMult;
+
+                    const shoot = (vx, vy) => {
+                        projectiles.push({ 
+                            x: player.x, y: player.y, vx: vx, vy: vy, 
+                            r: baseSize, dmg: baseDmg, color: wpn.color,
+                            pierce: G.mods.pierce, life: 100
+                        });
+                    };
+
+                    shoot(ax*baseSpd, ay*baseSpd);
+                    if(G.mods.multishot > 0) shoot((ax*0.9 - ay*0.2)*baseSpd, (ay*0.9 + ax*0.2)*baseSpd);
+                    
+                    if(!G.infiniteAmmo) G.ammo--;
+                    G.lastShot = Date.now();
+                }
+            } else {
+                G.reloading = true;
+                setTimeout(() => { G.ammo = G.maxAmmo; G.reloading = false; }, G.reloadTime);
+            }
         }
     }
 
-    // Inimigos
-    enemies.forEach((en) => {
-        let dx = player.x - en.x, dy = player.y - en.y, dist = Math.hypot(dx, dy);
-        let mX = dx/dist, mY = dy/dist;
-        if(!en.isBoss) { mX += Math.cos(Date.now()*0.005 + en.offset)*0.25; mY += Math.sin(Date.now()*0.005 + en.offset)*0.25; }
-        en.x += mX * en.spd; en.y += mY * en.spd;
-        if(dist < player.r + en.r) {
-            let dmg = en.isBoss ? 0.9 : 0.6;
+    // Atualizar Inimigos (IA Melhorada)
+    enemies.forEach((en, idx) => {
+        if(en.isBoss) {
+            updateBoss(en);
+        } else {
+            // IA Normal
+            let dx = player.x - en.x;
+            let dy = player.y - en.y;
+            let dist = Math.hypot(dx, dy);
+            
+            // Força de separação (Evitar empilhar)
+            let sepX = 0, sepY = 0;
+            enemies.forEach((other, oIdx) => {
+                if(idx !== oIdx) {
+                    let dX = en.x - other.x;
+                    let dY = en.y - other.y;
+                    let d = Math.hypot(dX, dY);
+                    if(d < en.r * 2) {
+                        sepX += dX / d;
+                        sepY += dY / d;
+                    }
+                }
+            });
+
+            if (en.behavior === 'flank' && dist > 150) {
+                 en.flankAngle += 0.02;
+                 dx += Math.cos(en.flankAngle) * 100;
+                 dy += Math.sin(en.flankAngle) * 100;
+            }
+
+            let angle = Math.atan2(dy, dx);
+            en.x += Math.cos(angle) * en.spd + sepX;
+            en.y += Math.sin(angle) * en.spd + sepY;
+        }
+
+        // Colisão com Player
+        if(Math.hypot(player.x-en.x, player.y-en.y) < player.r + en.r) {
+            let dmg = en.isBoss ? 1.5 : 0.8;
             if(G.mods.dmgRed > 0) dmg *= (1 - G.mods.dmgRed);
             G.hp -= dmg;
         }
     });
 
-    // Colisões Projéteis
+    // Atualizar Projéteis
     projectiles.forEach((p, pi) => {
         p.x += p.vx; p.y += p.vy;
-        
-        // Remove fora da tela
-        if(p.x < 0 || p.x > ROOM.w || p.y < 0 || p.y > ROOM.h) { projectiles.splice(pi, 1); return; }
+        p.life--;
+        if (p.life <= 0 || p.x < 0 || p.x > ROOM_W || p.y < 0 || p.y > ROOM_H) { projectiles.splice(pi, 1); return; }
 
-        for (let ei = enemies.length - 1; ei >= 0; ei--) {
-            let en = enemies[ei];
-            if(Math.hypot(p.x-en.x, p.y-en.y) < en.r + p.r) {
-                // Dano
-                let finalDmg = p.dmg;
-                // Crítico
-                if(Math.random() < G.mods.critChance) finalDmg *= 2;
-                // Instakill (Lendário)
-                if(G.mods.instakill && !en.isBoss) finalDmg = en.hp + 10;
-                if(G.mods.instakill && en.isBoss) finalDmg *= 1.5;
+        if (p.isEnemy) {
+            // Tiro Inimigo acerta Player
+            if (Math.hypot(p.x - player.x, p.y - player.y) < p.r + player.r) {
+                G.hp -= 10 * (1 - G.mods.dmgRed);
+                projectiles.splice(pi, 1);
+            }
+        } else {
+            // Tiro Player acerta Inimigo
+            for (let ei = enemies.length - 1; ei >= 0; ei--) {
+                let en = enemies[ei];
+                if(Math.hypot(p.x-en.x, p.y-en.y) < en.r + p.r) {
+                    let finalDmg = p.dmg;
+                    if(G.mods.instakill && !en.isBoss) finalDmg = en.hp + 999;
+                    en.hp -= finalDmg;
 
-                en.hp -= finalDmg;
-                
-                // Explosão (Épico)
-                if(G.mods.explode && en.hp <= 0) {
-                    // Causa dano em área (simulado)
+                    // Efeito de Morte
+                    if(en.hp <= 0) {
+                        if(G.mods.explode) {
+                             // Dano em área simples
+                             enemies.forEach(nearby => {
+                                 if(Math.hypot(nearby.x - en.x, nearby.y - en.y) < 150) nearby.hp -= 50;
+                             });
+                             visuals.push({type: 'explosion', x: en.x, y: en.y, life: 10});
+                        }
+                        
+                        // Drops
+                        let dropR = Math.random();
+                        if (dropR < 0.3) drops.push({x: en.x, y: en.y, type: 'hp'});
+                        else if (dropR < 0.5) drops.push({x: en.x, y: en.y, type: 'ammo'});
+
+                        enemies.splice(ei, 1);
+                    }
+
+                    if(p.pierce > 0) p.pierce--;
+                    else { projectiles.splice(pi, 1); break; }
                 }
-
-                // Vampirismo
-                if(en.hp <= 0 && Math.random() < G.mods.lifesteal) G.hp = Math.min(G.maxHp, G.hp + 5);
-
-                // Perfuração
-                if(p.pierce > 0) {
-                    p.pierce--;
-                } else {
-                    projectiles.splice(pi, 1);
-                }
-
-                if(en.hp <= 0) {
-                    if(Math.random() < 0.4) drops.push({x: en.x, y: en.y});
-                    enemies.splice(ei, 1);
-                }
-                break; // Atingiu um inimigo, para loop (se não perfurar)
             }
         }
     });
 
-    drops.forEach((d, i) => { if(Math.hypot(player.x-d.x, player.y-d.y) < 50) { G.hp = Math.min(G.maxHp, G.hp+25); drops.splice(i, 1); } });
+    // Pickups
+    drops.forEach((d, i) => { 
+        if(Math.hypot(player.x-d.x, player.y-d.y) < 50) { 
+            if (d.type === 'hp') G.hp = Math.min(G.maxHp, G.hp+25);
+            if (d.type === 'ammo') G.ammo = Math.min(G.maxAmmo, G.ammo+10);
+            drops.splice(i, 1); 
+        } 
+    });
 
-    // Objetos (Armas, Cristais)
+    // Objetos
     objects.forEach((o, i) => {
         if(o.type === 'crystal') o.angle += 0.05;
         if(Math.hypot(player.x-o.x, player.y-o.y) < o.r + player.r) {
             if(o.type === 'weapon') {
-                G.hasFireWpn = true; 
+                if (!G.unlockedWeapons.includes(o.wpnIdx)) {
+                    G.unlockedWeapons.push(o.wpnIdx);
+                    showPopup(o.wpnIdx === 2 ? texts.pt.sword : texts.pt.weapon);
+                    // Troca automática
+                    G.curWpn = o.wpnIdx;
+                }
                 objects.splice(i, 1); 
-                showPopup(texts.pt.weapon);
-                document.getElementById('mobile-swap-btn').style.display = 'flex'; // Exibe botão se mobile
+                document.getElementById('mobile-swap-btn').style.display = 'flex';
             }
             if(o.type === 'crystal') {
                 objects.splice(i, 1);
@@ -570,57 +732,73 @@ function update() {
         }
     });
 
-    // Limpeza da Sala
+    // Visuals update
+    visuals.forEach((v, i) => {
+        v.life--;
+        if(v.life <= 0) visuals.splice(i, 1);
+    });
+
+    // Check Fim da Sala
     if(enemies.length === 0 && !G.enemiesDefeated) {
         G.enemiesDefeated = true;
         G.clearedRooms.add(G.room);
+        if(G.room > 0 && G.room % 10 === 0) spawnUpgradeCrystal();
         
-        // Spawn de Recompensa
-        if(G.room > 0 && G.room % 10 === 0) {
-            spawnUpgradeCrystal();
+        // Drop de Armas Específicas
+        // Andar 5: Arma de Fogo
+        if (G.room === 5 && !G.unlockedWeapons.includes(1)) {
+             objects.push({ type: 'weapon', x: ROOM_W/2, y: ROOM_H/2, r: 40, wpnIdx: 1 });
         }
+        // Andar 8 ou 3: Espada do Rei
+        if (G.room === 3 && !G.unlockedWeapons.includes(2)) {
+             objects.push({ type: 'weapon', x: ROOM_W/2, y: ROOM_H/2, r: 40, wpnIdx: 2 });
+        }
+        
+        // Garante persistência
+        saveRoomState();
     }
 
     // Portas
-    if (G.enemiesDefeated && objects.length === 0) { // Só libera porta se pegar recompensa
+    if (G.enemiesDefeated && objects.filter(o => o.type === 'crystal').length === 0) { 
         const doorW = 200;
-        if (player.y < ROOM.wallSize + 30 && player.x > ROOM.w/2 - doorW/2 && player.x < ROOM.w/2 + doorW/2) {
+        if (player.y < WALL_SIZE + 30 && player.x > ROOM_W/2 - doorW/2 && player.x < ROOM_W/2 + doorW/2) {
             G.room++; initRoom('bottom');
         }
-        if (G.room > 0 && player.y > ROOM.h - ROOM.wallSize - 30 && player.x > ROOM.w/2 - doorW/2 && player.x < ROOM.w/2 + doorW/2) {
+        if (G.room > 0 && player.y > ROOM_H - WALL_SIZE - 30 && player.x > ROOM_W/2 - doorW/2 && player.x < ROOM_W/2 + doorW/2) {
             G.room--; initRoom('top');
         }
     }
 
-    if(G.hp <= 0) location.reload();
+    if(G.hp <= 0) {
+        alert("GAME OVER - Você sucumbiu às sombras.");
+        location.reload();
+    }
 }
 
 function drawMinimap() {
     mCtx.clearRect(0,0,mCanvas.width, mCanvas.height);
-    const sw = mCanvas.width / ROOM.w;
-    const sh = mCanvas.height / ROOM.h;
+    const sw = mCanvas.width / ROOM_W;
+    const sh = mCanvas.height / ROOM_H;
 
     mCtx.fillStyle = "#fff"; mCtx.fillRect(player.x * sw, player.y * sh, 4, 4);
     mCtx.fillStyle = "#f00"; enemies.forEach(en => mCtx.fillRect(en.x * sw, en.y * sh, 3, 3));
     
-    // Objetos no mapa
     objects.forEach(o => {
         mCtx.fillStyle = o.type === 'crystal' ? '#0ff' : '#f1c40f';
         mCtx.fillRect(o.x * sw, o.y * sh, 5, 5);
     });
 
-    if(G.enemiesDefeated && objects.length === 0) {
+    if(G.enemiesDefeated && objects.filter(o=>o.type==='crystal').length === 0) {
         mCtx.strokeStyle = "#f00";
-        mCtx.strokeRect((ROOM.w/2-50)*sw, 0, 100*sw, 10*sh);
-        if(G.room > 0) mCtx.strokeRect((ROOM.w/2-50)*sw, mCanvas.height - 10*sh, 100*sw, 10*sh);
+        mCtx.strokeRect((ROOM_W/2-50)*sw, 0, 100*sw, 10*sh);
+        if(G.room > 0) mCtx.strokeRect((ROOM_W/2-50)*sw, mCanvas.height - 10*sh, 100*sw, 10*sh);
     }
 }
 
 function draw() {
     ctx.fillStyle = "#000"; ctx.fillRect(0,0,canvas.width, canvas.height);
-    if(!G.play && document.getElementById('upgrade-screen').style.display !== 'flex') { requestAnimationFrame(draw); return; }
     
-    // Se tela de upgrade estiver aberta, não atualiza lógica, só desenha fundo
+    // Se o menu de upgrade estiver aberto, não atualiza lógica, apenas desenha (pausa)
     if(document.getElementById('upgrade-screen').style.display !== 'flex') {
         update();
     }
@@ -628,27 +806,51 @@ function draw() {
     drawMinimap();
 
     ctx.save();
-    let s = Math.min(canvas.width/ROOM.w, canvas.height/ROOM.h);
-    ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(s,s); ctx.translate(-ROOM.w/2, -ROOM.h/2);
+    // Camera
+    let zoom = Math.min(canvas.width/ROOM_W, canvas.height/ROOM_H);
+    // Para salas grandes (Boss), limitar zoom out
+    if(ROOM_W > 1600) zoom = Math.max(zoom, 0.4); 
 
-    // Cenário
-    ctx.fillStyle = "#0d0000"; ctx.fillRect(0,0,ROOM.w,ROOM.h);
+    let camX = canvas.width/2 - player.x*zoom;
+    let camY = canvas.height/2 - player.y*zoom;
+    
+    // Clamp camera
+    camX = Math.min(0, Math.max(canvas.width - ROOM_W*zoom, camX));
+    camY = Math.min(0, Math.max(canvas.height - ROOM_H*zoom, camY));
+
+    ctx.translate(camX, camY);
+    ctx.scale(zoom, zoom);
+
+    // Chão
+    ctx.fillStyle = "#0d0000"; ctx.fillRect(0,0,ROOM_W,ROOM_H);
+    // Paredes
     ctx.fillStyle = "#1a0000"; 
-    ctx.fillRect(0,0,ROOM.w,ROOM.wallSize); ctx.fillRect(0,ROOM.h-ROOM.wallSize,ROOM.w,ROOM.wallSize);
-    ctx.fillRect(0,0,ROOM.wallSize,ROOM.h); ctx.fillRect(ROOM.w-ROOM.wallSize,0,ROOM.wallSize,ROOM.h);
+    ctx.fillRect(0,0,ROOM_W,WALL_SIZE); ctx.fillRect(0,ROOM_H-WALL_SIZE,ROOM_W,WALL_SIZE);
+    ctx.fillRect(0,0,WALL_SIZE,ROOM_H); ctx.fillRect(ROOM_W-WALL_SIZE,0,WALL_SIZE,ROOM_H);
+    
+    // Grid sutil
+    ctx.strokeStyle = "#200000"; ctx.lineWidth = 2;
+    ctx.beginPath();
+    for(let x=0; x<ROOM_W; x+=100) { ctx.moveTo(x,0); ctx.lineTo(x,ROOM_H); }
+    for(let y=0; y<ROOM_H; y+=100) { ctx.moveTo(0,y); ctx.lineTo(ROOM_W,y); }
+    ctx.stroke();
 
-    if(G.enemiesDefeated && objects.length === 0) {
+    // Portas
+    if(G.enemiesDefeated && objects.filter(o=>o.type==='crystal').length === 0) {
         ctx.fillStyle = "#ff0000"; ctx.shadowBlur = 30; ctx.shadowColor = "#f00";
-        ctx.fillRect(ROOM.w/2-100, 0, 200, ROOM.wallSize + 15);
-        if (G.room > 0) ctx.fillRect(ROOM.w/2-100, ROOM.h - ROOM.wallSize - 15, 200, ROOM.wallSize + 15);
+        ctx.fillRect(ROOM_W/2-100, 0, 200, WALL_SIZE + 15);
+        if (G.room > 0) ctx.fillRect(ROOM_W/2-100, ROOM_H - WALL_SIZE - 15, 200, WALL_SIZE + 15);
         ctx.shadowBlur = 0;
     }
 
     // Objetos
     objects.forEach(o => {
         if(o.type === 'weapon') {
-            ctx.fillStyle = "#333"; ctx.fillRect(o.x-50, o.y-40, 100, 80);
-            ctx.fillStyle = "#ff4500"; ctx.font = "45px Arial"; ctx.fillText("🔫", o.x-22, o.y+15);
+            ctx.fillStyle = "#333"; ctx.fillRect(o.x-40, o.y-40, 80, 80);
+            ctx.font = "40px Arial"; ctx.textAlign = "center";
+            if (o.wpnIdx === 1) ctx.fillText("🔫", o.x, o.y+15);
+            else if (o.wpnIdx === 2) ctx.fillText("⚔️", o.x, o.y+15);
+            else ctx.fillText("?", o.x, o.y+15);
         }
         if(o.type === 'crystal') {
             ctx.save();
@@ -659,29 +861,85 @@ function draw() {
         }
     });
 
-    drops.forEach(d => { ctx.fillStyle = "#fff"; ctx.font = "35px Orbitron"; ctx.fillText("➕", d.x-15, d.y+15); });
+    drops.forEach(d => { 
+        ctx.font = "30px Orbitron"; ctx.textAlign = "center";
+        if (d.type === 'hp') { ctx.fillStyle = "#f00"; ctx.fillText("♥", d.x, d.y+10); }
+        if (d.type === 'ammo') { ctx.fillStyle = "#ff0"; ctx.fillText("▮", d.x, d.y+10); }
+    });
 
+    // Inimigos
     enemies.forEach(en => {
+        ctx.save();
+        ctx.translate(en.x, en.y);
         ctx.fillStyle = en.isBoss ? "#600" : "#f00";
-        ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(0, 0, en.r, 0, Math.PI*2); ctx.fill();
+        
+        // Olhos
+        ctx.fillStyle = "#000";
+        ctx.beginPath(); ctx.arc(-en.r/3, -en.r/4, en.r/4, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(en.r/3, -en.r/4, en.r/4, 0, Math.PI*2); ctx.fill();
+        
+        ctx.restore();
+        
+        // Barra HP Inimigo
         let hpPct = en.hp / en.maxHp;
         ctx.fillStyle = "#222"; ctx.fillRect(en.x-40, en.y-en.r-20, 80, 8);
         ctx.fillStyle = "#f00"; ctx.fillRect(en.x-40, en.y-en.r-20, 80 * hpPct, 8);
     });
 
+    // Player
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    ctx.rotate(player.angle + Math.PI/2); // Rotacionar para olhar para o alvo
+    
     ctx.fillStyle = G.reloading ? "#444" : "#fff";
-    ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
-    // Indicador da arma atual
+    ctx.beginPath(); ctx.arc(0, 0, player.r, 0, Math.PI*2); ctx.fill();
+    // Indicador da arma atual (Corpo)
     ctx.strokeStyle = G.weapons[G.curWpn].color; ctx.lineWidth = 5; ctx.stroke();
     
+    // Desenho Arma
+    if (G.weapons[G.curWpn].type === 'range') {
+        ctx.fillStyle = G.weapons[G.curWpn].color;
+        ctx.fillRect(-5, -35, 10, 20); // Cano da arma
+    } else {
+        // Espada Visual no player (Idle)
+        ctx.strokeStyle = "#9932CC"; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(10, -40); ctx.stroke();
+    }
+    ctx.restore();
+
+    // Projéteis
     projectiles.forEach(p => { 
         ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); 
     });
 
+    // Efeitos Visuais (Swings de espada, explosões)
+    visuals.forEach(v => {
+        if (v.type === 'swing') {
+            ctx.save();
+            ctx.translate(v.x, v.y);
+            ctx.rotate(v.angle);
+            ctx.strokeStyle = v.color;
+            ctx.lineWidth = 5;
+            ctx.globalAlpha = v.life / 10;
+            ctx.beginPath();
+            ctx.arc(0, 0, v.size, -Math.PI/3, Math.PI/3);
+            ctx.stroke();
+            ctx.restore();
+        }
+        if (v.type === 'explosion' || v.type === 'dust') {
+             ctx.fillStyle = v.type === 'dust' ? '#555' : '#fa0';
+             ctx.globalAlpha = v.life / 10;
+             ctx.beginPath(); ctx.arc(v.x, v.y, v.type==='dust'? 40 : 100, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+    });
+
     ctx.restore();
     
-    document.getElementById('hp-bar').style.width = (G.hp/G.maxHp*100) + "%";
-    document.getElementById('ammo-bar').style.width = G.infiniteAmmo ? "100%" : (G.ammo/G.maxAmmo*100) + "%";
+    // Update HUD
+    document.getElementById('hp-bar').style.width = Math.max(0, (G.hp/G.maxHp*100)) + "%";
+    document.getElementById('ammo-bar').style.width = G.infiniteAmmo || G.weapons[G.curWpn].type==='melee' ? "100%" : (G.ammo/G.maxAmmo*100) + "%";
     document.getElementById('room-txt').innerText = G.room;
     
     requestAnimationFrame(draw);
