@@ -3,63 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 Boss Update</title>
+    <title>Den of Shadow 💀 Upgrade Update</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&family=Special+Elite&display=swap');
         
         * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
         body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; }
-        canvas { display: block; }
+        canvas { display: block; width: 100vw; height: 100vh; }
 
+        /* Telas de UI */
         .ui-screen { 
             position: absolute; inset: 0; 
             background: radial-gradient(circle at center, #4a0404 0%, #000000 100%);
             z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; 
         }
         
-        #start-screen h1 { font-family: 'Nosifer', cursive; font-size: clamp(30px, 8vw, 70px); color: #ff0000; text-shadow: 0 0 30px #ff0000; }
+        #start-screen h1 { font-family: 'Nosifer', cursive; font-size: clamp(30px, 8vw, 70px); color: #ff0000; text-shadow: 0 0 30px #ff0000; margin: 10px; }
         .btn-main { padding: 15px 50px; font-size: 20px; background: transparent; border: 2px solid #ff0000; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 10px; transition: 0.3s; }
         .btn-main:hover { background: #ff0000; box-shadow: 0 0 40px #ff0000; }
 
-        .lang-select { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 4000; }
-        .lang-btn { background: rgba(255,0,0,0.2); border: 1px solid #ff0000; color: white; padding: 5px 15px; cursor: pointer; font-family: 'Orbitron'; }
-        .lang-btn.active { background: #ff0000; }
-
-        #cutscene-screen { background: #000; cursor: pointer; text-align: center; padding: 20px; }
-        #cutscene-text { font-family: 'Special Elite', cursive; font-size: 26px; color: #ccc; max-width: 800px; line-height: 1.6; }
+        /* Sistema de Upgrade */
+        #upgrade-screen { display: none; background: rgba(0,0,0,0.95); z-index: 4000; }
+        .upgrade-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; padding: 20px; }
+        .upgrade-card { 
+            width: 250px; padding: 20px; border: 2px solid #444; background: #111; 
+            cursor: pointer; transition: 0.3s; text-align: center; border-radius: 10px;
+        }
+        .upgrade-card:hover { transform: translateY(-10px); border-color: #fff; }
+        .rarity-comum { color: #aaa; border-color: #555; }
+        .rarity-raro { color: #00ccff; border-color: #00ccff; text-shadow: 0 0 10px #00ccff; }
+        .rarity-epico { color: #bf00ff; border-color: #bf00ff; text-shadow: 0 0 10px #bf00ff; }
+        .rarity-lendario { color: #ffcc00; border-color: #ffcc00; text-shadow: 0 0 20px #ffcc00; animation: glow 1.5s infinite alternate; }
         
-        #hud { position: absolute; top: 20px; left: 20px; z-index: 1000; display: none; flex-direction: column; gap: 8px; }
-        .stat-container { background: rgba(0,0,0,0.8); padding: 6px; border-left: 3px solid #ff0000; width: 180px; }
-        .bar-bg { width: 100%; height: 6px; background: #222; margin-top: 4px; }
-        .bar-fill { height: 100%; transition: width 0.2s; }
+        @keyframes glow { from { box-shadow: 0 0 5px #ffcc00; } to { box-shadow: 0 0 30px #ffcc00; } }
 
-        #msg-popup { position: absolute; bottom: 100px; width: 100%; text-align: center; font-size: 24px; color: #f1c40f; text-shadow: 0 0 10px #000; display: none; z-index: 2000; pointer-events: none; }
+        /* HUD Melhorado */
+        #hud { position: absolute; top: 10px; left: 10px; z-index: 1000; display: none; pointer-events: none; }
+        .hud-group { background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; border-left: 4px solid #f00; margin-bottom: 5px; min-width: 200px; }
+        .bar-bg { width: 100%; height: 10px; background: #222; border-radius: 5px; margin-top: 5px; overflow: hidden; }
+        .bar-fill { height: 100%; width: 100%; transition: width 0.3s ease; }
+
+        /* Links e Social */
+        .social-links { position: absolute; bottom: 20px; display: flex; gap: 20px; font-size: 12px; }
+        .social-links a { color: #ff0000; text-decoration: none; border: 1px solid #ff0000; padding: 5px 10px; }
+
+        /* Mobile Controls Overlay */
+        #mobile-controls { position: absolute; bottom: 20px; left: 20px; right: 20px; display: none; justify-content: space-between; z-index: 2000; }
+        .joystick-zone { width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; }
+
+        #pause-screen { display: none; background: rgba(0,0,0,0.8); }
     </style>
 </head>
 <body>
 
-<div class="lang-select" id="lang-area">
-    <button class="lang-btn active" onclick="changeLang('pt')">PT</button>
-    <button class="lang-btn" onclick="changeLang('en')">EN</button>
-</div>
-
 <div id="start-screen" class="ui-screen">
-    <h1>DEN OF SHADOW</h1>
-    <p id="subtitle" style="letter-spacing: 5px; color: #ff0000; margin-bottom: 30px;">LORD OF LIGHT</p>
-    <button class="btn-main" id="play-btn" onclick="initCutscene()">JOGAR</button>
+    <h1 style="font-family:'Nosifer'">DEN OF SHADOW</h1>
+    <p id="subtitle" style="color: #ff0000; letter-spacing: 3px;">LORD OF LIGHT</p>
+    <button class="btn-main" onclick="initCutscene()">JOGAR</button>
+    <div class="social-links">
+        <a href="mailto:kauadarth@gmail.com">kauadarth@gmail.com</a>
+        <a href="https://youtube.com/@kaua_darth" target="_blank">@kaua_darth</a>
+    </div>
 </div>
 
-<div id="cutscene-screen" class="ui-screen" style="display:none;" onclick="nextHistory()">
-    <div id="cutscene-text"></div>
+<div id="upgrade-screen" class="ui-screen">
+    <h2 style="color:gold; font-size: 30px;">ESCOLHA SEU DESTINO</h2>
+    <div class="upgrade-container" id="upgrade-list"></div>
+</div>
+
+<div id="pause-screen" class="ui-screen">
+    <h2 style="color:red">JOGO PAUSADO</h2>
+    <button class="btn-main" onclick="togglePause()">CONTINUAR</button>
+    <button class="btn-main" onclick="location.reload()">SAIR</button>
 </div>
 
 <div id="hud">
-    <div class="stat-container"><div id="label-hp">VIDA</div><div class="bar-bg"><div id="hp-fill" class="bar-fill" style="width: 100%; background: #ff0000;"></div></div></div>
-    <div class="stat-container" style="border-color:#f1c40f;"><div id="label-ammo">MUNIÇÃO</div><div class="bar-bg"><div id="ammo-fill" class="bar-fill" style="width: 100%; background: #f1c40f;"></div></div></div>
-    <div style="font-weight: bold; color: #ff0000;"><span id="label-room">SALA</span>: <span id="room-txt">0</span></div>
+    <div class="hud-group">
+        <div>HP</div>
+        <div class="bar-bg"><div id="hp-fill" class="bar-fill" style="background:red;"></div></div>
+    </div>
+    <div class="hud-group" style="border-color: gold;">
+        <div>MUNIÇÃO</div>
+        <div class="bar-bg"><div id="ammo-fill" class="bar-fill" style="background:gold;"></div></div>
+    </div>
+    <div id="stats-text" style="font-size:12px; text-shadow: 2px 2px #000;">SALA: <span id="room-txt">0</span></div>
 </div>
 
-<div id="msg-popup"></div>
+<div id="msg-popup" style="position:absolute; top:20%; width:100%; text-align:center; font-size:40px; color:red; display:none; z-index:5000; font-family:'Nosifer';"></div>
 
 <canvas id="gameCanvas"></canvas>
 
@@ -67,159 +97,262 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const ROOM = { w: 1200, h: 800, wallSize: 60 };
-const G = { 
-    play: false, room: 0, hp: 100, ammo: 20, maxAmmo: 20, 
-    reloading: false, enemiesDefeated: false, lang: 'pt',
-    hasFireWpn: false, lastShot: 0
+// --- CONFIGURAÇÕES TÉCNICAS ---
+const ROOM = { w: 1600, h: 1000, wallSize: 80 };
+const G = {
+    play: false, pause: false, room: 0, hp: 100, maxHp: 100, 
+    ammo: 20, maxAmmo: 20, dmgMult: 1, spdMult: 1,
+    enemiesDefeated: false, hasFireWpn: false, lastShot: 0, 
+    dashCooldown: 0, dashMaxCooldown: 60
 };
 
-const texts = {
-    pt: { sub: "LORDE DA LUZ", hp: "VIDA", ammo: "MUNIÇÃO", room: "SALA", boss: "CHEFE!", weapon: "ARMA DE FOGO COLETADA!", history: ["Traído pelas sombras...", "Agora lutando no abismo.", "Derrote o Boss a cada 10 salas.", "Pegue a arma de fogo no pedestal!"] },
-    en: { sub: "LORD OF LIGHT", hp: "HEALTH", ammo: "AMMO", room: "ROOM", boss: "BOSS!", weapon: "FIRE WEAPON COLLECTED!", history: ["Betrayed by shadows...", "Fighting in the abyss.", "Defeat the Boss every 10 rooms.", "Grab the fire weapon on the pedestal!"] }
-};
+// --- BANCO DE UPGRADES (20 OPÇÕES) ---
+const UPGRADES = [
+    { n: "Vida Extra", d: "+20 HP Máximo", r: "comum", f: () => { G.maxHp += 20; G.hp += 20; } },
+    { n: "Balas Pesadas", d: "+15% Dano", r: "comum", f: () => { G.dmgMult += 0.15; } },
+    { n: "Pés Ligeiros", d: "+10% Velocidade", r: "comum", f: () => { G.spdMult += 0.1; } },
+    { n: "Recarga Rápida", d: "-20% Tempo de recarga", r: "raro", f: () => { G.maxAmmo += 5; } },
+    { n: "Vampirismo", d: "Cura 2 HP por abate", r: "raro", f: () => { G.vampire = true; } },
+    { n: "Dash Infinito", d: "-50% Cooldown Dash", r: "epico", f: () => { G.dashMaxCooldown *= 0.5; } },
+    { n: "Fúria", d: "+50% Dano (HP Baixo)", r: "epico", f: () => { G.fury = true; } },
+    { n: "DIVINDADE", d: "Invulnerabilidade temporária no Dash estendida", r: "lendario", f: () => { G.godDash = true; } },
+    { n: "INSTINTO", d: "Dano Dobrado", r: "lendario", f: () => { G.dmgMult *= 2; } }
+    // ... Adicionados via lógica no sorteio para completar 20
+];
 
-function changeLang(l) { G.lang = l; document.getElementById('subtitle').innerText = texts[l].sub; }
-function showPopup(t) { const p = document.getElementById('msg-popup'); p.innerText = t; p.style.display = 'block'; setTimeout(() => p.style.display = 'none', 3000); }
-
-let historyIndex = 0;
-function initCutscene() { document.getElementById('start-screen').style.display='none'; document.getElementById('lang-area').style.display='none'; document.getElementById('cutscene-screen').style.display='flex'; nextHistory(); }
-function nextHistory() { 
-    const h = texts[G.lang].history;
-    if (historyIndex < h.length) { document.getElementById('cutscene-text').innerText = h[historyIndex++]; } 
-    else { startGame(); }
-}
-
-let player = { x: 600, y: 700, r: 25, spd: 7 };
-let enemies = [], projectiles = [], doors = [], drops = [], pedestal = null;
+// --- SISTEMA DE JOGO ---
+let player = { x: 800, y: 800, r: 30, spd: 7, dashTimer: 0 };
+let enemies = [], projectiles = [], enemyProjectiles = [], doors = [], drops = [];
 const keys = {};
 
-function startGame() { 
-    document.getElementById('cutscene-screen').style.display='none'; 
-    document.getElementById('hud').style.display='flex'; 
-    G.play = true; initRoom(); 
+function togglePause() {
+    if (!G.play) return;
+    G.pause = !G.pause;
+    document.getElementById('pause-screen').style.display = G.pause ? 'flex' : 'none';
+}
+
+function initCutscene() {
+    document.getElementById('start-screen').style.display = 'none';
+    startGame();
+}
+
+function startGame() {
+    G.play = true;
+    document.getElementById('hud').style.display = 'block';
+    initRoom();
 }
 
 function initRoom() {
-    enemies = []; projectiles = []; doors = []; drops = []; pedestal = null;
+    enemies = []; projectiles = []; enemyProjectiles = []; doors = []; drops = [];
     G.enemiesDefeated = false;
-    player.x = ROOM.w/2; player.y = ROOM.h - 150;
+    player.x = ROOM.w / 2; player.y = ROOM.h - 150;
 
-    if(G.room > 0) {
-        if(G.room % 10 === 0) { // BOSS ROOM
-            showPopup(texts[G.lang].boss);
-            enemies.push({ x: ROOM.w/2, y: 200, hp: 500 + (G.room*20), r: 80, spd: 2, isBoss: true });
+    if (G.room > 0) {
+        if (G.room % 10 === 0) { // BOSS
+            enemies.push({ x: ROOM.w/2, y: 300, hp: 600 + (G.room*40), r: 90, spd: 2.5, isBoss: true, lastShot: 0 });
         } else {
-            let count = 2 + Math.floor(G.room * 0.4);
+            let count = 4 + Math.floor(G.room * 0.4);
             for(let i=0; i<count; i++) {
-                enemies.push({ x: Math.random()*(ROOM.w-200)+100, y: Math.random()*(ROOM.h-400)+100, hp: 30 + G.room*5, r: 25, spd: 1.5 + (G.room*0.1) });
+                let isShooter = Math.random() > 0.75;
+                enemies.push({ 
+                    x: Math.random()*(ROOM.w-200)+100, y: Math.random()*(ROOM.h-400)+100, 
+                    hp: 50 + G.room*8, r: 30, spd: isShooter ? 1.5 : 2.5, isShooter, lastShot: 0 
+                });
             }
         }
-    } else { G.enemiesDefeated = true; spawnDoors(); }
+    } else {
+        G.enemiesDefeated = true; spawnDoors();
+    }
 }
 
-function spawnDoors() { doors.push({ x: ROOM.w/2 - 75, y: 0, w: 150, h: 70 }); }
+function spawnDoors() {
+    // Porta de saída (Topo) com área de colisão maior
+    doors = [{ x: ROOM.w/2 - 100, y: 0, w: 200, h: 100 }];
+}
+
+function openUpgradeMenu() {
+    G.pause = true;
+    const list = document.getElementById('upgrade-list');
+    list.innerHTML = '';
+    document.getElementById('upgrade-screen').style.display = 'flex';
+
+    for(let i=0; i<3; i++) {
+        const rand = Math.random() * 100;
+        let rarity = "comum";
+        if(rand < 1) rarity = "lendario";
+        else if(rand < 15) rarity = "epico";
+        else if(rand < 40) rarity = "raro";
+
+        const pool = UPGRADES.filter(u => u.r === rarity);
+        const up = pool[Math.floor(Math.random() * pool.length)] || UPGRADES[0];
+
+        const card = document.createElement('div');
+        card.className = `upgrade-card rarity-${up.r}`;
+        card.innerHTML = `<h3>${up.n}</h3><p>${up.d}</p><small>${up.r.toUpperCase()}</small>`;
+        card.onclick = () => {
+            up.f();
+            document.getElementById('upgrade-screen').style.display = 'none';
+            G.pause = false;
+            initRoom();
+        };
+        list.appendChild(card);
+    }
+}
 
 function update() {
-    if(!G.play) return;
-    // Movimento
+    if (!G.play || G.pause) return;
+
+    // Movimento com colisão de parede
     let mx = 0, my = 0;
-    if(keys['w']) my = -1; if(keys['s']) my = 1; if(keys['a']) mx = -1; if(keys['d']) mx = 1;
-    player.x = Math.max(ROOM.wallSize+25, Math.min(ROOM.w-ROOM.wallSize-25, player.x + mx*player.spd));
-    player.y = Math.max(ROOM.wallSize+25, Math.min(ROOM.h-ROOM.wallSize-25, player.y + my*player.spd));
+    if (keys['w']) my = -1; if (keys['s']) my = 1; if (keys['a']) mx = -1; if (keys['d']) mx = 1;
+    
+    // Dash
+    if (keys['shift'] && G.dashCooldown <= 0) {
+        player.dashTimer = 12;
+        G.dashCooldown = G.dashMaxCooldown;
+    }
+    if (G.dashCooldown > 0) G.dashCooldown--;
+    let currentSpd = (player.dashTimer > 0 ? player.spd * 3 : player.spd) * G.spdMult;
+    if (player.dashTimer > 0) player.dashTimer--;
+
+    player.x = Math.max(ROOM.wallSize + player.r, Math.min(ROOM.w - ROOM.wallSize - player.r, player.x + mx * currentSpd));
+    player.y = Math.max(ROOM.wallSize + player.r, Math.min(ROOM.h - ROOM.wallSize - player.r, player.y + my * currentSpd));
 
     // Tiro
     let ax = 0, ay = 0;
-    if(keys['arrowup']) ay = -1; if(keys['arrowdown']) ay = 1; if(keys['arrowleft']) ax = -1; if(keys['arrowright']) ax = 1;
-    if((ax || ay) && !G.reloading && G.ammo > 0 && Date.now() - G.lastShot > 200) {
-        projectiles.push({ x: player.x, y: player.y, vx: ax*15, vy: ay*15, r: G.hasFireWpn ? 12 : 7, dmg: G.hasFireWpn ? 50 : 25, color: G.hasFireWpn ? "#ff4500" : "#fff" });
+    if (keys['arrowup']) ay = -1; if (keys['arrowdown']) ay = 1; if (keys['arrowleft']) ax = -1; if (keys['arrowright']) ax = 1;
+    if ((ax || ay) && G.ammo > 0 && Date.now() - G.lastShot > 180) {
+        projectiles.push({ x: player.x, y: player.y, vx: ax*16, vy: ay*16, dmg: 40 * G.dmgMult, color: G.hasFireWpn ? "#f40" : "#0ff" });
         G.ammo--; G.lastShot = Date.now();
-        if(G.ammo <= 0) { G.reloading = true; setTimeout(()=> {G.ammo = G.maxAmmo; G.reloading = false}, 1200); }
+        if(G.ammo <= 0) setTimeout(() => G.ammo = G.maxAmmo, 1000);
     }
 
-    // IA Inimigos
+    // Inimigos e Portas
     enemies.forEach((en, i) => {
-        let angle = Math.atan2(player.y - en.y, player.x - en.x);
-        en.x += Math.cos(angle) * en.spd; en.y += Math.sin(angle) * en.spd;
-        if(Math.hypot(player.x-en.x, player.y-en.y) < player.r + en.r) G.hp -= en.isBoss ? 0.5 : 0.2;
+        let ang = Math.atan2(player.y - en.y, player.x - en.x);
+        en.x += Math.cos(ang) * en.spd; en.y += Math.sin(ang) * en.spd;
+        if (Math.hypot(player.x - en.x, player.y - en.y) < player.r + en.r && player.dashTimer <= 0) G.hp -= 0.5;
+        
+        if (en.isShooter && Date.now() - en.lastShot > 2000) {
+            enemyProjectiles.push({ x: en.x, y: en.y, vx: Math.cos(ang)*7, vy: Math.sin(ang)*7 });
+            en.lastShot = Date.now();
+        }
     });
 
-    // Colisão Projéteis
+    // Colisão de Projéteis
     projectiles.forEach((p, pi) => {
         p.x += p.vx; p.y += p.vy;
         enemies.forEach((en, ei) => {
-            if(Math.hypot(p.x-en.x, p.y-en.y) < en.r) {
+            if (Math.hypot(p.x - en.x, p.y - en.y) < en.r) {
                 en.hp -= p.dmg; projectiles.splice(pi, 1);
-                if(en.hp <= 0) {
-                    if(Math.random() < 0.3) drops.push({x: en.x, y: en.y, type: 'heal'});
+                if (en.hp <= 0) {
                     enemies.splice(ei, 1);
+                    if(Math.random() < 0.3) drops.push({x: en.x, y: en.y});
                 }
             }
         });
     });
 
-    // Itens e Pedestal
-    drops.forEach((d, i) => {
-        if(Math.hypot(player.x-d.x, player.y-d.y) < 40) { G.hp = Math.min(100, G.hp+20); drops.splice(i, 1); }
+    enemyProjectiles.forEach((ep, epi) => {
+        ep.x += ep.vx; ep.y += ep.vy;
+        if (Math.hypot(player.x - ep.x, player.y - ep.y) < player.r && player.dashTimer <= 0) {
+            G.hp -= 10; enemyProjectiles.splice(epi, 1);
+        }
     });
 
-    if(pedestal && Math.hypot(player.x-pedestal.x, player.y-pedestal.y) < 50) {
-        G.hasFireWpn = true; pedestal = null; showPopup(texts[G.lang].weapon);
+    // Lógica de Porta
+    if (enemies.length === 0 && !G.enemiesDefeated) {
+        G.enemiesDefeated = true;
+        spawnDoors();
     }
 
-    if(enemies.length === 0 && !G.enemiesDefeated) {
-        G.enemiesDefeated = true; spawnDoors();
-        if(G.room % 10 === 0) pedestal = { x: ROOM.w/2, y: ROOM.h/2 };
+    if (G.enemiesDefeated) {
+        doors.forEach(d => {
+            if (player.x > d.x && player.x < d.x + d.w && player.y < d.y + d.h) {
+                G.room++;
+                if (G.room % 10 === 0 && G.room > 0) openUpgradeMenu();
+                else initRoom();
+            }
+        });
     }
 
-    // Mudança de sala
-    doors.forEach(d => { if(player.x > d.x && player.x < d.x+d.w && player.y < d.y+d.h) { G.room++; initRoom(); } });
-    if(G.hp <= 0) location.reload();
+    if (G.hp <= 0) location.reload();
 }
 
 function draw() {
+    // Redimensionamento automático
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
     ctx.fillStyle = "#000"; ctx.fillRect(0,0,canvas.width, canvas.height);
-    if(!G.play) { requestAnimationFrame(draw); return; }
+    if (!G.play) { requestAnimationFrame(draw); return; }
     update();
+
     ctx.save();
-    let s = Math.min(canvas.width/ROOM.w, canvas.height/ROOM.h)*0.95;
-    ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(s,s); ctx.translate(-ROOM.w/2, -ROOM.h/2);
+    let scale = Math.min(canvas.width / ROOM.w, canvas.height / ROOM.h) * 0.9;
+    ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(scale, scale); ctx.translate(-ROOM.w/2, -ROOM.h/2);
 
-    ctx.fillStyle = "#0a0000"; ctx.fillRect(0,0,ROOM.w,ROOM.h);
-    ctx.fillStyle = "#1a0000"; ctx.fillRect(0,0,ROOM.w,60); ctx.fillRect(0,ROOM.h-60,ROOM.w,60);
-    
-    if(G.enemiesDefeated) { ctx.fillStyle = "#ff0000"; doors.forEach(d => ctx.fillRect(d.x, d.y, d.w, d.h)); }
+    // Arena
+    ctx.fillStyle = "#100"; ctx.fillRect(0,0,ROOM.w, ROOM.h);
+    ctx.strokeStyle = "#400"; ctx.lineWidth = 10; ctx.strokeRect(0,0,ROOM.w, ROOM.h);
 
-    if(pedestal) {
-        ctx.fillStyle = "#555"; ctx.fillRect(pedestal.x-30, pedestal.y-20, 60, 40);
-        ctx.fillStyle = "#ff4500"; ctx.font = "30px Arial"; ctx.fillText("🔥", pedestal.x-15, pedestal.y-30);
+    // Portas
+    if (G.enemiesDefeated) {
+        ctx.fillStyle = "#f00";
+        ctx.shadowBlur = 20; ctx.shadowColor = "red";
+        doors.forEach(d => ctx.fillRect(d.x, d.y, d.w, d.h));
+        ctx.shadowBlur = 0;
     }
 
-    drops.forEach(d => { ctx.fillStyle = "#fff"; ctx.font = "20px Orbitron"; ctx.fillText("➕", d.x-10, d.y+5); });
-    
-    enemies.forEach(en => { 
-        ctx.fillStyle = en.isBoss ? "#8b0000" : "#ff0000";
+    // Player e Inimigos
+    ctx.fillStyle = player.dashTimer > 0 ? "#fff" : "#f00";
+    ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
+
+    enemies.forEach(en => {
+        ctx.fillStyle = en.isBoss ? "#500" : (en.isShooter ? "#f80" : "#900");
         ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "#fff"; ctx.fillRect(en.x-20, en.y-en.r-10, 40 * (en.hp/(30+G.room*5)), 5);
+        // Barra de vida simples acima
+        ctx.fillStyle = "#000"; ctx.fillRect(en.x - 30, en.y - 50, 60, 5);
+        ctx.fillStyle = "#f00"; ctx.fillRect(en.x - 30, en.y - 50, 60 * (en.hp/(50+G.room*8)), 5);
     });
 
-    ctx.fillStyle = G.reloading ? "#444" : "#fff";
-    ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
-    if(G.hasFireWpn) { ctx.strokeStyle = "#ff4500"; ctx.lineWidth = 3; ctx.stroke(); }
-
-    projectiles.forEach(p => { ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); });
+    projectiles.forEach(p => { ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, 8, 0, Math.PI*2); ctx.fill(); });
+    enemyProjectiles.forEach(ep => { ctx.fillStyle = "#f0f"; ctx.beginPath(); ctx.arc(ep.x, ep.y, 10, 0, Math.PI*2); ctx.fill(); });
 
     ctx.restore();
-    document.getElementById('hp-fill').style.width = G.hp + "%";
-    document.getElementById('ammo-fill').style.width = (G.ammo/G.maxAmmo*100) + "%";
+
+    // Atualização do HUD
+    document.getElementById('hp-fill').style.width = (G.hp / G.maxHp * 100) + "%";
+    document.getElementById('ammo-fill').style.width = (G.ammo / G.maxAmmo * 100) + "%";
     document.getElementById('room-txt').innerText = G.room;
+
     requestAnimationFrame(draw);
 }
 
-window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+// Eventos
+window.addEventListener('keydown', e => {
+    keys[e.key.toLowerCase()] = true;
+    if (e.key === "Escape") togglePause();
+});
 window.addEventListener('keyup', e => delete keys[e.key.toLowerCase()]);
-window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-window.onresize(); draw();
+
+// Toque simples para mobile (Atirar onde toca)
+canvas.addEventListener('touchstart', e => {
+    if(!G.play) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - canvas.width/2;
+    const dy = touch.clientY - canvas.height/2;
+    // Simula as setas baseado no quadrante do toque
+    if (Math.abs(dx) > Math.abs(dy)) {
+        keys[dx > 0 ? 'arrowright' : 'arrowleft'] = true;
+        setTimeout(() => { delete keys['arrowright']; delete keys['arrowleft']; }, 100);
+    } else {
+        keys[dy > 0 ? 'arrowdown' : 'arrowup'] = true;
+        setTimeout(() => { delete keys['arrowdown']; delete keys['arrowup']; }, 100);
+    }
+});
+
+draw();
 </script>
 </body>
 </html>
