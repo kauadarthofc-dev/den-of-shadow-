@@ -37,7 +37,6 @@
         .bar-bg { width: 100%; height: 8px; background: #222; margin-top: 5px; overflow: hidden; }
         .bar-fill { height: 100%; width: 100%; transition: width 0.3s ease; }
 
-        /* CONTROLES MOBILE */
         .mobile-ui { position: absolute; bottom: 30px; width: 100%; display: none; justify-content: space-between; padding: 0 40px; z-index: 2500; pointer-events: none; }
         .joystick-zone { display: grid; grid-template-columns: repeat(3, 70px); gap: 10px; pointer-events: auto; }
         .btn-joy { 
@@ -47,11 +46,20 @@
         .btn-joy:active { background: rgba(255,0,0,0.3); color: white; border-color: red; }
         .btn-dash-mobile { width: 80px; height: 80px; background: rgba(255,0,0,0.15); border: 2px solid red; border-radius: 50%; pointer-events: auto; align-self: center; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
 
+        #btn-fullscreen {
+            position: absolute; top: 15px; right: 15px; z-index: 6000;
+            width: 40px; height: 40px; background: rgba(0,0,0,0.5); border: 1px solid #444;
+            color: white; font-size: 20px; display: none; align-items: center; justify-content: center;
+            border-radius: 5px; cursor: pointer;
+        }
+
         .social-box { margin-top: 30px; display: flex; gap: 15px; }
         .social-box a { color: #660000; text-decoration: none; font-size: 12px; border: 1px solid #300; padding: 5px 10px; border-radius: 2px; }
     </style>
 </head>
 <body>
+
+<div id="btn-fullscreen" onclick="toggleFS()">⛶</div>
 
 <div id="start-screen" class="ui-screen">
     <h1>DEN OF SHADOW</h1>
@@ -140,6 +148,15 @@ const STORY = {
 let currentStoryArr = [];
 let storyIdx = 0;
 const keys = {};
+let player = { x: 800, y: 800, r: 25, spd: 7.5, dashTimer: 0 };
+let enemies = [], projectiles = [], enemyProjectiles = [], drops = [];
+
+function toggleFS() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+}
+
+if ('ontouchstart' in window) document.getElementById('btn-fullscreen').style.display = 'flex';
 
 function btnK(k, v) { if(v) keys[k] = true; else delete keys[k]; }
 
@@ -176,7 +193,7 @@ function startGame() {
 }
 
 function initRoom() {
-    enemies = []; projectiles = []; enemyProjectiles = [];
+    enemies = []; projectiles = []; enemyProjectiles = []; drops = [];
     G.enemiesDefeated = false;
     player.x = ROOM.w / 2; player.y = ROOM.h - 150;
 
@@ -225,9 +242,6 @@ function openUpgradeMenu() {
     }
 }
 
-let player = { x: 800, y: 800, r: 25, spd: 7.5, dashTimer: 0 };
-let enemies = [], projectiles = [], enemyProjectiles = [];
-
 function togglePause() {
     if (!G.play || G.inCutscene) return;
     G.pause = !G.pause;
@@ -239,7 +253,6 @@ function update() {
 
     let mx = 0, my = 0;
     if (keys['w']) my = -1; if (keys['s']) my = 1; if (keys['a']) mx = -1; if (keys['d']) mx = 1;
-    
     if (keys['shift'] && G.dashCooldown <= 0) {
         player.dashTimer = 14; G.dashCooldown = G.dashMaxCooldown;
     }
@@ -281,10 +294,19 @@ function update() {
         enemies.forEach((en, ei) => {
             if (Math.hypot(p.x - en.x, p.y - en.y) < en.r) {
                 en.hp -= p.dmg; projectiles.splice(pi, 1);
-                if (en.hp <= 0) { enemies.splice(ei, 1); if (enemies.length === 0) G.enemiesDefeated = true; }
+                if (en.hp <= 0) {
+                    if (Math.random() < 0.2 || en.isBoss) drops.push({ x: en.x, y: en.y, r: 10 });
+                    enemies.splice(ei, 1); if (enemies.length === 0) G.enemiesDefeated = true; 
+                }
             }
         });
         if(p.x < 0 || p.x > ROOM.w || p.y < 0 || p.y > ROOM.h) projectiles.splice(pi, 1);
+    });
+
+    drops.forEach((d, di) => {
+        if (Math.hypot(player.x - d.x, player.y - d.y) < player.r + d.r) {
+            G.hp = Math.min(G.maxHp, G.hp + 15); drops.splice(di, 1);
+        }
     });
 
     enemyProjectiles.forEach((ep, epi) => {
@@ -318,6 +340,12 @@ function draw() {
         ctx.fillStyle = "#400"; ctx.fillRect(ROOM.w/2 - 120, 0, 240, ROOM.wallSize);
         ctx.fillStyle = "#fff"; ctx.font = "14px Orbitron"; ctx.fillText("SUBIR", ROOM.w/2 - 25, ROOM.wallSize/2 + 5);
     }
+
+    drops.forEach(d => {
+        ctx.fillStyle = "#ff0000"; ctx.shadowBlur = 15; ctx.shadowColor = "red";
+        ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
+    });
 
     ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
     enemies.forEach(en => {
