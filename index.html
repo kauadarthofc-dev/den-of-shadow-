@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 Upgrade Update</title>
+    <title>Den of Shadow 💀 Ultimate Boss Update</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&family=Special+Elite&display=swap');
         
@@ -11,85 +11,85 @@
         body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; }
         canvas { display: block; width: 100vw; height: 100vh; }
 
-        /* Telas de UI */
         .ui-screen { 
             position: absolute; inset: 0; 
             background: radial-gradient(circle at center, #4a0404 0%, #000000 100%);
-            z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;
         }
         
-        #start-screen h1 { font-family: 'Nosifer', cursive; font-size: clamp(30px, 8vw, 70px); color: #ff0000; text-shadow: 0 0 30px #ff0000; margin: 10px; }
+        #start-screen h1 { font-family: 'Nosifer', cursive; font-size: clamp(30px, 8vw, 70px); color: #ff0000; text-shadow: 0 0 30px #ff0000; }
         .btn-main { padding: 15px 50px; font-size: 20px; background: transparent; border: 2px solid #ff0000; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 10px; transition: 0.3s; }
         .btn-main:hover { background: #ff0000; box-shadow: 0 0 40px #ff0000; }
 
-        /* Sistema de Upgrade */
-        #upgrade-screen { display: none; background: rgba(0,0,0,0.95); z-index: 4000; }
-        .upgrade-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; padding: 20px; }
+        /* Cutscene */
+        #cutscene-screen { background: black; cursor: pointer; }
+        #cutscene-text { font-family: 'Special Elite', serif; font-size: 24px; color: #ff4444; max-width: 800px; line-height: 1.6; }
+
+        /* Upgrades */
+        #upgrade-screen { display: none; background: rgba(0,0,0,0.98); z-index: 4000; }
+        .upgrade-container { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; }
         .upgrade-card { 
-            width: 250px; padding: 20px; border: 2px solid #444; background: #111; 
-            cursor: pointer; transition: 0.3s; text-align: center; border-radius: 10px;
+            width: 220px; padding: 20px; border: 2px solid #444; background: #111; 
+            cursor: pointer; transition: 0.3s; border-radius: 10px;
         }
-        .upgrade-card:hover { transform: translateY(-10px); border-color: #fff; }
+        .upgrade-card:hover { transform: scale(1.05); border-color: white; }
         .rarity-comum { color: #aaa; border-color: #555; }
         .rarity-raro { color: #00ccff; border-color: #00ccff; text-shadow: 0 0 10px #00ccff; }
         .rarity-epico { color: #bf00ff; border-color: #bf00ff; text-shadow: 0 0 10px #bf00ff; }
-        .rarity-lendario { color: #ffcc00; border-color: #ffcc00; text-shadow: 0 0 20px #ffcc00; animation: glow 1.5s infinite alternate; }
-        
+        .rarity-lendario { color: #ffcc00; border-color: #ffcc00; animation: glow 1.5s infinite alternate; }
         @keyframes glow { from { box-shadow: 0 0 5px #ffcc00; } to { box-shadow: 0 0 30px #ffcc00; } }
 
-        /* HUD Melhorado */
-        #hud { position: absolute; top: 10px; left: 10px; z-index: 1000; display: none; pointer-events: none; }
-        .hud-group { background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; border-left: 4px solid #f00; margin-bottom: 5px; min-width: 200px; }
-        .bar-bg { width: 100%; height: 10px; background: #222; border-radius: 5px; margin-top: 5px; overflow: hidden; }
+        /* HUD */
+        #hud { position: absolute; top: 15px; left: 15px; z-index: 1000; display: none; pointer-events: none; }
+        .hud-group { background: rgba(0,0,0,0.8); padding: 10px; border-radius: 5px; border-left: 5px solid #f00; margin-bottom: 8px; min-width: 220px; border-right: 1px solid #333; }
+        .bar-bg { width: 100%; height: 12px; background: #222; border-radius: 6px; margin-top: 5px; overflow: hidden; border: 1px solid #444; }
         .bar-fill { height: 100%; width: 100%; transition: width 0.3s ease; }
 
-        /* Links e Social */
         .social-links { position: absolute; bottom: 20px; display: flex; gap: 20px; font-size: 12px; }
         .social-links a { color: #ff0000; text-decoration: none; border: 1px solid #ff0000; padding: 5px 10px; }
-
-        /* Mobile Controls Overlay */
-        #mobile-controls { position: absolute; bottom: 20px; left: 20px; right: 20px; display: none; justify-content: space-between; z-index: 2000; }
-        .joystick-zone { width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%; }
-
-        #pause-screen { display: none; background: rgba(0,0,0,0.8); }
     </style>
 </head>
 <body>
 
 <div id="start-screen" class="ui-screen">
-    <h1 style="font-family:'Nosifer'">DEN OF SHADOW</h1>
-    <p id="subtitle" style="color: #ff0000; letter-spacing: 3px;">LORD OF LIGHT</p>
-    <button class="btn-main" onclick="initCutscene()">JOGAR</button>
+    <h1>DEN OF SHADOW</h1>
+    <p style="color: #ff0000; letter-spacing: 5px;">LORD OF LIGHT</p>
+    <button class="btn-main" onclick="startCutscene('init')">JOGAR</button>
     <div class="social-links">
         <a href="mailto:kauadarth@gmail.com">kauadarth@gmail.com</a>
         <a href="https://youtube.com/@kaua_darth" target="_blank">@kaua_darth</a>
     </div>
 </div>
 
+<div id="cutscene-screen" class="ui-screen" style="display:none" onclick="advanceCutscene()">
+    <div id="cutscene-text"></div>
+    <p style="position:absolute; bottom:30px; font-size:12px; color:#555;">CLIQUE PARA CONTINUAR...</p>
+</div>
+
 <div id="upgrade-screen" class="ui-screen">
-    <h2 style="color:gold; font-size: 30px;">ESCOLHA SEU DESTINO</h2>
+    <h2 style="color:gold; font-size: 30px; margin-bottom:30px;">ESCOLHA UM PODER</h2>
     <div class="upgrade-container" id="upgrade-list"></div>
 </div>
 
-<div id="pause-screen" class="ui-screen">
-    <h2 style="color:red">JOGO PAUSADO</h2>
+<div id="pause-screen" class="ui-screen" style="display:none; background: rgba(0,0,0,0.9);">
+    <h2 style="color:red">PAUSADO</h2>
     <button class="btn-main" onclick="togglePause()">CONTINUAR</button>
-    <button class="btn-main" onclick="location.reload()">SAIR</button>
+    <button class="btn-main" onclick="location.reload()">REINICIAR</button>
 </div>
 
 <div id="hud">
     <div class="hud-group">
-        <div>HP</div>
-        <div class="bar-bg"><div id="hp-fill" class="bar-fill" style="background:red;"></div></div>
+        <div style="font-size:12px;">VIDA</div>
+        <div class="bar-bg"><div id="hp-fill" class="bar-fill" style="background:linear-gradient(90deg, #800, #f00);"></div></div>
     </div>
     <div class="hud-group" style="border-color: gold;">
-        <div>MUNIÇÃO</div>
-        <div class="bar-bg"><div id="ammo-fill" class="bar-fill" style="background:gold;"></div></div>
+        <div style="font-size:12px;">MUNIÇÃO</div>
+        <div class="bar-bg"><div id="ammo-fill" class="bar-fill" style="background:linear-gradient(90deg, #a80, #ff0);"></div></div>
     </div>
-    <div id="stats-text" style="font-size:12px; text-shadow: 2px 2px #000;">SALA: <span id="room-txt">0</span></div>
+    <div style="padding: 5px 10px; background: rgba(0,0,0,0.8); border-radius: 4px; display:inline-block; border: 1px solid #444;">
+        SALA: <span id="room-txt" style="color:red; font-weight:bold;">0</span> / 100
+    </div>
 </div>
-
-<div id="msg-popup" style="position:absolute; top:20%; width:100%; text-align:center; font-size:40px; color:red; display:none; z-index:5000; font-family:'Nosifer';"></div>
 
 <canvas id="gameCanvas"></canvas>
 
@@ -97,43 +97,84 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// --- CONFIGURAÇÕES TÉCNICAS ---
 const ROOM = { w: 1600, h: 1000, wallSize: 80 };
 const G = {
     play: false, pause: false, room: 0, hp: 100, maxHp: 100, 
     ammo: 20, maxAmmo: 20, dmgMult: 1, spdMult: 1,
     enemiesDefeated: false, hasFireWpn: false, lastShot: 0, 
-    dashCooldown: 0, dashMaxCooldown: 60
+    dashCooldown: 0, dashMaxCooldown: 60, inCutscene: false
 };
 
-// --- BANCO DE UPGRADES (20 OPÇÕES) ---
-const UPGRADES = [
-    { n: "Vida Extra", d: "+20 HP Máximo", r: "comum", f: () => { G.maxHp += 20; G.hp += 20; } },
-    { n: "Balas Pesadas", d: "+15% Dano", r: "comum", f: () => { G.dmgMult += 0.15; } },
-    { n: "Pés Ligeiros", d: "+10% Velocidade", r: "comum", f: () => { G.spdMult += 0.1; } },
-    { n: "Recarga Rápida", d: "-20% Tempo de recarga", r: "raro", f: () => { G.maxAmmo += 5; } },
-    { n: "Vampirismo", d: "Cura 2 HP por abate", r: "raro", f: () => { G.vampire = true; } },
-    { n: "Dash Infinito", d: "-50% Cooldown Dash", r: "epico", f: () => { G.dashMaxCooldown *= 0.5; } },
-    { n: "Fúria", d: "+50% Dano (HP Baixo)", r: "epico", f: () => { G.fury = true; } },
-    { n: "DIVINDADE", d: "Invulnerabilidade temporária no Dash estendida", r: "lendario", f: () => { G.godDash = true; } },
-    { n: "INSTINTO", d: "Dano Dobrado", r: "lendario", f: () => { G.dmgMult *= 2; } }
-    // ... Adicionados via lógica no sorteio para completar 20
-];
+// --- CUTSCENES DATA ---
+const STORY = {
+    init: ["Você acorda no abismo...", "As sombras traíram o Lorde da Luz.", "Chegue ao nível 100 para recuperar seu trono.", "Use SHIFT para Dash e SETAS para disparar sua essência."],
+    boss10: ["O Guardião de Ferro caiu.", "Mas as sombras ficam mais densas aqui embaixo...", "Escolha um novo poder."],
+    boss20: ["A Besta das Sombras foi silenciada.", "O abismo começa a tremer com sua presença."],
+    boss30: ["Três generais derrotados...", "A luz começa a brilhar fracamente em suas mãos."],
+    boss40: ["O Labirinto de Sangue foi superado.", "Você está mais perto do que imagina."],
+    boss50: ["Metade do caminho. O Lorde das Sombras sabe que você vem."],
+    boss60: ["O Ceifador de Almas não pôde te parar.", "Sua determinação é assustadora."],
+    boss70: ["As chamas do inferno esfriaram diante de você."],
+    boss80: ["O Vazio tentou te consumir, mas você é o consumo."],
+    boss90: ["O último portão está à vista. Nada pode te deter agora."],
+    final: ["O Lorde das Sombras foi obliterado.", "A luz retorna ao Den of Shadow.", "Você recuperou seu trono.", "FIM... POR ENQUANTO."]
+};
 
-// --- SISTEMA DE JOGO ---
+let currentStoryArr = [];
+let storyIdx = 0;
+
+function startCutscene(key) {
+    G.inCutscene = true;
+    G.play = false;
+    storyIdx = 0;
+    currentStoryArr = STORY[key] || ["A jornada continua..."];
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('upgrade-screen').style.display = 'none';
+    document.getElementById('cutscene-screen').style.display = 'flex';
+    document.getElementById('hud').style.display = 'none';
+    advanceCutscene();
+}
+
+function advanceCutscene() {
+    if (storyIdx < currentStoryArr.length) {
+        document.getElementById('cutscene-text').innerText = currentStoryArr[storyIdx++];
+    } else {
+        document.getElementById('cutscene-screen').style.display = 'none';
+        G.inCutscene = false;
+        if (G.room === 100) { location.reload(); return; }
+        
+        if (G.room % 10 === 0 && G.room > 0 && !G.enemiesDefeated) {
+             openUpgradeMenu();
+        } else {
+            startGame();
+        }
+    }
+}
+
+// --- UPGRADES (20 OPÇÕES) ---
+const UPGRADES = [
+    { n: "Vida Extra", d: "+25 HP Máximo", r: "comum", f: () => { G.maxHp += 25; G.hp = G.maxHp; } },
+    { n: "Balas Rápidas", d: "+20% Vel. Ataque", r: "comum", f: () => { G.dmgMult += 0.1; } },
+    { n: "Sapatos Leves", d: "+15% Movimento", r: "comum", f: () => { G.spdMult += 0.15; } },
+    { n: "Cura Rápida", d: "Recupera 50% HP", r: "raro", f: () => { G.hp = Math.min(G.maxHp, G.hp + G.maxHp/2); } },
+    { n: "Pente Expandido", d: "+10 Munição", r: "raro", f: () => { G.maxAmmo += 10; G.ammo = G.maxAmmo; } },
+    { n: "Impacto Crítico", d: "+40% Dano", r: "epico", f: () => { G.dmgMult += 0.4; } },
+    { n: "Sombra Fugaz", d: "Dash Cooldown -50%", r: "epico", f: () => { G.dashMaxCooldown *= 0.5; } },
+    { n: "INSTINTO", d: "Dano Dobrado", r: "lendario", f: () => { G.dmgMult *= 2; } },
+    { n: "IMORTAL", d: "+200 HP Máximo", r: "lendario", f: () => { G.maxHp += 200; G.hp = G.maxHp; } }
+];
+// Preenchendo variantes para completar 20
+while(UPGRADES.length < 20) { UPGRADES.push({...UPGRADES[0], n: UPGRADES[0].n + " +"}); }
+
+// --- GAME LOGIC ---
 let player = { x: 800, y: 800, r: 30, spd: 7, dashTimer: 0 };
 let enemies = [], projectiles = [], enemyProjectiles = [], doors = [], drops = [];
 const keys = {};
 
 function togglePause() {
-    if (!G.play) return;
+    if (!G.play || G.inCutscene) return;
     G.pause = !G.pause;
     document.getElementById('pause-screen').style.display = G.pause ? 'flex' : 'none';
-}
-
-function initCutscene() {
-    document.getElementById('start-screen').style.display = 'none';
-    startGame();
 }
 
 function startGame() {
@@ -148,15 +189,15 @@ function initRoom() {
     player.x = ROOM.w / 2; player.y = ROOM.h - 150;
 
     if (G.room > 0) {
-        if (G.room % 10 === 0) { // BOSS
-            enemies.push({ x: ROOM.w/2, y: 300, hp: 600 + (G.room*40), r: 90, spd: 2.5, isBoss: true, lastShot: 0 });
+        if (G.room % 10 === 0) {
+            enemies.push({ x: ROOM.w/2, y: 300, hp: 500 + (G.room*50), r: 100, spd: 2.8, isBoss: true, lastShot: 0 });
         } else {
-            let count = 4 + Math.floor(G.room * 0.4);
+            let count = 3 + Math.floor(G.room * 0.4);
             for(let i=0; i<count; i++) {
-                let isShooter = Math.random() > 0.75;
+                let isShooter = Math.random() > 0.7;
                 enemies.push({ 
-                    x: Math.random()*(ROOM.w-200)+100, y: Math.random()*(ROOM.h-400)+100, 
-                    hp: 50 + G.room*8, r: 30, spd: isShooter ? 1.5 : 2.5, isShooter, lastShot: 0 
+                    x: Math.random()*(ROOM.w-200)+100, y: Math.random()*(ROOM.h-500)+100, 
+                    hp: 40 + G.room*10, r: 30, spd: isShooter ? 1.4 : 2.4, isShooter, lastShot: 0 
                 });
             }
         }
@@ -166,12 +207,12 @@ function initRoom() {
 }
 
 function spawnDoors() {
-    // Porta de saída (Topo) com área de colisão maior
-    doors = [{ x: ROOM.w/2 - 100, y: 0, w: 200, h: 100 }];
+    // Porta no topo: x, y, largura, altura
+    doors = [{ x: ROOM.w/2 - 120, y: 0, w: 240, h: 85 }];
 }
 
 function openUpgradeMenu() {
-    G.pause = true;
+    G.play = false;
     const list = document.getElementById('upgrade-list');
     list.innerHTML = '';
     document.getElementById('upgrade-screen').style.display = 'flex';
@@ -179,7 +220,7 @@ function openUpgradeMenu() {
     for(let i=0; i<3; i++) {
         const rand = Math.random() * 100;
         let rarity = "comum";
-        if(rand < 1) rarity = "lendario";
+        if(rand < 2) rarity = "lendario";
         else if(rand < 15) rarity = "epico";
         else if(rand < 40) rarity = "raro";
 
@@ -192,54 +233,48 @@ function openUpgradeMenu() {
         card.onclick = () => {
             up.f();
             document.getElementById('upgrade-screen').style.display = 'none';
-            G.pause = false;
             initRoom();
+            G.play = true;
         };
         list.appendChild(card);
     }
 }
 
 function update() {
-    if (!G.play || G.pause) return;
+    if (!G.play || G.pause || G.inCutscene) return;
 
-    // Movimento com colisão de parede
     let mx = 0, my = 0;
     if (keys['w']) my = -1; if (keys['s']) my = 1; if (keys['a']) mx = -1; if (keys['d']) mx = 1;
     
-    // Dash
     if (keys['shift'] && G.dashCooldown <= 0) {
         player.dashTimer = 12;
         G.dashCooldown = G.dashMaxCooldown;
     }
     if (G.dashCooldown > 0) G.dashCooldown--;
-    let currentSpd = (player.dashTimer > 0 ? player.spd * 3 : player.spd) * G.spdMult;
+    let curSpd = (player.dashTimer > 0 ? player.spd * 3.5 : player.spd) * G.spdMult;
     if (player.dashTimer > 0) player.dashTimer--;
 
-    player.x = Math.max(ROOM.wallSize + player.r, Math.min(ROOM.w - ROOM.wallSize - player.r, player.x + mx * currentSpd));
-    player.y = Math.max(ROOM.wallSize + player.r, Math.min(ROOM.h - ROOM.wallSize - player.r, player.y + my * currentSpd));
+    player.x = Math.max(ROOM.wallSize + player.r, Math.min(ROOM.w - ROOM.wallSize - player.r, player.x + mx * curSpd));
+    player.y = Math.max(ROOM.wallSize + player.r, Math.min(ROOM.h - ROOM.wallSize - player.r, player.y + my * curSpd));
 
-    // Tiro
     let ax = 0, ay = 0;
     if (keys['arrowup']) ay = -1; if (keys['arrowdown']) ay = 1; if (keys['arrowleft']) ax = -1; if (keys['arrowright']) ax = 1;
     if ((ax || ay) && G.ammo > 0 && Date.now() - G.lastShot > 180) {
-        projectiles.push({ x: player.x, y: player.y, vx: ax*16, vy: ay*16, dmg: 40 * G.dmgMult, color: G.hasFireWpn ? "#f40" : "#0ff" });
+        projectiles.push({ x: player.x, y: player.y, vx: ax*18, vy: ay*18, dmg: 40 * G.dmgMult });
         G.ammo--; G.lastShot = Date.now();
         if(G.ammo <= 0) setTimeout(() => G.ammo = G.maxAmmo, 1000);
     }
 
-    // Inimigos e Portas
     enemies.forEach((en, i) => {
         let ang = Math.atan2(player.y - en.y, player.x - en.x);
         en.x += Math.cos(ang) * en.spd; en.y += Math.sin(ang) * en.spd;
-        if (Math.hypot(player.x - en.x, player.y - en.y) < player.r + en.r && player.dashTimer <= 0) G.hp -= 0.5;
-        
-        if (en.isShooter && Date.now() - en.lastShot > 2000) {
-            enemyProjectiles.push({ x: en.x, y: en.y, vx: Math.cos(ang)*7, vy: Math.sin(ang)*7 });
+        if (Math.hypot(player.x - en.x, player.y - en.y) < player.r + en.r && player.dashTimer <= 0) G.hp -= 0.6;
+        if ((en.isShooter || en.isBoss) && Date.now() - en.lastShot > (en.isBoss ? 1000 : 2000)) {
+            enemyProjectiles.push({ x: en.x, y: en.y, vx: Math.cos(ang)*8, vy: Math.sin(ang)*8 });
             en.lastShot = Date.now();
         }
     });
 
-    // Colisão de Projéteis
     projectiles.forEach((p, pi) => {
         p.x += p.vx; p.y += p.vy;
         enemies.forEach((en, ei) => {
@@ -247,30 +282,31 @@ function update() {
                 en.hp -= p.dmg; projectiles.splice(pi, 1);
                 if (en.hp <= 0) {
                     enemies.splice(ei, 1);
-                    if(Math.random() < 0.3) drops.push({x: en.x, y: en.y});
+                    if (enemies.length === 0) {
+                        G.enemiesDefeated = true;
+                        spawnDoors();
+                    }
                 }
             }
         });
+        if(p.x < 0 || p.x > ROOM.w || p.y < 0 || p.y > ROOM.h) projectiles.splice(pi, 1);
     });
 
     enemyProjectiles.forEach((ep, epi) => {
         ep.x += ep.vx; ep.y += ep.vy;
         if (Math.hypot(player.x - ep.x, player.y - ep.y) < player.r && player.dashTimer <= 0) {
-            G.hp -= 10; enemyProjectiles.splice(epi, 1);
+            G.hp -= 15; enemyProjectiles.splice(epi, 1);
         }
     });
 
-    // Lógica de Porta
-    if (enemies.length === 0 && !G.enemiesDefeated) {
-        G.enemiesDefeated = true;
-        spawnDoors();
-    }
-
+    // SISTEMA DE PORTAS CORRIGIDO
     if (G.enemiesDefeated) {
         doors.forEach(d => {
             if (player.x > d.x && player.x < d.x + d.w && player.y < d.y + d.h) {
                 G.room++;
-                if (G.room % 10 === 0 && G.room > 0) openUpgradeMenu();
+                G.enemiesDefeated = false; // Reset para a próxima sala
+                if (G.room === 100) startCutscene('final');
+                else if (G.room % 10 === 0) startCutscene('boss' + G.room);
                 else initRoom();
             }
         });
@@ -280,48 +316,63 @@ function update() {
 }
 
 function draw() {
-    // Redimensionamento automático
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-
     ctx.fillStyle = "#000"; ctx.fillRect(0,0,canvas.width, canvas.height);
-    if (!G.play) { requestAnimationFrame(draw); return; }
+    if (!G.play && !G.inCutscene && !G.pause) { requestAnimationFrame(draw); return; }
     update();
 
     ctx.save();
-    let scale = Math.min(canvas.width / ROOM.w, canvas.height / ROOM.h) * 0.9;
+    let scale = Math.min(canvas.width / ROOM.w, canvas.height / ROOM.h) * 0.95;
     ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(scale, scale); ctx.translate(-ROOM.w/2, -ROOM.h/2);
 
-    // Arena
-    ctx.fillStyle = "#100"; ctx.fillRect(0,0,ROOM.w, ROOM.h);
-    ctx.strokeStyle = "#400"; ctx.lineWidth = 10; ctx.strokeRect(0,0,ROOM.w, ROOM.h);
+    // Chão
+    ctx.fillStyle = "#0a0505"; ctx.fillRect(0,0,ROOM.w, ROOM.h);
+    // Grade
+    ctx.strokeStyle = "#200"; ctx.lineWidth = 1;
+    for(let i=0; i<ROOM.w; i+=100) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,ROOM.h); ctx.stroke(); }
+    for(let i=0; i<ROOM.h; i+=100) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(ROOM.w,i); ctx.stroke(); }
+    
+    // Paredes
+    ctx.fillStyle = "#1a0000"; ctx.fillRect(0,0,ROOM.w, ROOM.wallSize); // Cima
+    ctx.fillRect(0, ROOM.h-ROOM.wallSize, ROOM.w, ROOM.wallSize); // Baixo
+    ctx.fillRect(0,0, ROOM.wallSize, ROOM.h); // Esquerda
+    ctx.fillRect(ROOM.w-ROOM.wallSize, 0, ROOM.wallSize, ROOM.h); // Direita
 
-    // Portas
+    // Portas (Só aparecem se inimigos mortos)
     if (G.enemiesDefeated) {
-        ctx.fillStyle = "#f00";
-        ctx.shadowBlur = 20; ctx.shadowColor = "red";
-        doors.forEach(d => ctx.fillRect(d.x, d.y, d.w, d.h));
+        ctx.fillStyle = "#ff0000";
+        ctx.shadowBlur = 30; ctx.shadowColor = "red";
+        doors.forEach(d => {
+            ctx.fillRect(d.x, d.y, d.w, d.h);
+            // Luz da porta
+            ctx.fillStyle = "white"; ctx.font = "20px Orbitron";
+            ctx.fillText("PROXIMA SALA", d.x + 35, d.y + 120);
+        });
         ctx.shadowBlur = 0;
     }
 
-    // Player e Inimigos
-    ctx.fillStyle = player.dashTimer > 0 ? "#fff" : "#f00";
-    ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
+    // Player rastro
+    if(player.dashTimer > 0) {
+        ctx.fillStyle = "rgba(255,255,255,0.3)";
+        ctx.beginPath(); ctx.arc(player.x, player.y, player.r+5, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
 
+    // Inimigos
     enemies.forEach(en => {
-        ctx.fillStyle = en.isBoss ? "#500" : (en.isShooter ? "#f80" : "#900");
+        ctx.fillStyle = en.isBoss ? "#f00" : (en.isShooter ? "#f80" : "#700");
         ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill();
-        // Barra de vida simples acima
-        ctx.fillStyle = "#000"; ctx.fillRect(en.x - 30, en.y - 50, 60, 5);
-        ctx.fillStyle = "#f00"; ctx.fillRect(en.x - 30, en.y - 50, 60 * (en.hp/(50+G.room*8)), 5);
+        // HP Bar Inimigo
+        ctx.fillStyle = "#000"; ctx.fillRect(en.x-40, en.y-en.r-20, 80, 8);
+        ctx.fillStyle = "#f00"; ctx.fillRect(en.x-40, en.y-en.r-20, 80 * (en.hp/(en.isBoss ? 500+G.room*50 : 40+G.room*10)), 8);
     });
 
-    projectiles.forEach(p => { ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, 8, 0, Math.PI*2); ctx.fill(); });
+    projectiles.forEach(p => { ctx.fillStyle = "#0ff"; ctx.beginPath(); ctx.arc(p.x, p.y, 8, 0, Math.PI*2); ctx.fill(); });
     enemyProjectiles.forEach(ep => { ctx.fillStyle = "#f0f"; ctx.beginPath(); ctx.arc(ep.x, ep.y, 10, 0, Math.PI*2); ctx.fill(); });
 
     ctx.restore();
 
-    // Atualização do HUD
     document.getElementById('hp-fill').style.width = (G.hp / G.maxHp * 100) + "%";
     document.getElementById('ammo-fill').style.width = (G.ammo / G.maxAmmo * 100) + "%";
     document.getElementById('room-txt').innerText = G.room;
@@ -329,27 +380,20 @@ function draw() {
     requestAnimationFrame(draw);
 }
 
-// Eventos
 window.addEventListener('keydown', e => {
     keys[e.key.toLowerCase()] = true;
-    if (e.key === "Escape") togglePause();
+    if (e.key === "escape") togglePause();
 });
 window.addEventListener('keyup', e => delete keys[e.key.toLowerCase()]);
 
-// Toque simples para mobile (Atirar onde toca)
+// Mobile Shoot
 canvas.addEventListener('touchstart', e => {
-    if(!G.play) return;
-    const touch = e.touches[0];
-    const dx = touch.clientX - canvas.width/2;
-    const dy = touch.clientY - canvas.height/2;
-    // Simula as setas baseado no quadrante do toque
-    if (Math.abs(dx) > Math.abs(dy)) {
-        keys[dx > 0 ? 'arrowright' : 'arrowleft'] = true;
-        setTimeout(() => { delete keys['arrowright']; delete keys['arrowleft']; }, 100);
-    } else {
-        keys[dy > 0 ? 'arrowdown' : 'arrowup'] = true;
-        setTimeout(() => { delete keys['arrowdown']; delete keys['arrowup']; }, 100);
-    }
+    if(!G.play || G.inCutscene) return;
+    const t = e.touches[0];
+    const dx = t.clientX - window.innerWidth/2;
+    const dy = t.clientY - window.innerHeight/2;
+    const key = Math.abs(dx) > Math.abs(dy) ? (dx>0?'arrowright':'arrowleft') : (dy>0?'arrowdown':'arrowup');
+    keys[key] = true; setTimeout(() => delete keys[key], 100);
 });
 
 draw();
