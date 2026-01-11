@@ -3,128 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow - Lord of Light</title>
+    <title>Den of Shadow 💀 Boss Update</title>
     <style>
-        :root { --p-color: #9932CC; --ui-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        * { box-sizing: border-box; touch-action: none; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; padding: 0; background: #050505; color: #eee; font-family: var(--ui-font); overflow: hidden; }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&family=Special+Elite&display=swap');
         
-        #hud { position: absolute; top: 20px; left: 20px; z-index: 100; pointer-events: none; }
-        .bar-container { width: 200px; height: 12px; background: rgba(0,0,0,0.5); border: 1px solid #333; margin-bottom: 10px; border-radius: 6px; overflow: hidden; }
-        #hp-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0000, #880000); transition: width 0.3s; }
-        
-        #weapon-info { font-weight: bold; font-size: 18px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
-        #controls-hint { position: absolute; bottom: 20px; left: 20px; font-size: 12px; opacity: 0.6; pointer-events: none; }
+        * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
+        body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; }
+        canvas { display: block; }
 
-        /* Botões Mobile/Console Overlay */
-        #mobile-btns { position: absolute; bottom: 30px; right: 30px; display: flex; gap: 15px; z-index: 100; }
-        .btn-ui { width: 65px; height: 65px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; cursor: pointer; }
-        .btn-ui:active { transform: scale(0.9); background: rgba(255,255,255,0.3); }
+        .ui-screen { 
+            position: absolute; inset: 0; 
+            background: radial-gradient(circle at center, #4a0404 0%, #000000 100%);
+            z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        }
         
-        canvas { display: block; image-rendering: pixelated; }
+        #start-screen h1 { font-family: 'Nosifer', cursive; font-size: clamp(30px, 8vw, 70px); color: #ff0000; text-shadow: 0 0 30px #ff0000; }
+        .btn-main { padding: 15px 50px; font-size: 20px; background: transparent; border: 2px solid #ff0000; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 10px; transition: 0.3s; }
+        .btn-main:hover { background: #ff0000; box-shadow: 0 0 40px #ff0000; }
+
+        .lang-select { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 4000; }
+        .lang-btn { background: rgba(255,0,0,0.2); border: 1px solid #ff0000; color: white; padding: 5px 15px; cursor: pointer; font-family: 'Orbitron'; }
+        .lang-btn.active { background: #ff0000; }
+
+        #cutscene-screen { background: #000; cursor: pointer; text-align: center; padding: 20px; }
+        #cutscene-text { font-family: 'Special Elite', cursive; font-size: 26px; color: #ccc; max-width: 800px; line-height: 1.6; }
+        
+        #hud { position: absolute; top: 20px; left: 20px; z-index: 1000; display: none; flex-direction: column; gap: 8px; }
+        .stat-container { background: rgba(0,0,0,0.8); padding: 6px; border-left: 3px solid #ff0000; width: 180px; }
+        .bar-bg { width: 100%; height: 6px; background: #222; margin-top: 4px; }
+        .bar-fill { height: 100%; transition: width 0.2s; }
+
+        #msg-popup { position: absolute; bottom: 100px; width: 100%; text-align: center; font-size: 24px; color: #f1c40f; text-shadow: 0 0 10px #000; display: none; z-index: 2000; pointer-events: none; }
     </style>
 </head>
 <body>
 
+<div class="lang-select" id="lang-area">
+    <button class="lang-btn active" onclick="changeLang('pt')">PT</button>
+    <button class="lang-btn" onclick="changeLang('en')">EN</button>
+</div>
+
+<div id="start-screen" class="ui-screen">
+    <h1>DEN OF SHADOW</h1>
+    <p id="subtitle" style="letter-spacing: 5px; color: #ff0000; margin-bottom: 30px;">LORD OF LIGHT</p>
+    <button class="btn-main" id="play-btn" onclick="initCutscene()">JOGAR</button>
+</div>
+
+<div id="cutscene-screen" class="ui-screen" style="display:none;" onclick="nextHistory()">
+    <div id="cutscene-text"></div>
+</div>
+
 <div id="hud">
-    <div class="bar-container"><div id="hp-bar"></div></div>
-    <div id="weapon-info">ARMA: <span id="weapon-txt">LUZ</span></div>
+    <div class="stat-container"><div id="label-hp">VIDA</div><div class="bar-bg"><div id="hp-fill" class="bar-fill" style="width: 100%; background: #ff0000;"></div></div></div>
+    <div class="stat-container" style="border-color:#f1c40f;"><div id="label-ammo">MUNIÇÃO</div><div class="bar-bg"><div id="ammo-fill" class="bar-fill" style="width: 100%; background: #f1c40f;"></div></div></div>
+    <div style="font-weight: bold; color: #ff0000;"><span id="label-room">SALA</span>: <span id="room-txt">0</span></div>
 </div>
 
-<div id="controls-hint">WASD: MOVER | SETAS: ATACAR | Q: TROCAR ARMA | SUPORTE A CONSOLE ATIVO</div>
-
-<div id="mobile-btns">
-    <div class="btn-ui" onclick="swapWeapon()">Q</div>
-</div>
+<div id="msg-popup"></div>
 
 <canvas id="gameCanvas"></canvas>
 
 <script>
-// --- CONFIGURAÇÃO GLOBAL ---
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const ROOM_W = 3000, ROOM_H = 3000;
 
-const G = {
-    play: true,
-    curWpn: 0,
-    unlockedWeapons: [0, 1, 2], // 0:Luz, 1:Fogo, 2:Espada do Rei
-    weapons: [
-        { id: 0, name: "Luz", type: 'range', color: "#fff", dmg: 35, rate: 180, spd: 12 },
-        { id: 1, name: "Fogo", type: 'range', color: "#ff4500", dmg: 85, rate: 450, spd: 8 },
-        { id: 2, name: "Espada do Rei", type: 'melee', color: "#9932CC", dmg: 160, rate: 400, range: 110 }
-    ],
-    lastShot: 0,
-    camera: { x: 0, y: 0, lerp: 0.1 }
+const ROOM = { w: 1200, h: 800, wallSize: 60 };
+const G = { 
+    play: false, room: 0, hp: 100, ammo: 20, maxAmmo: 20, 
+    reloading: false, enemiesDefeated: false, lang: 'pt',
+    hasFireWpn: false, lastShot: 0
 };
 
-let player = { x: 1500, y: 1500, r: 28, spd: 7, hp: 100, maxHp: 100, angle: 0 };
-let keys = {};
-let projectiles = [];
-let enemies = [];
-let visuals = [];
+const texts = {
+    pt: { sub: "LORDE DA LUZ", hp: "VIDA", ammo: "MUNIÇÃO", room: "SALA", boss: "CHEFE!", weapon: "ARMA DE FOGO COLETADA!", history: ["Traído pelas sombras...", "Agora lutando no abismo.", "Derrote o Boss a cada 10 salas.", "Pegue a arma de fogo no pedestal!"] },
+    en: { sub: "LORD OF LIGHT", hp: "HEALTH", ammo: "AMMO", room: "ROOM", boss: "BOSS!", weapon: "FIRE WEAPON COLLECTED!", history: ["Betrayed by shadows...", "Fighting in the abyss.", "Defeat the Boss every 10 rooms.", "Grab the fire weapon on the pedestal!"] }
+};
 
-// Gerador de inimigos simples para teste
-for(let i=0; i<20; i++) {
-    enemies.push({
-        x: Math.random() * ROOM_W,
-        y: Math.random() * ROOM_H,
-        r: 30, hp: 100, spd: 2 + Math.random() * 2
-    });
+function changeLang(l) { G.lang = l; document.getElementById('subtitle').innerText = texts[l].sub; }
+function showPopup(t) { const p = document.getElementById('msg-popup'); p.innerText = t; p.style.display = 'block'; setTimeout(() => p.style.display = 'none', 3000); }
+
+let historyIndex = 0;
+function initCutscene() { document.getElementById('start-screen').style.display='none'; document.getElementById('lang-area').style.display='none'; document.getElementById('cutscene-screen').style.display='flex'; nextHistory(); }
+function nextHistory() { 
+    const h = texts[G.lang].history;
+    if (historyIndex < h.length) { document.getElementById('cutscene-text').innerText = h[historyIndex++]; } 
+    else { startGame(); }
 }
 
-// --- SISTEMA DE ENTRADA (MOBILE/CONSOLE/PC) ---
-window.addEventListener('keydown', e => {
-    const k = e.key.toLowerCase();
-    keys[k] = true;
-    if(k === 'q') swapWeapon(); // Troca de arma no Q
-});
-window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+let player = { x: 600, y: 700, r: 25, spd: 7 };
+let enemies = [], projectiles = [], doors = [], drops = [], pedestal = null;
+const keys = {};
 
-function swapWeapon() {
-    let currentIdx = G.unlockedWeapons.indexOf(G.curWpn);
-    G.curWpn = G.unlockedWeapons[(currentIdx + 1) % G.unlockedWeapons.length];
+function startGame() { 
+    document.getElementById('cutscene-screen').style.display='none'; 
+    document.getElementById('hud').style.display='flex'; 
+    G.play = true; initRoom(); 
+}
+
+function initRoom() {
+    enemies = []; projectiles = []; doors = []; drops = []; pedestal = null;
+    G.enemiesDefeated = false;
+    player.x = ROOM.w/2; player.y = ROOM.h - 150;
+
+    if(G.room > 0) {
+        if(G.room % 10 === 0) { // BOSS ROOM
+            showPopup(texts[G.lang].boss);
+            enemies.push({ x: ROOM.w/2, y: 200, hp: 500 + (G.room*20), r: 80, spd: 2, isBoss: true });
+        } else {
+            let count = 2 + Math.floor(G.room * 0.4);
+            for(let i=0; i<count; i++) {
+                enemies.push({ x: Math.random()*(ROOM.w-200)+100, y: Math.random()*(ROOM.h-400)+100, hp: 30 + G.room*5, r: 25, spd: 1.5 + (G.room*0.1) });
+            }
+        }
+    } else { G.enemiesDefeated = true; spawnDoors(); }
+}
+
+function spawnDoors() { doors.push({ x: ROOM.w/2 - 75, y: 0, w: 150, h: 70 }); }
+
+function update() {
+    if(!G.play) return;
+    // Movimento
+    let mx = 0, my = 0;
+    if(keys['w']) my = -1; if(keys['s']) my = 1; if(keys['a']) mx = -1; if(keys['d']) mx = 1;
+    player.x = Math.max(ROOM.wallSize+25, Math.min(ROOM.w-ROOM.wallSize-25, player.x + mx*player.spd));
+    player.y = Math.max(ROOM.wallSize+25, Math.min(ROOM.h-ROOM.wallSize-25, player.y + my*player.spd));
+
+    // Tiro
+    let ax = 0, ay = 0;
+    if(keys['arrowup']) ay = -1; if(keys['arrowdown']) ay = 1; if(keys['arrowleft']) ax = -1; if(keys['arrowright']) ax = 1;
+    if((ax || ay) && !G.reloading && G.ammo > 0 && Date.now() - G.lastShot > 200) {
+        projectiles.push({ x: player.x, y: player.y, vx: ax*15, vy: ay*15, r: G.hasFireWpn ? 12 : 7, dmg: G.hasFireWpn ? 50 : 25, color: G.hasFireWpn ? "#ff4500" : "#fff" });
+        G.ammo--; G.lastShot = Date.now();
+        if(G.ammo <= 0) { G.reloading = true; setTimeout(()=> {G.ammo = G.maxAmmo; G.reloading = false}, 1200); }
+    }
+
+    // IA Inimigos
+    enemies.forEach((en, i) => {
+        let angle = Math.atan2(player.y - en.y, player.x - en.x);
+        en.x += Math.cos(angle) * en.spd; en.y += Math.sin(angle) * en.spd;
+        if(Math.hypot(player.x-en.x, player.y-en.y) < player.r + en.r) G.hp -= en.isBoss ? 0.5 : 0.2;
+    });
+
+    // Colisão Projéteis
+    projectiles.forEach((p, pi) => {
+        p.x += p.vx; p.y += p.vy;
+        enemies.forEach((en, ei) => {
+            if(Math.hypot(p.x-en.x, p.y-en.y) < en.r) {
+                en.hp -= p.dmg; projectiles.splice(pi, 1);
+                if(en.hp <= 0) {
+                    if(Math.random() < 0.3) drops.push({x: en.x, y: en.y, type: 'heal'});
+                    enemies.splice(ei, 1);
+                }
+            }
+        });
+    });
+
+    // Itens e Pedestal
+    drops.forEach((d, i) => {
+        if(Math.hypot(player.x-d.x, player.y-d.y) < 40) { G.hp = Math.min(100, G.hp+20); drops.splice(i, 1); }
+    });
+
+    if(pedestal && Math.hypot(player.x-pedestal.x, player.y-pedestal.y) < 50) {
+        G.hasFireWpn = true; pedestal = null; showPopup(texts[G.lang].weapon);
+    }
+
+    if(enemies.length === 0 && !G.enemiesDefeated) {
+        G.enemiesDefeated = true; spawnDoors();
+        if(G.room % 10 === 0) pedestal = { x: ROOM.w/2, y: ROOM.h/2 };
+    }
+
+    // Mudança de sala
+    doors.forEach(d => { if(player.x > d.x && player.x < d.x+d.w && player.y < d.y+d.h) { G.room++; initRoom(); } });
+    if(G.hp <= 0) location.reload();
+}
+
+function draw() {
+    ctx.fillStyle = "#000"; ctx.fillRect(0,0,canvas.width, canvas.height);
+    if(!G.play) { requestAnimationFrame(draw); return; }
+    update();
+    ctx.save();
+    let s = Math.min(canvas.width/ROOM.w, canvas.height/ROOM.h)*0.95;
+    ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(s,s); ctx.translate(-ROOM.w/2, -ROOM.h/2);
+
+    ctx.fillStyle = "#0a0000"; ctx.fillRect(0,0,ROOM.w,ROOM.h);
+    ctx.fillStyle = "#1a0000"; ctx.fillRect(0,0,ROOM.w,60); ctx.fillRect(0,ROOM.h-60,ROOM.w,60);
     
-    const w = G.weapons.find(wp => wp.id === G.curWpn);
-    const txt = document.getElementById('weapon-txt');
-    txt.innerText = w.name;
-    txt.style.color = w.color;
-} <!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Den of Shadow - Corrigido</title>
-    <style>
-        body { margin: 0; background: #050505; overflow: hidden; color: white; font-family: sans-serif; }
-        canvas { display: block; width: 100vw; height: 100vh; }
-        #hud { position: absolute; top: 20px; left: 20px; z-index: 10; pointer-events: none; }
-        .bar { width: 200px; height: 10px; background: #222; border: 1px solid #444; margin-bottom: 5px; }
-        #hp-fill { width: 100%; height: 100%; background: red; transition: 0.3s; }
-        #wpn-txt { font-weight: bold; font-size: 20px; text-shadow: 0 0 10px currentColor; }
-    </style>
-</head>
-<body>
-<div id="hud">
-    <div class="bar"><div id="hp-fill"></div></div>
-    <div id="wpn-txt">ARMA: LUZ</div>
-</div>
-<canvas id="gameCanvas"></canvas>
-<script>
-// Início da Lógica dentro do HTML
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const G = {
-    play: true, curWpn: 0, unlockedWeapons: [0, 1, 2],
-    weapons: [
-        { id: 0, name: "LUZ", type: 'range', color: "#fff", dmg: 30, rate: 200 },
-        { id: 1, name: "FOGO", type: 'range', color: "#ff4500", dmg: 70, rate: 400 },
-        { id: 2, name: "REI", type: 'melee', color: "#9932CC", dmg: 150, rate: 500 }
-    ],
-    lastShot: 0, camX: 0, camY: 0
-};
-let player = { x: 1000, y: 1000, r: 25, spd: 7, angle: 0, hp: 100 };
-let enemies = []; // Adicione inimigos aqui
-let projectiles = [];
-let visuals = [];
-let keys = {};
+    if(G.enemiesDefeated) { ctx.fillStyle = "#ff0000"; doors.forEach(d => ctx.fillRect(d.x, d.y, d.w, d.h)); }
+
+    if(pedestal) {
+        ctx.fillStyle = "#555"; ctx.fillRect(pedestal.x-30, pedestal.y-20, 60, 40);
+        ctx.fillStyle = "#ff4500"; ctx.font = "30px Arial"; ctx.fillText("🔥", pedestal.x-15, pedestal.y-30);
+    }
+
+    drops.forEach(d => { ctx.fillStyle = "#fff"; ctx.font = "20px Orbitron"; ctx.fillText("➕", d.x-10, d.y+5); });
+    
+    enemies.forEach(en => { 
+        ctx.fillStyle = en.isBoss ? "#8b0000" : "#ff0000";
+        ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.fillRect(en.x-20, en.y-en.r-10, 40 * (en.hp/(30+G.room*5)), 5);
+    });
+
+    ctx.fillStyle = G.reloading ? "#444" : "#fff";
+    ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
+    if(G.hasFireWpn) { ctx.strokeStyle = "#ff4500"; ctx.lineWidth = 3; ctx.stroke(); }
+
+    projectiles.forEach(p => { ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); });
+
+    ctx.restore();
+    document.getElementById('hp-fill').style.width = G.hp + "%";
+    document.getElementById('ammo-fill').style.width = (G.ammo/G.maxAmmo*100) + "%";
+    document.getElementById('room-txt').innerText = G.room;
+    requestAnimationFrame(draw);
+}
+
+window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+window.addEventListener('keyup', e => delete keys[e.key.toLowerCase()]);
+window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+window.onresize(); draw();
+</script>
+</body>
+</html>
