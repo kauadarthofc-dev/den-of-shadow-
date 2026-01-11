@@ -3,160 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Game Mobile & Console</title>
+    <title>Den of Shadow Corrigido</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #222; font-family: sans-serif; }
-        canvas { display: block; }
-
-        /* Interface UI */
-        #ui {
-            position: absolute; top: 10px; left: 10px; color: white;
-            pointer-events: none; text-shadow: 2px 2px 4px #000;
+        /* CSS para manter o jogo centralizado e responsivo */
+        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; }
+        canvas { display: block; width: 100vw; height: 100vh; }
+        
+        #hud {
+            position: absolute; top: 20px; left: 20px; color: white;
+            pointer-events: none; text-shadow: 2px 2px #000;
         }
 
-        /* Controles Mobile */
-        .controls {
-            position: absolute; bottom: 20px; width: 100%;
-            display: flex; justify-content: space-between; padding: 0 20px;
-            box-sizing: border-box;
+        /* Botão de troca para Mobile */
+        #mobile-swap {
+            position: absolute; bottom: 40px; right: 40px;
+            width: 80px; height: 80px; background: rgba(255,0,0,0.3);
+            border: 2px solid #ff4500; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold; pointer-events: auto;
         }
-        .btn {
-            width: 70px; height: 70px; background: rgba(255,255,255,0.2);
-            border-radius: 50%; display: flex; align-items: center;
-            justify-content: center; color: white; user-select: none;
-            border: 2px solid white; pointer-events: auto;
-        }
-        #joystick-area { width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; }
     </style>
 </head>
 <body>
 
-    <div id="ui">
-        <h2 id="weapon-name">Arma: Espada</h2>
-        <p>Console: A/X para Atacar | R1 para Trocar</p>
-        <p>Teclado: Espaço para Atacar | Q para Trocar</p>
-    </div>
+<div id="hud">
+    <div>SALA: <span id="room-txt">1</span></div>
+    <div>ARMA: <span id="weapon-txt" style="color: #fff;">LUZ</span></div>
+    <div style="font-size: 12px; opacity: 0.7;">[Q] Trocar | [Espaço] Atacar | Analógico Console</div>
+</div>
 
-    <div class="controls">
-        <div id="joystick-area"></div>
-        <div style="display: flex; gap: 10px;">
-            <div class="btn" id="btn-switch">Trocar</div>
-            <div class="btn" id="btn-attack" style="background: rgba(255,0,0,0.5);">Atacar</div>
-        </div>
-    </div>
+<div id="mobile-swap" onclick="swapWeapon()">SWAP</div>
 
-    <canvas id="gameCanvas"></canvas>
+<canvas id="gameCanvas"></canvas>
 
 <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// Configurações do Mundo e Player
+let ROOM_W = 2000;
+let ROOM_H = 2000;
+const G = {
+    play: true,
+    curWpn: 0,
+    unlockedWeapons: [0, 1, 2], // 0: Luz, 1: Fogo, 2: Espada do Rei
+    weapons: [
+        { name: "LUZ", type: 'range', color: "#fff", dmg: 40, rate: 200 },
+        { name: "FOGO", type: 'range', color: "#ff4500", dmg: 80, rate: 400 },
+        { name: "REI", type: 'melee', color: "#9932CC", dmg: 150, rate: 500 }
+    ],
+    lastShot: 0
+};
+
+let player = { x: 1000, y: 1000, r: 25, spd: 7, angle: 0 };
+let camera = { x: 0, y: 0 };
+let keys = {};
+let projectiles = [];
+let enemies = [{x: 1200, y: 1200, r: 30, hp: 100}]; // Inimigo de teste
+
+// --- INPUTS (MOBILE, CONSOLE, PC) ---
+window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+window.addEventListener('keyup', e => {
+    if(e.key.toLowerCase() === 'q') swapWeapon(); // Troca no Q
+    keys[e.key.toLowerCase()] = false;
+});
+
+function swapWeapon() {
+    let currentIdx = G.unlockedWeapons.indexOf(G.curWpn);
+    G.curWpn = G.unlockedWeapons[(currentIdx + 1) % G.unlockedWeapons.length];
     
-    // Configurações do Mundo
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const w = G.weapons[G.curWpn];
+    document.getElementById('weapon-txt').innerText = w.name;
+    document.getElementById('weapon-txt').style.color = w.color;
+}
 
-    // Estado do Jogador
-    const player = {
-        x: canvas.width / 2,
-        y: canvas.height / 2,
-        size: 30,
-        speed: 4,
-        color: 'cyan',
-        weapons: ['Espada', 'Arco', 'Cajado'],
-        currentWeaponIndex: 0,
-        isAttacking: false
-    };
+function update() {
+    if(!G.play) return;
 
-    // Câmera
-    const camera = { x: 0, y: 0 };
+    // Movimentação (Suporte a Console via Gamepad API)
+    const gp = navigator.getGamepads()[0];
+    let mx = 0, my = 0;
 
-    // Inputs
-    const keys = {};
-    window.addEventListener('keydown', e => keys[e.code] = true);
-    window.addEventListener('keyup', e => keys[e.code] = false);
+    if(keys['w'] || (gp && gp.axes[1] < -0.2)) my = -1;
+    if(keys['s'] || (gp && gp.axes[1] > 0.2)) my = 1;
+    if(keys['a'] || (gp && gp.axes[0] < -0.2)) mx = -1;
+    if(keys['d'] || (gp && gp.axes[0] > 0.2)) mx = 1;
 
-    // Lógica de Troca de Arma (Não remove o que já existe)
-    function switchWeapon() {
-        player.currentWeaponIndex = (player.currentWeaponIndex + 1) % player.weapons.length;
-        document.getElementById('weapon-name').innerText = "Arma: " + player.weapons[player.currentWeaponIndex];
+    if(mx !== 0 || my !== 0) {
+        player.x += mx * player.spd;
+        player.y += my * player.spd;
     }
 
-    function attack() {
-        player.isAttacking = true;
-        setTimeout(() => player.isAttacking = false, 150);
-        console.log("Atacando com " + player.weapons[player.currentWeaponIndex]);
+    // --- CORREÇÃO DA CÂMERA (CENTRALIZAÇÃO TOTAL) ---
+    camera.x = player.x - canvas.width / 2;
+    camera.y = player.y - canvas.height / 2;
+
+    // Lógica de Ataque (Espaço ou Botão Console)
+    if(keys[' '] || (gp && gp.buttons[0].pressed)) {
+        attack();
     }
+}
 
-    // Eventos Mobile
-    document.getElementById('btn-switch').addEventListener('touchstart', (e) => { e.preventDefault(); switchWeapon(); });
-    document.getElementById('btn-attack').addEventListener('touchstart', (e) => { e.preventDefault(); attack(); });
+function attack() {
+    const w = G.weapons[G.curWpn];
+    if(Date.now() - G.lastShot < w.rate) return;
 
-    // Suporte a Gamepad (Console)
-    function checkGamepad() {
-        const gamepads = navigator.getGamepads();
-        if (!gamepads[0]) return;
-        
-        const gp = gamepads[0];
-        // Movimento (Analógico Esquerdo)
-        if (Math.abs(gp.axes[0]) > 0.1) player.x += gp.axes[0] * player.speed;
-        if (Math.abs(gp.axes[1]) > 0.1) player.y += gp.axes[1] * player.speed;
-
-        // Botões (A ou X para ataque, R1 para trocar)
-        if (gp.buttons[0].pressed) attack();
-        if (gp.buttons[5].pressed) switchWeapon(); // R1 / RB
-    }
-
-    function update() {
-        // Movimentação Teclado
-        if (keys['KeyW'] || keys['ArrowUp']) player.y -= player.speed;
-        if (keys['KeyS'] || keys['ArrowDown']) player.y += player.speed;
-        if (keys['KeyA'] || keys['ArrowLeft']) player.x -= player.speed;
-        if (keys['KeyD'] || keys['ArrowRight']) player.x += player.speed;
-
-        // Atalhos Teclado
-        if (keys['KeyQ']) { switchWeapon(); keys['KeyQ'] = false; }
-        if (keys['Space']) { attack(); keys['Space'] = false; }
-
-        checkGamepad();
-
-        // CENTRALIZAÇÃO DA CÂMERA
-        // A câmera segue o jogador mantendo-o no centro da tela
-        camera.x = player.x - canvas.width / 2;
-        camera.y = player.y - canvas.height / 2;
-    }
-
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        ctx.save();
-        // Aplica o deslocamento da câmera
-        ctx.translate(-camera.x, -camera.y);
-
-        // Desenha um "Chão" para referência de movimento
-        ctx.strokeStyle = "#444";
-        for(let i=0; i<2000; i+=100) {
-            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 2000); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(2000, i); ctx.stroke();
-        }
-
-        // Desenha o Jogador
-        ctx.fillStyle = player.isAttacking ? "white" : player.color;
-        ctx.fillRect(player.x - player.size/2, player.y - player.size/2, player.size, player.size);
-
-        // Desenha a "Arma" (visual simples)
-        ctx.fillStyle = "yellow";
-        if (player.currentWeaponIndex === 0) ctx.fillRect(player.x + 20, player.y - 5, 20, 10); // Espada
-        if (player.currentWeaponIndex === 1) ctx.arc(player.x + 25, player.y, 10, 0, Math.PI*2); // Arco
-
-        ctx.restore();
-
-        requestAnimationFrame(() => {
-            update();
-            draw();
+    if(w.type === 'range') {
+        projectiles.push({ x: player.x, y: player.y, vx: 10, vy: 0, r: 10, color: w.color });
+    } else {
+        // ATAQUE DA ESPADA (Visual e Dano)
+        player.isAttacking = 10; // Frames de animação
+        enemies.forEach(en => {
+            let dist = Math.hypot(en.x - player.x, en.y - player.y);
+            if(dist < 100) en.hp -= w.dmg; // Alcance da espada
         });
     }
+    G.lastShot = Date.now();
+}
 
-    draw();
+function draw() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    // APLICA A CÂMERA
+    ctx.translate(-camera.x, -camera.y);
+
+    // Desenha Chão (Grid)
+    ctx.strokeStyle = "#220000";
+    for(let i=0; i<ROOM_W; i+=100) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, ROOM_H); ctx.stroke();
+    }
+
+    // Desenha Inimigos
+    enemies.forEach(en => {
+        if(en.hp > 0) {
+            ctx.fillStyle = "red";
+            ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill();
+        }
+    });
+
+    // --- DESENHA PLAYER E ESPADA ---
+    ctx.fillStyle = "white";
+    ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
+
+    if(G.weapons[G.curWpn].name === "REI") {
+        ctx.strokeStyle = G.weapons[G.curWpn].color;
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        // A espada agora aparece como um arco ao redor do player
+        ctx.arc(player.x, player.y, 60, -0.5, 0.5);
+        ctx.stroke();
+    }
+
+    ctx.restore();
+
+    update();
+    requestAnimationFrame(draw);
+}
+
+draw();
 </script>
 </body>
 </html>
