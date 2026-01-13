@@ -23,21 +23,16 @@
 
         #upgrade-screen { display:none; }
         .upgrade-container { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; max-width: 1000px; }
-        .upgrade-card { 
-            background: linear-gradient(145deg, #1a0000, #000); 
-            border: 2px solid #400; padding: 20px; width: 180px; 
-            cursor: pointer; pointer-events: auto; transition: 0.3s;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-        }
+        .upgrade-card { background: linear-gradient(145deg, #1a0000, #000); border: 2px solid #400; padding: 20px; width: 180px; cursor: pointer; pointer-events: auto; transition: 0.3s; }
         .upgrade-card:hover { border-color: #f00; transform: translateY(-5px); box-shadow: 0 0 20px #600; }
         .upgrade-card h3 { font-family: 'Nosifer'; font-size: 10px; color: #f00; margin-bottom: 10px; }
         .upgrade-card p { font-family: 'Special Elite'; font-size: 12px; color: #ccc; }
 
         .mobile-ui { position: absolute; bottom: 30px; width: 100%; display: none; justify-content: space-between; padding: 0 20px; z-index: 4000; pointer-events: none; }
-        .joy-area { width: 120px; height: 120px; background: rgba(255,0,0,0.05); border: 2px solid rgba(255,0,0,0.2); border-radius: 50%; position: relative; pointer-events: auto; }
-        .joy-stick { width: 40px; height: 40px; background: rgba(255,0,0,0.4); border: 2px solid #f00; border-radius: 50%; position: absolute; top: 40px; left: 40px; pointer-events: none; }
+        .joy-area { width: 110px; height: 110px; background: rgba(255,0,0,0.05); border: 2px solid rgba(255,0,0,0.2); border-radius: 50%; position: relative; pointer-events: auto; }
+        .joy-stick { width: 40px; height: 40px; background: rgba(255,0,0,0.4); border: 2px solid #f00; border-radius: 50%; position: absolute; top: 35px; left: 35px; pointer-events: none; }
         .action-btns { display: flex; flex-direction: column; gap: 10px; pointer-events: auto; }
-        .btn-circle { width: 60px; height: 60px; background: rgba(50,0,0,0.8); border: 2px solid #a00; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; }
+        .btn-circle { width: 55px; height: 55px; background: rgba(50,0,0,0.8); border: 2px solid #a00; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -59,7 +54,7 @@
 
 <div id="hud">
     <div class="hud-group">
-        <div>VITALIDADE <span id="dev-tag" style="color:yellow; font-size:9px; display:none;">[ENTIDADE SUPREMA]</span></div>
+        <div>VITALIDADE <span id="dev-tag" style="color:yellow; font-size:9px; display:none;">[SOMBRA MESTRA]</span></div>
         <div class="bar-bg"><div id="hp-fill" class="bar-fill" style="background:#800; width: 100%;"></div></div>
     </div>
     <div class="hud-group" style="border-color:#660;">
@@ -84,7 +79,7 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-let audioCtx, bufferInimigo, bufferFilha;
+let audioCtx;
 const ROOM = { w: 1600, h: 1000, wall: 80 };
 const G = {
     play: false, room: 0, hp: 100, maxHp: 100, ammo: 25, maxAmmo: 25,
@@ -103,9 +98,8 @@ const WEAPONS = [
 
 const STORY = {
     init: ["Você não é um herói.", "O Rei das Sombras lhe tirou tudo.", "A torre é o seu caminho.", "O topo é a única saída."],
-    boss10: ["O Pentágono do Medo ruiu.", "O Guardião foi silenciado.", "Você sente o peso de cada vida?"],
-    boss20: ["O Triângulo Áureo foi partido.", "A Filha do Rei implora por misericórdia...", "Mas aqui, apenas a morte é real."],
-    boss30: ["O Hexágono da Angústia silenciou.", "Eles imploram em línguas esquecidas."],
+    boss10: ["O Pentágono do Medo ruiu.", "O Guardião foi silenciado."],
+    boss20: ["A Filha do Rei implora por misericórdia...", "Mas aqui, apenas a morte é real."],
     boss100: ["O REI DAS SOMBRAS CAIU.", "Você recuperou seu trono.", "Mas agora, você é a coisa mais sombria neste lugar."]
 };
 
@@ -113,27 +107,21 @@ let particles = [];
 let enemies = [], projectiles = [], joyInput = { moveX: 0, moveY: 0, aimX: 0, aimY: 0 };
 const keys = {};
 let player = { x: 800, y: 800, r: 25, spd: 7.5 };
+let devCode = "";
 
-// --- AUXILIARES ---
 function drawPolygon(x, y, r, sides, angle) {
     ctx.beginPath();
     for(let i=0; i<sides; i++){
         let a = angle + (i * Math.PI * 2 / sides);
         ctx.lineTo(x + r * Math.cos(a), y + r * Math.sin(a));
     }
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+    ctx.closePath(); ctx.fill(); ctx.stroke();
 }
 
-async function setupAudio() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') await audioCtx.resume();
-}
-
-function spawnParticles(x, y, color, count=10) {
-    for(let i=0; i<count; i++) {
-        particles.push({ x, y, vx: (Math.random()-0.5)*12, vy: (Math.random()-0.5)*12, life: 1.0, color });
+function triggerDash() {
+    if (Date.now() > G.dashCooldown) {
+        G.dashTime = Date.now() + 150; G.dashCooldown = Date.now() + 800;
+        for(let i=0;i<5;i++) particles.push({x:player.x, y:player.y, vx:(Math.random()-0.5)*5, vy:(Math.random()-0.5)*5, life:1.0, color:"white"});
     }
 }
 
@@ -143,14 +131,11 @@ function switchWeapon() {
     document.getElementById('weapon-name').innerText = available[G.currentWeaponIdx].n.toUpperCase();
 }
 
-function triggerDash() {
-    if (Date.now() > G.dashCooldown) {
-        G.dashTime = Date.now() + 150; G.dashCooldown = Date.now() + 800;
-        spawnParticles(player.x, player.y, "white", 5);
-    }
+function initGameFlow() { 
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    document.getElementById('start-screen').style.display='none'; 
+    if(G.room===0) startCutscene('init'); else startGame(); 
 }
-
-function initGameFlow() { setupAudio().then(() => { document.getElementById('start-screen').style.display='none'; if(G.room===0) startCutscene('init'); else startGame(); }); }
 
 function startGame() {
     G.play=true; G.inCutscene=false;
@@ -208,7 +193,7 @@ function initRoom() {
     if(G.room > 0 && G.room % 10 === 0) {
         let type = G.room % 30 === 10 ? 'pent' : (G.room % 30 === 20 ? 'tri' : 'hex');
         if(G.room === 100) type = 'king';
-        enemies.push({x:ROOM.w/2, y:300, hp:1200+(G.room*100), r:90, spd:2, type:type, state:0, timer:0, angle:0});
+        enemies.push({x:ROOM.w/2, y:300, hp:1200+(G.room*100), r:90, spd:2, type:type, timer:0, angle:0});
     } else if(G.room > 0) {
         let n = 4 + Math.floor(G.room*0.3);
         for(let i=0; i<n; i++) enemies.push({x:Math.random()*1400+100, y:Math.random()*400+100, hp:80, r:30, spd:2.5, type:'minion'});
@@ -231,46 +216,50 @@ function update() {
 
     let w = WEAPONS.filter(wa => G.kadtr || G.room >= wa.r)[G.currentWeaponIdx];
     if((Math.abs(ax)>0.3 || Math.abs(ay)>0.3) && G.ammo>0 && Date.now()-G.lastShot > w.s) {
-        projectiles.push({x:player.x, y:player.y, vx:ax*18, vy:ay*18, dmg:(G.kadtr?9999:w.d)*G.dmgMult, c:w.c, b:0});
+        projectiles.push({x:player.x, y:player.y, vx:ax*18, vy:ay*18, dmg:(G.kadtr?99999:w.d)*G.dmgMult, c:w.c, b:0});
         G.ammo--; G.lastShot=Date.now();
     } else if(mx===0 && my===0 && G.ammo<G.maxAmmo) G.ammo += 0.2;
 
     enemies.forEach((en, i) => {
         en.angle += 0.05;
-        if(en.type === 'tri') { // Move: Investida
+        if(en.type === 'tri') { 
             en.timer++; if(en.timer > 60) { en.spd = 15; if(en.timer > 75) { en.timer = 0; en.spd = 2; } }
         }
-        if(en.type === 'pent') { // Move: Giro de Tiros
-            if(Math.random() < 0.05) projectiles.push({x:en.x, y:en.y, vx:Math.cos(en.angle)*8, vy:Math.sin(en.angle)*8, dmg:10, c:"#f00", b:-1});
+        if(en.type === 'pent' && Math.random() < 0.05) {
+            projectiles.push({x:en.x, y:en.y, vx:Math.cos(en.angle)*8, vy:Math.sin(en.angle)*8, dmg:10, c:"#f00", b:-1});
         }
-        
-        let dist = Math.hypot(player.x-en.x, player.y-en.y);
         let ang = Math.atan2(player.y-en.y, player.x-en.x);
         en.x += Math.cos(ang)*en.spd; en.y += Math.sin(ang)*en.spd;
-
-        if(dist < player.r+en.r && !dashing) {
+        if(Math.hypot(player.x-en.x, player.y-en.y) < player.r+en.r && !dashing && !G.kadtr) {
             if(G.shield > 0) G.shield--; else G.hp -= 0.8;
             if(G.hp<=0) location.reload();
-            player.x += Math.cos(ang)*10; player.y += Math.sin(ang)*10;
         }
     });
 
     projectiles.forEach((p, pi) => {
         p.x+=p.vx; p.y+=p.vy;
-        if(p.b !== -1) { // Tiros do Player
+        if(p.b !== -1) { 
             enemies.forEach((en, ei) => {
                 if(Math.hypot(p.x-en.x, p.y-en.y)<en.r){
                     en.hp-=p.dmg; 
                     if(G.ricochet && p.b < 2) { p.vx *= -1; p.vy *= -1; p.b++; } else projectiles.splice(pi, 1);
-                    if(en.hp<=0){ spawnParticles(en.x, en.y, p.c, 15); G.hp = Math.min(G.maxHp, G.hp+G.lifeSteal); enemies.splice(ei, 1); if(enemies.length===0) G.enemiesDefeated=true; }
+                    if(en.hp<=0){ 
+                        for(let k=0;k<10;k++) particles.push({x:en.x,y:en.y,vx:(Math.random()-0.5)*10,vy:(Math.random()-0.5)*10,life:1,color:p.c});
+                        G.hp = Math.min(G.maxHp, G.hp+G.lifeSteal); enemies.splice(ei, 1); 
+                        if(enemies.length===0) G.enemiesDefeated=true; 
+                    }
                 }
             });
-        } else { // Tiros do Boss
-            if(Math.hypot(p.x-player.x, p.y-player.y)<player.r) { G.hp-=5; projectiles.splice(pi,1); }
-        }
+        } else if(Math.hypot(p.x-player.x, p.y-player.y)<player.r && !G.kadtr) { G.hp-=5; projectiles.splice(pi,1); }
     });
 
     particles.forEach((p, i) => { p.x+=p.vx; p.y+=p.vy; p.life-=0.02; if(p.life<=0) particles.splice(i,1); });
+
+    // LÓGICA DA PORTA (CONSERTADA)
+    if((G.enemiesDefeated || G.kadtr) && player.y < 110 && Math.abs(player.x - ROOM.w/2) < 120) {
+        if(G.room > 0 && G.room % 10 === 0 && enemies.length === 0) startCutscene('boss'+G.room);
+        else { G.room++; if(G.room === 101) startCutscene('boss100'); else initRoom(); }
+    }
 }
 
 function draw() {
@@ -284,17 +273,20 @@ function draw() {
     ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(sc, sc); ctx.translate(-ROOM.w/2, -ROOM.h/2);
     ctx.fillStyle="#080000"; ctx.fillRect(0,0,ROOM.w, ROOM.h);
     
-    if(G.enemiesDefeated){ ctx.fillStyle="#400"; ctx.fillRect(ROOM.w/2-100, 0, 200, 80); }
+    // Porta
+    if(G.enemiesDefeated || G.kadtr){ 
+        ctx.fillStyle="#600"; ctx.shadowBlur=20; ctx.shadowColor="red";
+        ctx.fillRect(ROOM.w/2-100, 0, 200, 85); 
+        ctx.shadowBlur=0;
+    }
     
     particles.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill(); });
     ctx.globalAlpha = 1;
 
-    // Player
     ctx.fillStyle = Date.now() < G.dashTime ? "white" : "#eee";
     ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
     if(G.shield > 0) { ctx.strokeStyle="cyan"; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(player.x, player.y, player.r+5, 0, Math.PI*2); ctx.stroke(); }
 
-    // Inimigos com Formas
     enemies.forEach(en=>{ 
         ctx.fillStyle="#400"; ctx.strokeStyle="#f00"; ctx.lineWidth=4;
         if(en.type === 'minion') { ctx.fillStyle="#300"; ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill(); }
@@ -330,8 +322,14 @@ window.onload = () => { handleJoy('move-area', 'move-stick', 'move'); handleJoy(
 window.addEventListener('keydown', e => { 
     const k = e.key.toLowerCase(); keys[k] = true; 
     if(k === 'shift') triggerDash(); if(k === 'q') switchWeapon();
-    devCode += k; if(devCode.includes("kadtr")){ G.kadtr=true; document.getElementById('dev-tag').style.display='inline'; switchWeapon(); }
-    if(devCode.length > 10) devCode="";
+    devCode += k; if(devCode.includes("kadtr")){ 
+        G.kadtr = true; 
+        document.getElementById('dev-tag').style.display='inline'; 
+        G.hp = G.maxHp = 999999;
+        switchWeapon(); 
+        devCode = ""; // Reseta para não acumular
+    }
+    if(devCode.length > 10) devCode = devCode.slice(-10);
 });
 window.addEventListener('keyup', e => delete keys[e.key.toLowerCase()]);
 </script>
