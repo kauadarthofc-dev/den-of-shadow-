@@ -2,152 +2,72 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Meme Defense: Procedural Edition</title>
+    <title>Meme Merge Defense</title>
     <style>
-        body {
-            background: #000;
-            color: #0f0; /* Estilo Hacker/Meme */
-            font-family: 'Courier New', monospace;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0;
-        }
+        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; margin: 0; user-select: none; }
+        #header { padding: 15px; text-align: center; border-bottom: 2px solid #0f0; width: 100%; margin-bottom: 20px; }
+        .stats { font-size: 24px; font-weight: bold; }
+        
+        #game-wrap { display: flex; gap: 15px; background: #111; padding: 20px; border: 3px solid #0f0; border-radius: 10px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 80px); gap: 10px; }
+        #defense-slots { display: flex; flex-direction: column; justify-content: space-around; background: #222; padding: 10px; border-radius: 10px; border-right: 2px dashed #0f0; }
+        #field { width: 400px; height: 300px; background: #050505; position: relative; overflow: hidden; border-radius: 0 10px 10px 0; }
 
-        #ui { padding: 15px; text-align: center; }
-        .stats { font-size: 24px; text-shadow: 2px 2px #005500; }
+        .slot { width: 80px; height: 80px; background: #1a1a1a; border: 1px solid #333; display: flex; align-items: center; justify-content: center; position: relative; }
+        
+        /* SPRITES */
+        .sprite { width: 70px; height: 70px; background-size: contain; background-repeat: no-repeat; background-position: center; image-rendering: pixelated; cursor: grab; }
+        .enemy { position: absolute; width: 60px; height: 60px; right: -70px; background-size: contain; background-repeat: no-repeat; image-rendering: pixelated; }
 
-        #game-container {
-            display: flex;
-            gap: 10px;
-            background: #111;
-            padding: 15px;
-            border: 3px solid #0f0;
-            border-radius: 10px;
-        }
+        /* MEME ICONS (Fallback to High-Res Emoji se o browser falhar, mas o CSS força a imagem) */
+        .lvl-0 { background-image: url('https://api.iconify.design/twemoji:dog-face.svg'); }
+        .lvl-1 { background-image: url('https://api.iconify.design/twemoji:frog.svg'); }
+        .lvl-2 { background-image: url('https://api.iconify.design/twemoji:sunglasses.svg'); }
+        .troll { background-image: url('https://api.iconify.design/logos:trollface.svg'); }
 
-        /* Grades */
-        .grid { display: grid; grid-template-columns: repeat(3, 80px); gap: 8px; }
-        #defense-slots {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            background: #222;
-            padding: 5px;
-            border-right: 2px dashed #0f0;
-        }
-
-        #battlefield {
-            width: 400px;
-            height: 270px;
-            background: #050505;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .slot {
-            width: 80px;
-            height: 80px;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Sprites de Memes Pesquisados */
-        .sprite {
-            width: 70px;
-            height: 70px;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            image-rendering: pixelated;
-            cursor: grab;
-        }
-
-        .enemy {
-            position: absolute;
-            width: 60px;
-            height: 60px;
-            right: -70px;
-            background-size: contain;
-            background-repeat: no-repeat;
-        }
-
-        .bullet {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #fff;
-            box-shadow: 0 0 10px #fff;
-            border-radius: 50%;
-        }
-
-        #buy-btn {
-            margin-top: 20px;
-            padding: 12px 30px;
-            background: #0f0;
-            color: #000;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 18px;
-        }
+        .bullet { position: absolute; width: 12px; height: 12px; background: #fff; border-radius: 50%; box-shadow: 0 0 10px #0f0; }
+        #buy-btn { margin-top: 20px; padding: 15px 40px; background: #0f0; color: #000; border: none; font-weight: bold; cursor: pointer; font-size: 18px; border-radius: 5px; }
+        #buy-btn:hover { background: #0a0; }
     </style>
 </head>
 <body>
 
-    <div id="ui">
-        <div class="stats">💰 DOGE COINS: <span id="money">100</span></div>
-        <div id="wave-info">ORDEM PROCEDURAL: NÍVEL <span id="lvl-txt">1</span></div>
+    <div id="header">
+        <div class="stats">💰 DOGE-COINS: <span id="money">100</span> | NÍVEL: <span id="level">1</span></div>
     </div>
 
-    <div id="game-container">
+    <div id="game-wrap">
         <div class="grid" id="inv">
-            <div class="slot m-slot"></div><div class="slot m-slot"></div><div class="slot m-slot"></div>
-            <div class="slot m-slot"></div><div class="slot m-slot"></div><div class="slot m-slot"></div>
-            <div class="slot m-slot"></div><div class="slot m-slot"></div><div class="slot m-slot"></div>
+            <div class="slot merge-s"></div><div class="slot merge-s"></div><div class="slot merge-s"></div>
+            <div class="slot merge-s"></div><div class="slot merge-s"></div><div class="slot merge-s"></div>
+            <div class="slot merge-s"></div><div class="slot merge-s"></div><div class="slot merge-s"></div>
         </div>
 
         <div id="defense-slots">
-            <div class="slot d-slot" data-row="0"></div>
-            <div class="slot d-slot" data-row="1"></div>
-            <div class="slot d-slot" data-row="2"></div>
+            <div class="slot def-s" data-row="0"></div>
+            <div class="slot def-s" data-row="1"></div>
+            <div class="slot def-s" data-row="2"></div>
         </div>
 
-        <div id="battlefield"></div>
+        <div id="field"></div>
     </div>
 
     <button id="buy-btn">COMPRAR MEME (20💰)</button>
 
     <script>
-        // Imagens de Memes Reais de Pesquisa Pixel Art
-        const MEMES = {
-            players: [
-                'https://i.imgur.com/8Nf7vS0.png', // Doge Lvl 1
-                'https://i.imgur.com/vHq0L9I.png', // Grumpy Cat Lvl 2
-                'https://i.imgur.com/uS3XmS5.png'  // Pepe Frog Lvl 3
-            ],
-            enemies: [
-                'https://i.imgur.com/9v8S8v6.png', // Trollface
-                'https://i.imgur.com/6E2hS2O.png'  // Forever Alone
-            ]
-        };
-
         let coins = 100;
         let gameLevel = 1;
-        let enemiesKilled = 0;
+        let kills = 0;
         let dragged = null;
 
+        // Criar Memes (Doge -> Pepe -> Glasses)
         function createMeme(lvl) {
             const div = document.createElement('div');
-            div.className = 'sprite';
-            div.style.backgroundImage = `url('${MEMES.players[lvl]}')`;
+            div.className = `sprite lvl-${lvl}`;
             div.dataset.lvl = lvl;
             div.dataset.lastShot = 0;
             div.draggable = true;
-            div.ondragstart = () => { dragged = div; };
+            div.ondragstart = (e) => { dragged = div; };
             return div;
         }
 
@@ -169,7 +89,7 @@
 
         document.getElementById('buy-btn').onclick = () => {
             if (coins >= 20) {
-                const empty = Array.from(document.querySelectorAll('.m-slot')).find(s => !s.hasChildNodes());
+                const empty = Array.from(document.querySelectorAll('.merge-s')).find(s => !s.hasChildNodes());
                 if (empty) {
                     coins -= 20;
                     empty.appendChild(createMeme(0));
@@ -181,55 +101,52 @@
         function spawnEnemy() {
             const row = Math.floor(Math.random() * 3);
             const en = document.createElement('div');
-            en.className = 'enemy';
-            // Alterna entre Trollface e outros conforme o nível procedural
-            const type = gameLevel > 2 ? Math.floor(Math.random() * MEMES.enemies.length) : 0;
-            en.style.backgroundImage = `url('${MEMES.enemies[type]}')`;
-            en.dataset.hp = 80 + (gameLevel * 20);
+            en.className = 'enemy troll';
+            en.dataset.hp = 50 + (gameLevel * 30);
             en.dataset.row = row;
-            en.style.top = (row * 90 + 15) + 'px';
-            document.getElementById('battlefield').appendChild(en);
+            en.style.top = (row * 100 + 20) + 'px';
+            document.getElementById('field').appendChild(en);
         }
 
         setInterval(() => {
-            // Movimento Procedural (fica mais rápido conforme o nível)
-            const speed = 1.0 + (gameLevel * 0.2);
+            // Movimento Procedural
+            const speed = 1.2 + (gameLevel * 0.2);
             document.querySelectorAll('.enemy').forEach(en => {
                 let r = parseFloat(en.style.right) || -70;
                 en.style.right = (r + speed) + 'px';
                 if (r > 400) en.remove();
             });
 
-            // Cadência de tiro controlada
+            // Tiros com Cadência Controlada
             const now = Date.now();
-            document.querySelectorAll('.d-slot').forEach(slot => {
+            document.querySelectorAll('.def-s').forEach(slot => {
                 if (slot.hasChildNodes()) {
                     const meme = slot.firstChild;
-                    const cooldown = 1400 - (meme.dataset.lvl * 300);
-                    if (now - meme.dataset.lastShot > cooldown) {
+                    const cd = 1500 - (meme.dataset.lvl * 400); // Cadência lenta (1.5s a 0.7s)
+                    if (now - meme.dataset.lastShot > cd) {
                         const target = Array.from(document.querySelectorAll('.enemy'))
                                             .find(e => e.dataset.row == slot.dataset.row);
                         if (target) {
-                            shoot(slot, target, (parseInt(meme.dataset.lvl) + 1) * 30);
+                            shoot(slot, target, (parseInt(meme.dataset.lvl) + 1) * 25);
                             meme.dataset.lastShot = now;
                         }
                     }
                 }
             });
 
-            if (Math.random() > 0.98 - (gameLevel * 0.005)) spawnEnemy();
+            if (Math.random() > 0.98 - (gameLevel * 0.003)) spawnEnemy();
         }, 50);
 
         function shoot(slot, target, dmg) {
             const b = document.createElement('div');
             b.className = 'bullet';
-            b.style.top = (slot.dataset.row * 90 + 45) + 'px';
+            b.style.top = (slot.dataset.row * 100 + 45) + 'px';
             b.style.left = '0px';
-            document.getElementById('battlefield').appendChild(b);
+            document.getElementById('field').appendChild(b);
 
             let pos = 0;
             const bInt = setInterval(() => {
-                pos += 12;
+                pos += 10;
                 b.style.left = pos + 'px';
                 const tPos = 400 - parseFloat(target.style.right);
                 if (pos >= tPos - 20) {
@@ -238,11 +155,8 @@
                     if (target.dataset.hp <= 0) {
                         target.remove();
                         coins += 15;
-                        enemiesKilled++;
-                        if (enemiesKilled % 5 === 0) {
-                            gameLevel++;
-                            document.getElementById('lvl-txt').innerText = gameLevel;
-                        }
+                        kills++;
+                        if (kills % 5 === 0) { gameLevel++; document.getElementById('level').innerText = gameLevel; }
                         document.getElementById('money').innerText = coins;
                     }
                 }
