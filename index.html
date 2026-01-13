@@ -10,48 +10,34 @@
         body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; }
         canvas { display: block; width: 100vw; height: 100vh; }
 
-        @keyframes titleGlow {
-            0% { text-shadow: 0 0 10px #440000; transform: scale(1); }
-            50% { text-shadow: 0 0 40px #ff0000, 0 0 60px #880000; transform: scale(1.05); }
-            100% { text-shadow: 0 0 10px #440000; transform: scale(1); }
-        }
-
         .ui-screen { position: absolute; inset: 0; background: radial-gradient(circle at center, #1a0000 0%, #000000 100%); z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
-        #start-screen h1 { font-family: 'Nosifer', cursive; font-size: clamp(30px, 8vw, 70px); color: #880000; animation: titleGlow 3s infinite ease-in-out; margin-bottom: 5px; }
+        #start-screen h1 { font-family: 'Nosifer', cursive; font-size: clamp(30px, 8vw, 70px); color: #880000; text-shadow: 0 0 20px #f00; margin-bottom: 20px; }
         
-        .social-links { margin-bottom: 25px; display: flex; gap: 15px; z-index: 3001; }
-        .social-links a { color: #ff0000; text-decoration: none; font-size: 11px; border: 1px solid #500; padding: 6px 12px; background: rgba(0,0,0,0.5); transition: 0.3s; pointer-events: auto; }
-
         .btn-main { padding: 15px 50px; font-size: 18px; background: transparent; border: 2px solid #550000; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 10px; transition: 0.3s; pointer-events: auto; }
         .btn-main:hover { background: #550000; box-shadow: 0 0 40px #ff0000; }
         
+        #hud { position: absolute; top: 15px; left: 15px; z-index: 1000; display: none; pointer-events: none; width: calc(100% - 30px); }
+        .hud-group { background: rgba(0,0,0,0.8); padding: 8px; border-left: 3px solid #f00; margin-bottom: 5px; width: 220px; }
+        .bar-bg { width: 100%; height: 8px; background: #222; margin-top: 5px; }
+        .bar-fill { height: 100%; transition: width 0.2s; }
+        
+        #room-ui { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.8); padding: 10px 20px; border-right: 3px solid #660; color: #fff; font-size: 18px; }
+
         #cutscene-screen { background: black; cursor: pointer; z-index: 5000; display:none; }
         #cutscene-text { font-family: 'Special Elite', serif; font-size: clamp(18px, 4vw, 24px); color: #bb0000; max-width: 800px; line-height: 1.6; }
 
-        #hud { position: absolute; top: 15px; left: 15px; z-index: 1000; display: none; pointer-events: none; }
-        .hud-group { background: rgba(0,0,0,0.8); padding: 8px; border-left: 3px solid #f00; margin-bottom: 5px; min-width: 180px; }
-        .bar-bg { width: 100%; height: 8px; background: #222; margin-top: 5px; }
-        .bar-fill { height: 100%; transition: width 0.2s; }
+        .upgrade-card { background: rgba(30, 0, 0, 0.9); border: 1px solid #500; padding: 20px; width: 220px; margin: 10px; cursor: pointer; pointer-events: auto; transition: 0.3s; }
+        .upgrade-card:hover { border-color: #f00; background: #400; transform: translateY(-5px); }
 
-        #game-over-screen { display: none; z-index: 6000; background: rgba(0,0,0,0.95); }
-        #game-over-screen h2 { font-family: 'Nosifer', cursive; color: #f00; font-size: 50px; }
-
-        .upgrade-card { background: rgba(30, 0, 0, 0.9); border: 1px solid #500; padding: 20px; width: 220px; cursor: pointer; pointer-events: auto; }
-        
         .mobile-ui { position: absolute; bottom: 40px; width: 100%; display: none; justify-content: space-between; align-items: flex-end; padding: 0 30px; z-index: 2500; pointer-events: none; }
-        .joy-container { width: 120px; height: 120px; background: rgba(255,0,0,0.05); border: 2px solid rgba(255,0,0,0.2); border-radius: 50%; position: relative; pointer-events: auto; }
-        .joy-stick { width: 40px; height: 40px; background: rgba(255,0,0,0.4); border: 2px solid red; border-radius: 50%; position: absolute; top: 38px; left: 38px; }
-        .btn-dash { width: 80px; height: 80px; background: rgba(255,0,0,0.2); border: 2px solid red; border-radius: 50%; display: flex; align-items: center; justify-content: center; pointer-events: auto; color: white; }
+        .joy-container { width: 130px; height: 130px; background: rgba(255,0,0,0.1); border: 2px solid rgba(255,0,0,0.3); border-radius: 50%; position: relative; pointer-events: auto; }
+        .joy-stick { width: 50px; height: 50px; background: rgba(255,0,0,0.5); border: 2px solid red; border-radius: 50%; position: absolute; top: 40px; left: 40px; pointer-events: none; }
     </style>
 </head>
 <body>
 
 <div id="start-screen" class="ui-screen">
     <h1>DEN OF SHADOW</h1>
-    <div class="social-links">
-        <a href="mailto:kauadarth@gmail.com">kauadarth@gmail.com</a>
-        <a href="https://youtube.com/@kaua_darth" target="_blank">YouTube @kaua_darth</a>
-    </div>
     <button class="btn-main" onclick="initGameFlow()">ACEITAR O FARDO</button>
     <button id="btn-continue" class="btn-main" style="display:none; border-color: #660;" onclick="loadGame()">CONTINUAR JORNADA</button>
 </div>
@@ -60,29 +46,26 @@
     <div id="cutscene-text"></div>
 </div>
 
-<div id="game-over-screen" class="ui-screen">
-    <h2>VOCÊ CAIU</h2>
-    <p id="death-msg">A escuridão finalmente te alcançou.</p>
-    <button class="btn-main" onclick="location.reload()">TENTAR NOVAMENTE</button>
-</div>
-
 <div id="upgrade-screen" class="ui-screen" style="display:none">
-    <h2 style="color:#660">RESTOS DE PODER</h2>
-    <div id="upgrade-list" style="display:flex; gap:15px; flex-wrap: wrap; justify-content: center;"></div>
+    <h2 style="font-family:'Nosifer'; color:#660;">RESTOS DE PODER</h2>
+    <div id="upgrade-list" style="display:flex; flex-wrap: wrap; justify-content: center;"></div>
 </div>
 
 <div id="hud">
-    <div class="hud-group"><div>VITALIDADE <span id="dev-tag" style="color:yellow; font-size:9px; display:none;">[MODO KADTR]</span></div><div class="bar-bg"><div id="hp-fill" class="bar-fill" style="background:#800; width: 100%;"></div></div></div>
-    <div class="hud-group" style="border-color:#660;"><div>ALMA</div><div class="bar-bg"><div id="ammo-fill" class="bar-fill" style="background:#660; width: 100%;"></div></div></div>
-    <div style="font-size:14px; background: rgba(0,0,0,0.7); padding: 5px;">PROFUNDIDADE: <span id="room-txt">0</span>/100</div>
+    <div class="hud-group">
+        <div>VITALIDADE <span id="dev-tag" style="color:yellow; font-size:9px; display:none;">[KADTR]</span></div>
+        <div class="bar-bg"><div id="hp-fill" class="bar-fill" style="background:#800; width: 100%;"></div></div>
+    </div>
+    <div class="hud-group" style="border-color:#660;">
+        <div>ARMA: <span id="weapon-name" style="font-size:10px;">BÁSICA</span></div>
+        <div class="bar-bg"><div id="ammo-fill" class="bar-fill" style="background:#660; width: 100%;"></div></div>
+    </div>
+    <div id="room-ui">SALA: <span id="room-txt">0</span> / 100</div>
 </div>
 
 <div id="mobile-controls" class="mobile-ui">
     <div class="joy-container" id="move-joy"><div class="joy-stick" id="move-stick"></div></div>
-    <div style="display:flex; gap:20px; align-items:center; pointer-events:none;">
-        <div class="joy-container" id="aim-joy"><div class="joy-stick" id="aim-stick"></div></div>
-        <div class="btn-dash" ontouchstart="btnK('shift',1)" ontouchend="btnK('shift',0)">DASH</div>
-    </div>
+    <div class="joy-container" id="aim-joy"><div class="joy-stick" id="aim-stick"></div></div>
 </div>
 
 <canvas id="gameCanvas"></canvas>
@@ -92,45 +75,15 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 let audioCtx, bufferInimigo, bufferFilha;
-let devCode = "";
-
-// Sistema de Áudio
-async function initAudio() {
-    if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        try {
-            const [r1, r2] = await Promise.all([
-                fetch('https://raw.githubusercontent.com/KauaDarth/Assets/main/cry-of-pain-357978.mp3'),
-                fetch('https://raw.githubusercontent.com/KauaDarth/Assets/main/creepy-woman-cry-407580.mp3')
-            ]);
-            bufferInimigo = await audioCtx.decodeAudioData(await r1.arrayBuffer());
-            bufferFilha = await audioCtx.decodeAudioData(await r2.arrayBuffer());
-        } catch(e) {}
-    }
-}
-
-function playScream(isBoss, isDaughter) {
-    if (!audioCtx || !bufferInimigo) return;
-    const source = audioCtx.createBufferSource();
-    const gain = audioCtx.createGain();
-    source.buffer = (isDaughter && bufferFilha) ? bufferFilha : bufferInimigo;
-    source.playbackRate.value = isBoss ? 0.6 : 0.9 + Math.random() * 0.4;
-    gain.gain.setValueAtTime(isBoss ? 0.4 : 0.2, audioCtx.currentTime);
-    source.connect(gain); gain.connect(audioCtx.destination);
-    source.start(0);
-}
-
-// Lógica Global
 const ROOM = { w: 1600, h: 1000, wall: 80 };
 const G = {
     play: false, room: 0, hp: 100, maxHp: 100, ammo: 25, maxAmmo: 25,
-    enemiesDefeated: false, lastShot: 0, dashCooldown: 0,
-    inCutscene: false, iframe: 0, dmgMult: 1, spdMult: 1, floorMsg: null,
-    kadtr: false
+    enemiesDefeated: false, inCutscene: false, kadtr: false, lastShot: 0,
+    weapon: "Básica", weaponDmg: 50, weaponSpd: 200, dmgMult: 1, spdMult: 1
 };
 
 const STORY = {
-    init: ["Você não é um herói.", "Nunca foi... as sombras o traiu.", "A torre é o seu caminho para a vingança.", "O topo é a única saída."],
+    init: ["Você não é um herói.", "O Rei das Sombras lhe tirou tudo.", "A torre é o seu caminho.", "O topo é a única saída."],
     boss10: ["O Guardião foi silenciado.", "Ele também já teve uma família.", "Você sente o peso de cada vida?"],
     boss20: ["A Filha do Rei implora por misericórdia...", "Mas aqui, apenas a morte é real."],
     boss30: ["Eles imploram em línguas esquecidas.", "O Den of Shadow se alimenta da sua raiva."],
@@ -143,47 +96,60 @@ const STORY = {
     final: ["O REI DAS SOMBRAS CAIU.", "Você recuperou seu trono.", "Mas agora, você é a coisa mais sombria neste lugar."]
 };
 
-const FLOOR_TEXTS = {
-    55: "Você consegue ouvir os sussurros?",
-    65: "Suas mãos estão manchadas de sangue.",
-    75: "O Rei está observando...",
-    85: "Ninguém volta sendo humano.",
-    95: "O abraço da sombra é quente."
-};
-
-let currentStory = [], storyIdx = 0;
+let currentStory = [], storyIdx = 0, devCode = "";
 const keys = {};
-let player = { x: 800, y: 800, r: 25, spd: 7.5, dash: 0 };
-let enemies = [], projectiles = [], enemyProjectiles = [], drops = [];
-let joyInput = { moveX: 0, moveY: 0, aimX: 0, aimY: 0 };
+let player = { x: 800, y: 800, r: 25, spd: 7.5 };
+let enemies = [], projectiles = [], joyInput = { moveX: 0, moveY: 0, aimX: 0, aimY: 0 };
 
-// Salvamento
+async function setupAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const loadSound = async (url) => {
+        try { const r = await fetch(url); return await audioCtx.decodeAudioData(await r.arrayBuffer()); } catch(e){ return null; }
+    };
+    if (!bufferInimigo) bufferInimigo = await loadSound('cry-of-pain-357978.mp3');
+    if (!bufferFilha) bufferFilha = await loadSound('creepy-woman-cry-407580.mp3');
+}
+
+function playScream(isBoss, isDaughter) {
+    if (!audioCtx || (!bufferInimigo && !isDaughter)) return;
+    const s = audioCtx.createBufferSource();
+    s.buffer = (isDaughter && bufferFilha) ? bufferFilha : bufferInimigo;
+    s.playbackRate.value = isBoss ? 0.6 : 1.0;
+    const g = audioCtx.createGain(); g.gain.value = 0.4;
+    s.connect(g); g.connect(audioCtx.destination);
+    s.start(0);
+}
+
 function saveGame() {
-    const data = { room: G.room, maxHp: G.maxHp, dmg: G.dmgMult, spd: G.spdMult };
-    localStorage.setItem('den_shadow_save', JSON.stringify(data));
+    localStorage.setItem('den_shadow_save', JSON.stringify({ room: G.room, maxHp: G.maxHp, dmg: G.dmgMult, spd: G.spdMult }));
 }
 
 function loadGame() {
-    const saved = localStorage.getItem('den_shadow_save');
+    const saved = JSON.parse(localStorage.getItem('den_shadow_save'));
     if (saved) {
-        const data = JSON.parse(saved);
-        G.room = data.room; G.maxHp = data.maxHp; G.hp = data.maxHp;
-        G.dmgMult = data.dmg; G.spdMult = data.spd;
-        initAudio();
-        startGame();
+        G.room = saved.room; G.maxHp = saved.maxHp; G.hp = saved.maxHp;
+        G.dmgMult = saved.dmg; G.spdMult = saved.spd;
+        initGameFlow();
     }
 }
 
-// Inicialização
+function updateWeapon() {
+    if (G.room >= 35) { G.weapon = "Vingança Final"; G.weaponDmg = 150; G.weaponSpd = 120; }
+    else if (G.room >= 25) { G.weapon = "Grito do Vazio"; G.weaponDmg = 100; G.weaponSpd = 150; }
+    else if (G.room >= 10) { G.weapon = "Alma Corrompida"; G.weaponDmg = 65; G.weaponSpd = 180; }
+    document.getElementById('weapon-name').innerText = G.weapon.toUpperCase();
+}
+
 function initGameFlow() {
-    initAudio();
+    setupAudio();
     document.getElementById('start-screen').style.display = 'none';
-    startCutscene('init');
+    if (G.room === 0) startCutscene('init');
+    else startGame();
 }
 
 function startGame() {
     G.play = true; G.inCutscene = false;
-    document.getElementById('start-screen').style.display = 'none';
     document.getElementById('hud').style.display = 'block';
     if('ontouchstart' in window) document.getElementById('mobile-controls').style.display = 'flex';
     initRoom();
@@ -192,7 +158,7 @@ function startGame() {
 function startCutscene(key) {
     G.play = false; G.inCutscene = true;
     storyIdx = 0;
-    currentStory = STORY[key] || ["O silêncio é absoluto."];
+    currentStory = STORY[key] || ["..."];
     document.getElementById('cutscene-screen').style.display = 'flex';
     advanceCutscene();
 }
@@ -202,7 +168,7 @@ function advanceCutscene() {
         document.getElementById('cutscene-text').innerText = currentStory[storyIdx++];
     } else {
         document.getElementById('cutscene-screen').style.display = 'none';
-        if (G.room > 0 && G.room % 10 === 0) openUpgradeMenu();
+        if (G.room > 0 && G.room % 10 === 0 && enemies.length === 0) openUpgradeMenu();
         else startGame();
     }
 }
@@ -213,69 +179,57 @@ function openUpgradeMenu() {
     list.innerHTML = '';
     document.getElementById('upgrade-screen').style.display = 'flex';
     const opts = [
-        {n:"CARNE MORTA", f:()=>G.maxHp+=50},
-        {n:"ÓDIO PURO", f:()=>G.dmgMult+=0.4},
-        {n:"DESESPERO", f:()=>G.spdMult+=0.2}
+        {n:"CARNE MORTA", d:"+50 Vida Máx", f:()=>G.maxHp+=50},
+        {n:"ÓDIO PURO", d:"+40% Dano", f:()=>G.dmgMult+=0.4},
+        {n:"DESESPERO", d:"+20% Velocidade", f:()=>G.spdMult+=0.2}
     ];
     opts.forEach(o => {
         const card = document.createElement('div');
         card.className = 'upgrade-card';
-        card.innerHTML = `<h3>${o.n}</h3>`;
-        card.onclick = () => { o.f(); G.hp=G.maxHp; document.getElementById('upgrade-screen').style.display='none'; startGame(); };
+        card.innerHTML = `<h3>${o.n}</h3><p>${o.d}</p>`;
+        card.onclick = () => { o.f(); G.hp=G.maxHp; document.getElementById('upgrade-screen').style.display='none'; G.room++; startGame(); };
         list.appendChild(card);
     });
 }
 
 function initRoom() {
-    enemies = []; projectiles = []; enemyProjectiles = []; drops = [];
-    G.enemiesDefeated = false; G.floorMsg = null;
+    enemies = []; projectiles = []; G.enemiesDefeated = false;
     player.x = ROOM.w/2; player.y = ROOM.h - 150;
+    updateWeapon();
     saveGame();
 
-    if (G.room > 50 && G.room % 5 === 0 && G.room % 10 !== 0) {
-        G.floorMsg = { text: FLOOR_TEXTS[G.room] || "...", x: ROOM.w/2, y: ROOM.h/2, active: false };
-    }
-
     if (G.room > 0 && G.room % 10 === 0) {
-        enemies.push({ x: ROOM.w/2, y: 300, hp: 800+(G.room*75), r: 100, spd: 3, isBoss: true, lastShot: 0 });
+        enemies.push({ x: ROOM.w/2, y: 300, hp: 1000 + (G.room * 60), r: 85, spd: 2, type: 'boss' });
     } else if (G.room > 0) {
-        let n = 4 + Math.floor(G.room * 0.4);
+        let n = 4 + Math.floor(G.room * 0.3);
         for(let i=0; i<n; i++) {
-            enemies.push({ x: Math.random()*1400+100, y: Math.random()*400+100, hp: 60+G.room*15, r: 30, spd: 1.5+Math.random(), isShooter: Math.random()>0.7, lastShot: 0 });
+            let type = (G.room > 20 && Math.random() > 0.7) ? 'fast' : (G.room > 35 && Math.random() > 0.8 ? 'tank' : 'normal');
+            enemies.push({ x: Math.random()*1400+100, y: Math.random()*400+100, hp: type==='tank'?300:80, r: type==='tank'?45:30, spd: type==='fast'?4:2, type: type });
         }
     } else G.enemiesDefeated = true;
 }
 
 function update() {
     if (!G.play || G.inCutscene) return;
-    if (G.iframe > 0) G.iframe--;
-
-    // Movimento
     let mx = joyInput.moveX; let my = joyInput.moveY;
     if (keys['w']) my = -1; if (keys['s']) my = 1; if (keys['a']) mx = -1; if (keys['d']) mx = 1;
-    let s = (player.dash > 0 ? player.spd * 3 : player.spd) * G.spdMult;
-    if (player.dash > 0) player.dash--;
+    player.x = Math.max(ROOM.wall, Math.min(ROOM.w-ROOM.wall, player.x + mx*player.spd*G.spdMult));
+    player.y = Math.max(ROOM.wall, Math.min(ROOM.h-ROOM.wall, player.y + my*player.spd*G.spdMult));
 
-    player.x = Math.max(ROOM.wall+player.r, Math.min(ROOM.w-ROOM.wall-player.r, player.x + mx*s));
-    player.y = Math.max(ROOM.wall+player.r, Math.min(ROOM.h-ROOM.wall-player.r, player.y + my*s));
-
-    // Tiro
     let ax = joyInput.aimX; let ay = joyInput.aimY;
     if (keys['arrowup']) ay = -1; if (keys['arrowdown']) ay = 1;
     if (keys['arrowleft']) ax = -1; if (keys['arrowright']) ax = 1;
-    
-    if ((Math.abs(ax)>0.4 || Math.abs(ay)>0.4) && G.ammo>0 && Date.now()-G.lastShot>180) {
-        projectiles.push({ x: player.x, y: player.y, vx: ax*18, vy: ay*18, dmg: (G.kadtr?9999:50)*G.dmgMult });
-        G.ammo--; G.lastShot = Date.now();
-    } else if (mx===0 && my===0 && Date.now()-G.lastShot>1500 && G.ammo<G.maxAmmo) G.ammo++;
 
-    // Colisões e Inimigos
-    enemies.forEach(en => {
+    if ((Math.abs(ax)>0.3 || Math.abs(ay)>0.3) && G.ammo>0 && Date.now()-G.lastShot > G.weaponSpd) {
+        projectiles.push({ x: player.x, y: player.y, vx: ax*18, vy: ay*18, dmg: (G.kadtr?9999:G.weaponDmg)*G.dmgMult });
+        G.ammo--; G.lastShot = Date.now();
+    } else if (mx===0 && my===0 && G.ammo<G.maxAmmo) G.ammo += 0.1;
+
+    enemies.forEach((en, ei) => {
         let ang = Math.atan2(player.y-en.y, player.x-en.x);
         en.x += Math.cos(ang)*en.spd; en.y += Math.sin(ang)*en.spd;
-        if (Math.hypot(player.x-en.x, player.y-en.y)<player.r+en.r && G.iframe<=0 && !G.kadtr) {
-            G.hp -= 20; G.iframe = 60;
-            if (G.hp <= 0) gameOver();
+        if (Math.hypot(player.x-en.x, player.y-en.y) < player.r+en.r && !G.kadtr) {
+            G.hp -= 0.5; if(G.hp <= 0) location.reload();
         }
     });
 
@@ -284,30 +238,15 @@ function update() {
         enemies.forEach((en, ei) => {
             if (Math.hypot(p.x-en.x, p.y-en.y)<en.r) {
                 en.hp -= p.dmg; projectiles.splice(pi, 1);
-                if (en.hp<=0) {
-                    playScream(en.isBoss, false);
-                    enemies.splice(ei, 1);
-                    if (enemies.length===0) G.enemiesDefeated = true;
-                }
+                if (en.hp<=0) { playScream(en.type==='boss', G.room===20); enemies.splice(ei, 1); if(enemies.length===0) G.enemiesDefeated=true; }
             }
         });
     });
 
-    if (G.floorMsg && !G.floorMsg.active && Math.hypot(player.x-G.floorMsg.x, player.y-G.floorMsg.y)<150) {
-        G.floorMsg.active = true; playScream(false, true);
+    if (G.enemiesDefeated && player.y < 100 && Math.abs(player.x-ROOM.w/2)<100) {
+        if (G.room > 0 && G.room % 10 === 0) startCutscene('boss' + G.room);
+        else { G.room++; if(G.room === 101) startCutscene('final'); else initRoom(); }
     }
-
-    if (G.enemiesDefeated && player.y < 120 && Math.abs(player.x-ROOM.w/2)<120) {
-        if (G.room>0 && G.room%10===0) startCutscene('boss'+G.room);
-        G.room++;
-        if (G.room === 101) startCutscene('final');
-        else initRoom();
-    }
-}
-
-function gameOver() {
-    G.play = false;
-    document.getElementById('game-over-screen').style.display = 'flex';
 }
 
 function draw() {
@@ -315,62 +254,33 @@ function draw() {
     if (G.play) update();
     ctx.fillStyle = "#000"; ctx.fillRect(0,0,canvas.width, canvas.height);
     if (!G.play && !G.inCutscene) { requestAnimationFrame(draw); return; }
-
     ctx.save();
     let sc = Math.min(canvas.width/ROOM.w, canvas.height/ROOM.h)*0.95;
     ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(sc, sc); ctx.translate(-ROOM.w/2, -ROOM.h/2);
     ctx.fillStyle = "#050000"; ctx.fillRect(0,0,ROOM.w, ROOM.h);
-
-    if (G.floorMsg) {
-        ctx.fillStyle = G.floorMsg.active ? "#f00" : "rgba(100,0,0,0.3)";
-        ctx.font = "italic 32px 'Special Elite', serif";
-        ctx.textAlign = "center";
-        ctx.fillText(G.floorMsg.text, G.floorMsg.x, G.floorMsg.y);
-    }
-
-    if(G.enemiesDefeated) { ctx.fillStyle = "#600"; ctx.fillRect(ROOM.w/2-120, 0, 240, 80); }
+    if(G.enemiesDefeated) { ctx.fillStyle = "#600"; ctx.fillRect(ROOM.w/2-100, 0, 200, 80); }
     ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
-    enemies.forEach(en => { ctx.fillStyle = en.isBoss?"#600":"#300"; ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill(); });
-    projectiles.forEach(p => { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI*2); ctx.fill(); });
+    enemies.forEach(en => { ctx.fillStyle = en.type==='boss'?"#800":en.type==='fast'?"#f00":"#300"; ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill(); });
+    projectiles.forEach(p => { ctx.fillStyle = "cyan"; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI*2); ctx.fill(); });
     ctx.restore();
-
     document.getElementById('hp-fill').style.width = (G.hp/G.maxHp*100) + "%";
     document.getElementById('ammo-fill').style.width = (G.ammo/G.maxAmmo*100) + "%";
     document.getElementById('room-txt').innerText = G.room;
     requestAnimationFrame(draw);
 }
 
-// Mobile Joystick setup simplificado
-function quickJoy(id, type) {
-    const c = document.getElementById(id);
-    c.addEventListener('touchstart', e => {
-        const r = c.getBoundingClientRect();
-        const touch = e.touches[0];
-        const dx = (touch.clientX - (r.left+60))/60;
-        const dy = (touch.clientY - (r.top+60))/60;
-        joyInput[type+'X'] = dx; joyInput[type+'Y'] = dy;
-    });
-    c.addEventListener('touchend', () => { joyInput[type+'X'] = 0; joyInput[type+'Y'] = 0; });
+function setupJoy(id, type) {
+    const c = document.getElementById(id); const s = c.querySelector('.joy-stick');
+    const h = (e) => { e.preventDefault(); const t = e.touches[0]; const r = c.getBoundingClientRect();
+        let dx = t.clientX - (r.left + 65); let dy = t.clientY - (r.top + 65);
+        const d = Math.hypot(dx, dy); if (d > 40) { dx *= 40/d; dy *= 40/d; }
+        s.style.transform = `translate(${dx}px, ${dy}px)`; joyInput[type+'X'] = dx/40; joyInput[type+'Y'] = dy/40; };
+    c.addEventListener('touchstart', h); c.addEventListener('touchmove', h);
+    c.addEventListener('touchend', () => { s.style.transform = 'translate(0,0)'; joyInput[type+'X']=0; joyInput[type+'Y']=0; });
 }
 
-window.onload = () => {
-    if(localStorage.getItem('den_shadow_save')) document.getElementById('btn-continue').style.display = 'block';
-    quickJoy('move-joy', 'move'); quickJoy('aim-joy', 'aim');
-    draw();
-};
-
-window.addEventListener('keydown', e => {
-    const k = e.key.toLowerCase();
-    keys[k] = true;
-    devCode += k;
-    if (devCode.includes("kadtr")) {
-        G.kadtr = true;
-        G.hp = 999; G.maxHp = 999;
-        document.getElementById('dev-tag').style.display = 'inline';
-        devCode = "";
-    }
-    if (devCode.length > 10) devCode = devCode.slice(-5);
-});
+window.onload = () => { if(localStorage.getItem('den_shadow_save')) document.getElementById('btn-continue').style.display='block'; setupJoy('move-joy','move'); setupJoy('aim-joy','aim'); draw(); };
+window.addEventListener('keydown', e => { const k = e.key.toLowerCase(); keys[k] = true; devCode += k; if (devCode.includes("kadtr")) { G.kadtr = true; document.getElementById('dev-tag').style.display = 'inline'; } if (devCode.length > 10) devCode = ""; });
 window.addEventListener('keyup', e => delete keys[e.key.toLowerCase()]);
 </script>
 </body>
