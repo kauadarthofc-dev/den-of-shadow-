@@ -2,344 +2,314 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Capivara Merge Battle</title>
+    <title>Capivara vs Zombies: Merge Art</title>
     <style>
         :root {
-            --bg: #2c3e50;
-            --slot: #34495e;
-            --highlight: #27ae60;
+            --bg: #1a1a1a;
+            --slot: #3d2b1f;
+            --accent: #8b5a2b;
         }
         body {
             margin: 0;
             background: var(--bg);
             color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Courier New', Courier, monospace;
             display: flex;
             flex-direction: column;
             align-items: center;
-            user-select: none;
+            overflow-x: hidden;
         }
 
-        /* Top Bar - Progressão */
+        /* Estilização das Entidades */
+        .sprite {
+            width: 64px;
+            height: 64px;
+            image-rendering: pixelated; /* Mantém o aspecto de Pixel Art */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        /* Área Superior */
+        #ui-top {
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         #progress-container {
-            width: 80%;
-            max-width: 600px;
-            height: 20px;
-            background: #1a252f;
-            border-radius: 10px;
-            margin: 20px 0;
-            position: relative;
+            width: 200px;
+            height: 15px;
+            background: #333;
             border: 3px solid #000;
+            border-radius: 5px;
         }
         #progress-bar {
-            width: 10%;
+            width: 0%;
             height: 100%;
-            background: #f1c40f;
-            border-radius: 5px;
+            background: #ffd700;
             transition: width 0.3s;
         }
 
-        #game-layout {
+        /* Layout Principal */
+        #main-container {
             display: flex;
-            gap: 40px;
-            padding: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
+            gap: 20px;
+            padding: 10px;
+            background: #2c2c2c;
+            border-radius: 15px;
+            border: 4px solid #444;
         }
 
-        /* Área de Merge (Esquerda) */
-        #merge-area {
-            background: var(--slot);
-            padding: 15px;
-            border-radius: 10px;
+        /* Grade de Merge */
+        #grid {
             display: grid;
-            grid-template-columns: repeat(3, 80px);
-            grid-template-rows: repeat(3, 80px);
-            gap: 10px;
+            grid-template-columns: repeat(3, 85px);
+            grid-template-rows: repeat(3, 85px);
+            gap: 8px;
+            background: var(--slot);
+            padding: 10px;
+            border-radius: 8px;
         }
         .slot {
-            width: 80px;
-            height: 80px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 8px;
+            width: 85px;
+            height: 85px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 5px;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
         }
 
-        /* Área de Batalha (Direita) */
-        #battle-area {
-            width: 300px;
+        /* Campo de Batalha Procedural */
+        #battle-field {
+            width: 400px;
             height: 280px;
-            background: #1a252f;
-            border-radius: 10px;
+            background: #252525;
             position: relative;
-            overflow: hidden;
-            border: 2px dashed #555;
-        }
-        .platform {
-            position: absolute;
-            width: 100%;
-            height: 2px;
-            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            border-left: 4px solid #555;
+            background-image: linear-gradient(#333 1px, transparent 1px);
+            background-size: 100% 90px;
         }
 
-        /* Elementos do Jogo */
-        .entity {
-            width: 50px;
-            height: 50px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            position: relative;
-            transition: transform 0.1s;
-        }
-        .capivara {
-            z-index: 10;
-        }
-        .enemy {
-            position: absolute;
-            right: 20px;
-            filter: hue-rotate(150deg); /* Diferenciar inimigos */
-        }
+        /* Inimigos e Capis na Luta */
+        .enemy { position: absolute; right: -70px; transition: right 0.1s linear; }
+        .capi-battle { position: absolute; left: 10px; }
+
         .hp-bar {
             position: absolute;
-            top: -10px;
-            width: 40px;
-            height: 5px;
-            background: red;
-            border: 1px solid #000;
-        }
-        .hp-fill {
-            height: 100%;
-            background: #2ecc71;
+            top: -5px;
             width: 100%;
+            height: 4px;
+            background: #500;
         }
+        .hp-fill { height: 100%; background: #f00; width: 100%; }
 
-        /* Projéteis */
-        .projectile {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #f1c40f;
-            border-radius: 50%;
-            pointer-events: none;
-        }
-
-        #controls {
-            margin-top: 20px;
-            text-align: center;
-        }
+        /* Controles */
+        #controls { margin-top: 20px; }
         #buy-btn {
-            background: #27ae60;
-            color: white;
+            background: #4caf50;
             border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            font-size: 18px;
+            color: white;
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 10px;
             cursor: pointer;
-            box-shadow: 0 4px #1e8449;
+            box-shadow: 0 5px #2e7d32;
         }
-        #buy-btn:active {
-            box-shadow: 0 0;
-            transform: translateY(4px);
+        #buy-btn:active { transform: translateY(3px); box-shadow: 0 2px #2e7d32; }
+
+        /* Estilo do Projétil */
+        .bullet {
+            position: absolute;
+            width: 12px;
+            height: 6px;
+            background: #ffa500;
+            border-radius: 3px;
+            box-shadow: 0 0 5px #ff4500;
         }
     </style>
 </head>
 <body>
 
-    <div id="progress-container">
-        <div id="progress-bar"></div>
+    <div id="ui-top">
+        <div>💰 Moedas: <span id="coins">50</span></div>
+        <div id="progress-container"><div id="progress-bar"></div></div>
     </div>
 
-    <h1>Capivara Merge Battle 🐾</h1>
-    <div id="score">Moedas: <span id="coin-count">50</span></div>
-
-    <div id="game-layout">
-        <div id="merge-area">
-            <div class="slot" data-id="0"></div>
-            <div class="slot" data-id="1"></div>
-            <div class="slot" data-id="2"></div>
-            <div class="slot" data-id="3"></div>
-            <div class="slot" data-id="4"></div>
-            <div class="slot" data-id="5"></div>
-            <div class="slot" data-id="6"></div>
-            <div class="slot" data-id="7"></div>
-            <div class="slot" data-id="8"></div>
+    <div id="main-container">
+        <div id="grid">
+            <div class="slot" data-index="0"></div><div class="slot" data-index="1"></div><div class="slot" data-index="2"></div>
+            <div class="slot" data-index="3"></div><div class="slot" data-index="4"></div><div class="slot" data-index="5"></div>
+            <div class="slot" data-index="6"></div><div class="slot" data-index="7"></div><div class="slot" data-index="8"></div>
         </div>
 
-        <div id="battle-area" id="battle-field">
-            <div class="platform" style="top: 80px;"></div>
-            <div class="platform" style="top: 170px;"></div>
-            <div id="entities-layer"></div>
-        </div>
+        <div id="battle-field">
+            </div>
     </div>
 
     <div id="controls">
-        <button id="buy-btn">Comprar Capi (10💰)</button>
+        <button id="buy-btn">NOVA CAPIVARA (15💰)</button>
     </div>
 
     <script>
-        let coins = 50;
-        let experience = 10;
-        const slots = document.querySelectorAll('.slot');
-        const battleField = document.getElementById('entities-layer');
-        let draggedCapi = null;
-
-        // Configurações das Capivaras
-        const capiLevels = {
-            1: { emoji: '🐹', power: 10, hp: 50 },
-            2: { emoji: '🐭', power: 25, hp: 100 },
-            3: { emoji: '🦫', power: 60, hp: 250 },
-            4: { emoji: '🦦', power: 150, hp: 600 }
+        // Imagens de Sprites (Pixel Art)
+        const SPRITES = {
+            capi: [
+                'https://i.ibb.co/Vmq9fH0/capy1.png', // Lvl 1
+                'https://i.ibb.co/9H6S0m6/capy2.png', // Lvl 2
+                'https://i.ibb.co/L5pGz17/capy3.png'  // Lvl 3
+            ],
+            zombie: 'https://i.ibb.co/yYv7p7X/zombie.png'
         };
 
-        // --- SISTEMA DE COMBATE ---
-        function spawnEnemy(row) {
-            const level = Math.floor(experience / 100) + 1;
-            const enemy = document.createElement('div');
-            enemy.className = 'entity enemy';
-            enemy.style.top = (row * 90 + 20) + 'px';
-            enemy.dataset.hp = 30 * level;
-            enemy.dataset.maxHp = 30 * level;
-            enemy.innerHTML = `<div class="hp-bar"><div class="hp-fill"></div></div>💀<br><small>Lvl ${level}</small>`;
-            battleField.appendChild(enemy);
+        let coins = 50;
+        let xp = 0;
+        let dragged = null;
+
+        // Configurações
+        const levels = [
+            { img: 'https://cdn-icons-png.flaticon.com/512/9616/9616990.png', power: 10 }, // Baby Capi
+            { img: 'https://cdn-icons-png.flaticon.com/512/9617/9617013.png', power: 30 }, // Knight Capi
+            { img: 'https://cdn-icons-png.flaticon.com/512/9617/9617028.png', power: 80 }  // King Capi
+        ];
+
+        // Lógica de Compra e Drag/Drop
+        document.getElementById('buy-btn').onclick = () => {
+            if (coins >= 15) {
+                const emptySlot = Array.from(document.querySelectorAll('.slot')).find(s => !s.hasChildNodes());
+                if (emptySlot) {
+                    coins -= 15;
+                    createCapi(0, emptySlot);
+                    updateUI();
+                }
+            }
+        };
+
+        function createCapi(lvl, target) {
+            const div = document.createElement('div');
+            div.className = 'sprite';
+            div.style.backgroundImage = `url(${levels[lvl].img})`;
+            div.draggable = true;
+            div.dataset.lvl = lvl;
+            
+            div.ondragstart = () => { dragged = div; };
+            target.appendChild(div);
+            syncBattle();
         }
 
-        function updateBattle() {
-            const capis = document.querySelectorAll('.capivara-battle');
-            const enemies = document.querySelectorAll('.enemy');
-
-            capis.forEach(capi => {
-                const row = capi.dataset.row;
-                const enemyInRow = Array.from(enemies).find(e => e.style.top === (row * 90 + 20) + 'px');
-                
-                if (enemyInRow) {
-                    shoot(capi, enemyInRow);
+        document.querySelectorAll('.slot').forEach(slot => {
+            slot.ondragover = e => e.preventDefault();
+            slot.ondrop = () => {
+                if (!slot.hasChildNodes()) {
+                    slot.appendChild(dragged);
+                } else {
+                    const target = slot.firstChild;
+                    if (target.dataset.lvl == dragged.dataset.lvl && target.dataset.lvl < levels.length - 1) {
+                        const nextLvl = parseInt(target.dataset.lvl) + 1;
+                        target.remove();
+                        dragged.remove();
+                        createCapi(nextLvl, slot);
+                        xp += 20;
+                    }
                 }
+                syncBattle();
+                updateUI();
+            };
+        });
+
+        // Campo de Batalha
+        function syncBattle() {
+            const field = document.getElementById('battle-field');
+            field.querySelectorAll('.capi-battle').forEach(c => c.remove());
+            
+            // Pega as 3 capivaras mais fortes para as 3 linhas
+            const allCapis = Array.from(document.querySelectorAll('.slot .sprite'))
+                                .sort((a,b) => b.dataset.lvl - a.dataset.lvl);
+
+            allCapis.slice(0, 3).forEach((capi, i) => {
+                const bCapi = capi.cloneNode(true);
+                bCapi.className = 'sprite capi-battle';
+                bCapi.style.top = (i * 90 + 15) + 'px';
+                bCapi.dataset.row = i;
+                bCapi.dataset.pwr = levels[capi.dataset.lvl].power;
+                field.appendChild(bCapi);
+            });
+        }
+
+        function spawnZombie() {
+            const row = Math.floor(Math.random() * 3);
+            const zombie = document.createElement('div');
+            zombie.className = 'sprite enemy';
+            zombie.style.backgroundImage = `url('https://cdn-icons-png.flaticon.com/512/1141/1141771.png')`;
+            zombie.style.top = (row * 90 + 15) + 'px';
+            zombie.dataset.hp = 100;
+            zombie.dataset.row = row;
+            zombie.innerHTML = `<div class="hp-bar"><div class="hp-fill"></div></div>`;
+            document.getElementById('battle-field').appendChild(zombie);
+        }
+
+        // Loop de Movimento e Ataque
+        setInterval(() => {
+            // Mover Zumbis
+            document.querySelectorAll('.enemy').forEach(z => {
+                let currentRight = parseInt(z.style.right) || -70;
+                z.style.right = (currentRight + 2) + 'px';
+                if (currentRight > 350) z.remove(); // Chegou na base
             });
 
-            // Se não houver inimigos, spawna novos aleatoriamente
-            if (enemies.length < 2) spawnEnemy(Math.floor(Math.random() * 3));
-        }
+            // Capivaras Atacam
+            document.querySelectorAll('.capi-battle').forEach(c => {
+                const target = Array.from(document.querySelectorAll('.enemy'))
+                                    .find(z => z.dataset.row == c.dataset.row);
+                if (target) shoot(c, target);
+            });
+
+            if (Math.random() > 0.95) spawnZombie();
+        }, 1000);
 
         function shoot(from, to) {
             const bullet = document.createElement('div');
-            bullet.className = 'projectile';
-            bullet.style.left = '60px';
-            bullet.style.top = (parseInt(from.style.top) + 20) + 'px';
-            battleField.appendChild(bullet);
+            bullet.className = 'bullet';
+            bullet.style.left = '70px';
+            bullet.style.top = (parseInt(from.style.top) + 32) + 'px';
+            document.getElementById('battle-field').appendChild(bullet);
 
-            let pos = 60;
-            const interval = setInterval(() => {
-                pos += 5;
-                bullet.style.left = pos + 'px';
-                if (pos > 240) {
-                    clearInterval(interval);
+            let bPos = 70;
+            const bInt = setInterval(() => {
+                bPos += 10;
+                bullet.style.left = bPos + 'px';
+                
+                // Colisão simples por posição
+                const zPos = 400 - parseInt(to.style.right);
+                if (bPos >= zPos - 20) {
+                    clearInterval(bInt);
                     bullet.remove();
-                    damageEnemy(to, parseInt(from.dataset.power));
+                    hitZombie(to, from.dataset.pwr);
                 }
-            }, 20);
+                if (bPos > 400) { clearInterval(bInt); bullet.remove(); }
+            }, 30);
         }
 
-        function damageEnemy(enemy, dmg) {
-            let hp = parseInt(enemy.dataset.hp) - dmg;
-            enemy.dataset.hp = hp;
-            const fill = enemy.querySelector('.hp-fill');
-            fill.style.width = (hp / parseInt(enemy.dataset.maxHp) * 100) + '%';
-
-            if (hp <= 0) {
-                enemy.remove();
+        function hitZombie(z, pwr) {
+            z.dataset.hp -= pwr;
+            z.querySelector('.hp-fill').style.width = z.dataset.hp + '%';
+            if (z.dataset.hp <= 0) {
+                z.remove();
                 coins += 5;
-                experience += 15;
                 updateUI();
             }
         }
 
-        // --- SISTEMA DE MERGE ---
-        function createCapivara(lvl) {
-            const div = document.createElement('div');
-            div.className = 'entity capivara';
-            div.draggable = true;
-            div.dataset.level = lvl;
-            div.innerHTML = `${capiLevels[lvl].emoji}<br><small>Lvl ${lvl}</small>`;
-            
-            div.ondragstart = (e) => {
-                draggedCapi = div;
-                setTimeout(() => div.style.opacity = '0.4', 0);
-            };
-            div.ondragend = () => {
-                div.style.opacity = '1';
-                draggedCapi = null;
-                updateBattleLineup();
-            };
-            return div;
-        }
-
-        function updateBattleLineup() {
-            // Limpa área de batalha e coloca as capivaras da grade nos "andares"
-            battleField.innerHTML = '';
-            const activeCapis = Array.from(slots).map(s => s.firstChild).filter(c => c !== null);
-            
-            // Pega as 3 melhores capivaras para lutar (uma em cada andar)
-            activeCapis.slice(0, 3).forEach((capi, index) => {
-                const battleClone = document.createElement('div');
-                battleClone.className = 'entity capivara-battle';
-                battleClone.style.top = (index * 90 + 20) + 'px';
-                battleClone.style.left = '20px';
-                battleClone.style.position = 'absolute';
-                battleClone.dataset.row = index;
-                battleClone.dataset.power = capiLevels[capi.dataset.level].power;
-                battleClone.innerHTML = capi.innerHTML;
-                battleField.appendChild(battleClone);
-            });
-        }
-
-        slots.forEach(slot => {
-            slot.ondragover = e => e.preventDefault();
-            slot.ondrop = e => {
-                const targetCapi = slot.firstChild;
-                if (!targetCapi) {
-                    slot.appendChild(draggedCapi);
-                } else if (targetCapi !== draggedCapi && targetCapi.dataset.level === draggedCapi.dataset.level) {
-                    const newLvl = parseInt(targetCapi.dataset.level) + 1;
-                    if (capiLevels[newLvl]) {
-                        slot.removeChild(targetCapi);
-                        draggedCapi.remove();
-                        slot.appendChild(createCapivara(newLvl));
-                        experience += 50;
-                        updateUI();
-                    }
-                }
-                updateBattleLineup();
-            };
-        });
-
-        document.getElementById('buy-btn').onclick = () => {
-            if (coins >= 10) {
-                const emptySlot = Array.from(slots).find(s => !s.firstChild);
-                if (emptySlot) {
-                    coins -= 10;
-                    emptySlot.appendChild(createCapivara(1));
-                    updateUI();
-                    updateBattleLineup();
-                }
-            }
-        };
-
         function updateUI() {
-            document.getElementById('coin-count').innerText = coins;
-            document.getElementById('progress-bar').style.width = (experience % 100) + '%';
+            document.getElementById('coins').innerText = coins;
+            document.getElementById('progress-bar').style.width = (xp % 100) + '%';
         }
-
-        // Loops do Jogo
-        setInterval(updateBattle, 1500); // Ataca a cada 1.5s
-        
     </script>
 </body>
 </html>
