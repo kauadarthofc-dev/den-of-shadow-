@@ -10,28 +10,32 @@
         body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; }
         canvas { display: block; width: 100vw; height: 100vh; }
 
+        /* UI Screens */
         .ui-screen { position: absolute; inset: 0; background: radial-gradient(circle at center, #1a0000 0%, #000000 100%); z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
         #start-screen h1 { font-family: 'Nosifer', cursive; font-size: clamp(30px, 8vw, 70px); color: #880000; text-shadow: 0 0 20px #f00; margin-bottom: 20px; }
-        
         .btn-main { padding: 15px 50px; font-size: 18px; background: transparent; border: 2px solid #550000; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 10px; transition: 0.3s; pointer-events: auto; }
         .btn-main:hover { background: #550000; box-shadow: 0 0 40px #ff0000; }
         
+        /* HUD */
         #hud { position: absolute; top: 15px; left: 15px; z-index: 1000; display: none; pointer-events: none; width: calc(100% - 30px); }
         .hud-group { background: rgba(0,0,0,0.8); padding: 8px; border-left: 3px solid #f00; margin-bottom: 5px; width: 220px; }
         .bar-bg { width: 100%; height: 8px; background: #222; margin-top: 5px; }
         .bar-fill { height: 100%; transition: width 0.2s; }
-        
         #room-ui { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.8); padding: 10px 20px; border-right: 3px solid #660; color: #fff; font-size: 18px; }
 
+        /* Cutscenes & Upgrades */
         #cutscene-screen { background: black; cursor: pointer; z-index: 5000; display:none; }
         #cutscene-text { font-family: 'Special Elite', serif; font-size: clamp(18px, 4vw, 24px); color: #bb0000; max-width: 800px; line-height: 1.6; }
+        #upgrade-screen { display:none; }
+        .upgrade-card { background: rgba(20, 0, 0, 0.95); border: 2px solid #400; padding: 20px; width: 200px; margin: 10px; cursor: pointer; pointer-events: auto; transition: 0.3s; }
+        .upgrade-card:hover { border-color: #f00; transform: scale(1.05); background: #300; }
+        .upgrade-card h3 { font-size: 14px; margin-bottom: 10px; color: #f00; }
+        .upgrade-card p { font-size: 11px; color: #ccc; }
 
-        .upgrade-card { background: rgba(30, 0, 0, 0.9); border: 1px solid #500; padding: 20px; width: 220px; margin: 10px; cursor: pointer; pointer-events: auto; transition: 0.3s; }
-        .upgrade-card:hover { border-color: #f00; background: #400; transform: translateY(-5px); }
-
-        .mobile-ui { position: absolute; bottom: 40px; width: 100%; display: none; justify-content: space-between; align-items: flex-end; padding: 0 30px; z-index: 2500; pointer-events: none; }
-        .joy-container { width: 130px; height: 130px; background: rgba(255,0,0,0.1); border: 2px solid rgba(255,0,0,0.3); border-radius: 50%; position: relative; pointer-events: auto; }
-        .joy-stick { width: 50px; height: 50px; background: rgba(255,0,0,0.5); border: 2px solid red; border-radius: 50%; position: absolute; top: 40px; left: 40px; pointer-events: none; }
+        /* Mobile Controls */
+        .mobile-ui { position: absolute; bottom: 50px; width: 100%; display: none; justify-content: space-between; padding: 0 40px; z-index: 4000; pointer-events: none; }
+        .joy-area { width: 140px; height: 140px; background: rgba(255,0,0,0.05); border: 2px solid rgba(255,0,0,0.2); border-radius: 50%; position: relative; pointer-events: auto; }
+        .joy-stick { width: 50px; height: 50px; background: rgba(255,0,0,0.4); border: 2px solid #f00; border-radius: 50%; position: absolute; top: 45px; left: 45px; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -46,8 +50,8 @@
     <div id="cutscene-text"></div>
 </div>
 
-<div id="upgrade-screen" class="ui-screen" style="display:none">
-    <h2 style="font-family:'Nosifer'; color:#660;">RESTOS DE PODER</h2>
+<div id="upgrade-screen" class="ui-screen">
+    <h2 style="font-family:'Nosifer'; color:#660;">ALMA FORTALECIDA</h2>
     <div id="upgrade-list" style="display:flex; flex-wrap: wrap; justify-content: center;"></div>
 </div>
 
@@ -64,8 +68,8 @@
 </div>
 
 <div id="mobile-controls" class="mobile-ui">
-    <div class="joy-container" id="move-joy"><div class="joy-stick" id="move-stick"></div></div>
-    <div class="joy-container" id="aim-joy"><div class="joy-stick" id="aim-stick"></div></div>
+    <div class="joy-area" id="move-area"><div class="joy-stick" id="move-stick"></div></div>
+    <div class="joy-area" id="aim-area"><div class="joy-stick" id="aim-stick"></div></div>
 </div>
 
 <canvas id="gameCanvas"></canvas>
@@ -74,12 +78,43 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// --- SISTEMA DE ÁUDIO ---
 let audioCtx, bufferInimigo, bufferFilha;
+async function setupAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+    
+    const loadSound = async (url) => {
+        try {
+            const resp = await fetch(url);
+            const data = await resp.arrayBuffer();
+            return await audioCtx.decodeAudioData(data);
+        } catch (e) { console.warn("Som não carregado:", url); return null; }
+    };
+
+    if (!bufferInimigo) bufferInimigo = await loadSound('cry-of-pain-357978.mp3');
+    if (!bufferFilha) bufferFilha = await loadSound('creepy-woman-cry-407580.mp3');
+}
+
+function playScream(isBoss, isDaughter) {
+    if (!audioCtx || audioCtx.state === 'suspended') return;
+    const source = audioCtx.createBufferSource();
+    const gain = audioCtx.createGain();
+    source.buffer = (isDaughter && bufferFilha) ? bufferFilha : bufferInimigo;
+    if (!source.buffer) return;
+    source.playbackRate.value = isBoss ? 0.6 : 0.9 + Math.random() * 0.2;
+    gain.gain.value = isBoss ? 0.5 : 0.3;
+    source.connect(gain); gain.connect(audioCtx.destination);
+    source.start(0);
+}
+
+// --- CONFIGURAÇÕES E ESTADO ---
 const ROOM = { w: 1600, h: 1000, wall: 80 };
 const G = {
     play: false, room: 0, hp: 100, maxHp: 100, ammo: 25, maxAmmo: 25,
     enemiesDefeated: false, inCutscene: false, kadtr: false, lastShot: 0,
-    weapon: "Básica", weaponDmg: 50, weaponSpd: 200, dmgMult: 1, spdMult: 1
+    weapon: "Básica", weaponDmg: 50, weaponSpd: 200, dmgMult: 1, spdMult: 1,
+    projSize: 6, lifeSteal: 0
 };
 
 const STORY = {
@@ -87,13 +122,13 @@ const STORY = {
     boss10: ["O Guardião foi silenciado.", "Ele também já teve uma família.", "Você sente o peso de cada vida?"],
     boss20: ["A Filha do Rei implora por misericórdia...", "Mas aqui, apenas a morte é real."],
     boss30: ["Eles imploram em línguas esquecidas.", "O Den of Shadow se alimenta da sua raiva."],
-    boss40: ["O Arquiteto das Sombras caiu.", "Ele construiu esta torre para manter algo lá fora...", "Ou para manter você aqui dentro?"],
+    boss40: ["O Arquiteto das Sombras caiu.", "Ele construiu esta torre para manter algo lá fora..."],
     boss50: ["Metade da subida.", "Não há nada lá atrás para você."],
     boss60: ["O Carrasco das Almas não tortura mais.", "Ele gritou exatamente como suas vítimas."],
     boss70: ["A Sombra do Passado foi dissipada.", "Você está matando suas próprias memórias para subir."],
     boss80: ["Você está quase lá.", "Mas o que restará de você no topo?"],
-    boss90: ["O Purgatório Final.", "A escuridão aqui é tão densa que você quase pode tocá-la.", "O último teste antes do Rei."],
-    final: ["O REI DAS SOMBRAS CAIU.", "Você recuperou seu trono.", "Mas agora, você é a coisa mais sombria neste lugar."]
+    boss90: ["O Purgatório Final.", "O último teste antes do Rei."],
+    boss100: ["O REI DAS SOMBRAS CAIU.", "Você recuperou seu trono.", "Mas agora, você é a coisa mais sombria neste lugar."]
 };
 
 let currentStory = [], storyIdx = 0, devCode = "";
@@ -101,167 +136,201 @@ const keys = {};
 let player = { x: 800, y: 800, r: 25, spd: 7.5 };
 let enemies = [], projectiles = [], joyInput = { moveX: 0, moveY: 0, aimX: 0, aimY: 0 };
 
-async function setupAudio() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const loadSound = async (url) => {
-        try { const r = await fetch(url); return await audioCtx.decodeAudioData(await r.arrayBuffer()); } catch(e){ return null; }
-    };
-    if (!bufferInimigo) bufferInimigo = await loadSound('cry-of-pain-357978.mp3');
-    if (!bufferFilha) bufferFilha = await loadSound('creepy-woman-cry-407580.mp3');
-}
-
-function playScream(isBoss, isDaughter) {
-    if (!audioCtx || (!bufferInimigo && !isDaughter)) return;
-    const s = audioCtx.createBufferSource();
-    s.buffer = (isDaughter && bufferFilha) ? bufferFilha : bufferInimigo;
-    s.playbackRate.value = isBoss ? 0.6 : 1.0;
-    const g = audioCtx.createGain(); g.gain.value = 0.4;
-    s.connect(g); g.connect(audioCtx.destination);
-    s.start(0);
-}
-
+// --- LÓGICA DE JOGO ---
 function saveGame() {
-    localStorage.setItem('den_shadow_save', JSON.stringify({ room: G.room, maxHp: G.maxHp, dmg: G.dmgMult, spd: G.spdMult }));
+    localStorage.setItem('den_shadow_save', JSON.stringify({
+        room: G.room, maxHp: G.maxHp, dmg: G.dmgMult, spd: G.spdMult, lifeS: G.lifeSteal, pSize: G.projSize
+    }));
 }
 
 function loadGame() {
-    const saved = JSON.parse(localStorage.getItem('den_shadow_save'));
-    if (saved) {
-        G.room = saved.room; G.maxHp = saved.maxHp; G.hp = saved.maxHp;
-        G.dmgMult = saved.dmg; G.spdMult = saved.spd;
-        initGameFlow();
+    const s = JSON.parse(localStorage.getItem('den_shadow_save'));
+    if(s){ 
+        G.room=s.room; G.maxHp=s.maxHp; G.hp=s.maxHp; 
+        G.dmgMult=s.dmg; G.spdMult=s.spd; G.lifeSteal=s.lifeS; G.projSize=s.pSize; 
+        initGameFlow(); 
     }
 }
 
 function updateWeapon() {
-    if (G.room >= 35) { G.weapon = "Vingança Final"; G.weaponDmg = 150; G.weaponSpd = 120; }
-    else if (G.room >= 25) { G.weapon = "Grito do Vazio"; G.weaponDmg = 100; G.weaponSpd = 150; }
-    else if (G.room >= 10) { G.weapon = "Alma Corrompida"; G.weaponDmg = 65; G.weaponSpd = 180; }
+    if(G.room>=35){ G.weapon="Vingança Final"; G.weaponDmg=150; G.weaponSpd=120; }
+    else if(G.room>=25){ G.weapon="Grito do Vazio"; G.weaponDmg=100; G.weaponSpd=150; }
+    else if(G.room>=10){ G.weapon="Alma Corrompida"; G.weaponDmg=65; G.weaponSpd=180; }
     document.getElementById('weapon-name').innerText = G.weapon.toUpperCase();
 }
 
 function initGameFlow() {
-    setupAudio();
-    document.getElementById('start-screen').style.display = 'none';
-    if (G.room === 0) startCutscene('init');
-    else startGame();
+    setupAudio().then(() => {
+        document.getElementById('start-screen').style.display='none';
+        if(G.room===0) startCutscene('init'); else startGame();
+    });
 }
 
 function startGame() {
-    G.play = true; G.inCutscene = false;
-    document.getElementById('hud').style.display = 'block';
-    if('ontouchstart' in window) document.getElementById('mobile-controls').style.display = 'flex';
+    G.play=true; G.inCutscene=false;
+    document.getElementById('hud').style.display='block';
+    if('ontouchstart' in window) document.getElementById('mobile-controls').style.display='flex';
     initRoom();
 }
 
-function startCutscene(key) {
-    G.play = false; G.inCutscene = true;
-    storyIdx = 0;
-    currentStory = STORY[key] || ["..."];
-    document.getElementById('cutscene-screen').style.display = 'flex';
+function startCutscene(k) {
+    G.play=false; G.inCutscene=true; storyIdx=0;
+    currentStory = STORY[k] || ["..."];
+    document.getElementById('cutscene-screen').style.display='flex';
     advanceCutscene();
 }
 
 function advanceCutscene() {
-    if (storyIdx < currentStory.length) {
-        document.getElementById('cutscene-text').innerText = currentStory[storyIdx++];
-    } else {
-        document.getElementById('cutscene-screen').style.display = 'none';
-        if (G.room > 0 && G.room % 10 === 0 && enemies.length === 0) openUpgradeMenu();
+    if(storyIdx < currentStory.length) document.getElementById('cutscene-text').innerText = currentStory[storyIdx++];
+    else {
+        document.getElementById('cutscene-screen').style.display='none';
+        if(G.room > 0 && G.room % 10 === 0 && enemies.length === 0) openUpgradeMenu();
         else startGame();
     }
 }
 
 function openUpgradeMenu() {
-    G.play = false;
-    const list = document.getElementById('upgrade-list');
-    list.innerHTML = '';
-    document.getElementById('upgrade-screen').style.display = 'flex';
+    G.play=false; const list = document.getElementById('upgrade-list'); list.innerHTML='';
+    document.getElementById('upgrade-screen').style.display='flex';
     const opts = [
         {n:"CARNE MORTA", d:"+50 Vida Máx", f:()=>G.maxHp+=50},
-        {n:"ÓDIO PURO", d:"+40% Dano", f:()=>G.dmgMult+=0.4},
-        {n:"DESESPERO", d:"+20% Velocidade", f:()=>G.spdMult+=0.2}
+        {n:"ÓDIO PURO", d:"+40% de Dano", f:()=>G.dmgMult+=0.4},
+        {n:"DESESPERO", d:"+20% Velocidade", f:()=>G.spdMult+=0.2},
+        {n:"SEDE DE SANGUE", d:"Cura ao matar", f:()=>G.lifeSteal+=2},
+        {n:"FÚRIA SOMBRIA", d:"Projéteis maiores", f:()=>G.projSize+=4}
     ];
-    opts.forEach(o => {
-        const card = document.createElement('div');
-        card.className = 'upgrade-card';
-        card.innerHTML = `<h3>${o.n}</h3><p>${o.d}</p>`;
-        card.onclick = () => { o.f(); G.hp=G.maxHp; document.getElementById('upgrade-screen').style.display='none'; G.room++; startGame(); };
-        list.appendChild(card);
+    // Escolhe 3 aleatórios
+    opts.sort(() => Math.random() - 0.5).slice(0,3).forEach(o => {
+        const c = document.createElement('div'); c.className='upgrade-card';
+        c.innerHTML=`<h3>${o.n}</h3><p>${o.d}</p>`;
+        c.onclick=()=>{ o.f(); G.hp=G.maxHp; document.getElementById('upgrade-screen').style.display='none'; G.room++; startGame(); };
+        list.appendChild(c);
     });
 }
 
 function initRoom() {
-    enemies = []; projectiles = []; G.enemiesDefeated = false;
-    player.x = ROOM.w/2; player.y = ROOM.h - 150;
-    updateWeapon();
-    saveGame();
-
-    if (G.room > 0 && G.room % 10 === 0) {
-        enemies.push({ x: ROOM.w/2, y: 300, hp: 1000 + (G.room * 60), r: 85, spd: 2, type: 'boss' });
-    } else if (G.room > 0) {
-        let n = 4 + Math.floor(G.room * 0.3);
+    enemies=[]; projectiles=[]; G.enemiesDefeated=false;
+    player.x=ROOM.w/2; player.y=ROOM.h-150;
+    updateWeapon(); saveGame();
+    if(G.room > 0 && G.room % 10 === 0) enemies.push({x:ROOM.w/2, y:300, hp:1000+(G.room*80), r:85, spd:2.2, type:'boss'});
+    else if(G.room > 0) {
+        let n = 4 + Math.floor(G.room*0.3);
         for(let i=0; i<n; i++) {
-            let type = (G.room > 20 && Math.random() > 0.7) ? 'fast' : (G.room > 35 && Math.random() > 0.8 ? 'tank' : 'normal');
-            enemies.push({ x: Math.random()*1400+100, y: Math.random()*400+100, hp: type==='tank'?300:80, r: type==='tank'?45:30, spd: type==='fast'?4:2, type: type });
+            let type = (G.room > 15 && Math.random() > 0.7) ? 'fast' : (G.room > 30 && Math.random() > 0.8 ? 'tank' : 'normal');
+            enemies.push({x:Math.random()*1400+100, y:Math.random()*400+100, hp:type==='tank'?300:80, r:type==='tank'?45:30, spd:type==='fast'?4:2, type:type});
         }
-    } else G.enemiesDefeated = true;
+    } else G.enemiesDefeated=true;
 }
 
 function update() {
-    if (!G.play || G.inCutscene) return;
+    if(!G.play || G.inCutscene) return;
+    
     let mx = joyInput.moveX; let my = joyInput.moveY;
-    if (keys['w']) my = -1; if (keys['s']) my = 1; if (keys['a']) mx = -1; if (keys['d']) mx = 1;
+    if(keys['w']) my=-1; if(keys['s']) my=1; if(keys['a']) mx=-1; if(keys['d']) mx=1;
     player.x = Math.max(ROOM.wall, Math.min(ROOM.w-ROOM.wall, player.x + mx*player.spd*G.spdMult));
     player.y = Math.max(ROOM.wall, Math.min(ROOM.h-ROOM.wall, player.y + my*player.spd*G.spdMult));
 
     let ax = joyInput.aimX; let ay = joyInput.aimY;
-    if (keys['arrowup']) ay = -1; if (keys['arrowdown']) ay = 1;
-    if (keys['arrowleft']) ax = -1; if (keys['arrowright']) ax = 1;
+    if(keys['arrowup']) ay=-1; if(keys['arrowdown']) ay=1;
+    if(keys['arrowleft']) ax=-1; if(keys['arrowright']) ax=1;
+    if((Math.abs(ax)>0.3 || Math.abs(ay)>0.3) && G.ammo>0 && Date.now()-G.lastShot > G.weaponSpd) {
+        projectiles.push({x:player.x, y:player.y, vx:ax*18, vy:ay*18, dmg:(G.kadtr?9999:G.weaponDmg)*G.dmgMult, s:G.projSize});
+        G.ammo--; G.lastShot=Date.now();
+    } else if(mx===0 && my===0 && G.ammo<G.maxAmmo) G.ammo += 0.12;
 
-    if ((Math.abs(ax)>0.3 || Math.abs(ay)>0.3) && G.ammo>0 && Date.now()-G.lastShot > G.weaponSpd) {
-        projectiles.push({ x: player.x, y: player.y, vx: ax*18, vy: ay*18, dmg: (G.kadtr?9999:G.weaponDmg)*G.dmgMult });
-        G.ammo--; G.lastShot = Date.now();
-    } else if (mx===0 && my===0 && G.ammo<G.maxAmmo) G.ammo += 0.1;
-
-    enemies.forEach((en, ei) => {
+    enemies.forEach((en, i) => {
         let ang = Math.atan2(player.y-en.y, player.x-en.x);
-        en.x += Math.cos(ang)*en.spd; en.y += Math.sin(ang)*en.spd;
-        if (Math.hypot(player.x-en.x, player.y-en.y) < player.r+en.r && !G.kadtr) {
-            G.hp -= 0.5; if(G.hp <= 0) location.reload();
+        let nX = en.x + Math.cos(ang)*en.spd; let nY = en.y + Math.sin(ang)*en.spd;
+
+        enemies.forEach((other, j) => {
+            if(i === j) return;
+            let d = Math.hypot(nX-other.x, nY-other.y);
+            if(d < en.r + other.r) {
+                let pA = Math.atan2(nY-other.y, nX-other.x);
+                nX += Math.cos(pA)*3; nY += Math.sin(pA)*3;
+            }
+        });
+        en.x = nX; en.y = nY;
+
+        if(Math.hypot(player.x-en.x, player.y-en.y) < player.r+en.r && !G.kadtr) {
+            G.hp -= 0.6; if(G.hp<=0) location.reload();
+            let pA = Math.atan2(player.y-en.y, player.x-en.x);
+            player.x += Math.cos(pA)*5; player.y += Math.sin(pA)*5;
         }
     });
 
     projectiles.forEach((p, pi) => {
-        p.x += p.vx; p.y += p.vy;
+        p.x+=p.vx; p.y+=p.vy;
         enemies.forEach((en, ei) => {
-            if (Math.hypot(p.x-en.x, p.y-en.y)<en.r) {
-                en.hp -= p.dmg; projectiles.splice(pi, 1);
-                if (en.hp<=0) { playScream(en.type==='boss', G.room===20); enemies.splice(ei, 1); if(enemies.length===0) G.enemiesDefeated=true; }
+            if(Math.hypot(p.x-en.x, p.y-en.y)<en.r + p.s){
+                en.hp-=p.dmg; projectiles.splice(pi, 1);
+                if(en.hp<=0){ 
+                    playScream(en.type==='boss', G.room===20); 
+                    G.hp = Math.min(G.maxHp, G.hp + G.lifeSteal);
+                    enemies.splice(ei, 1); 
+                    if(enemies.length===0) G.enemiesDefeated=true; 
+                }
             }
         });
     });
 
-    if (G.enemiesDefeated && player.y < 100 && Math.abs(player.x-ROOM.w/2)<100) {
-        if (G.room > 0 && G.room % 10 === 0) startCutscene('boss' + G.room);
-        else { G.room++; if(G.room === 101) startCutscene('final'); else initRoom(); }
+    if(G.enemiesDefeated && player.y<100 && Math.abs(player.x-ROOM.w/2)<100){
+        if(G.room>0 && G.room%10===0) startCutscene('boss'+G.room);
+        else { G.room++; if(G.room===101) startCutscene('boss100'); else initRoom(); }
+    }
+}
+
+// --- DESENHO ---
+function drawFloor() {
+    ctx.strokeStyle = "#110000"; ctx.lineWidth = 1;
+    for(let i=0; i<ROOM.w; i+=100) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, ROOM.h); ctx.stroke();
+    }
+    for(let i=0; i<ROOM.h; i+=100) {
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(ROOM.w, i); ctx.stroke();
     }
 }
 
 function draw() {
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    if (G.play) update();
-    ctx.fillStyle = "#000"; ctx.fillRect(0,0,canvas.width, canvas.height);
-    if (!G.play && !G.inCutscene) { requestAnimationFrame(draw); return; }
+    if(G.play) update();
+    ctx.fillStyle="#000"; ctx.fillRect(0,0,canvas.width, canvas.height);
+    if(!G.play && !G.inCutscene) { requestAnimationFrame(draw); return; }
+
     ctx.save();
     let sc = Math.min(canvas.width/ROOM.w, canvas.height/ROOM.h)*0.95;
     ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(sc, sc); ctx.translate(-ROOM.w/2, -ROOM.h/2);
-    ctx.fillStyle = "#050000"; ctx.fillRect(0,0,ROOM.w, ROOM.h);
-    if(G.enemiesDefeated) { ctx.fillStyle = "#600"; ctx.fillRect(ROOM.w/2-100, 0, 200, 80); }
-    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
-    enemies.forEach(en => { ctx.fillStyle = en.type==='boss'?"#800":en.type==='fast'?"#f00":"#300"; ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill(); });
-    projectiles.forEach(p => { ctx.fillStyle = "cyan"; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI*2); ctx.fill(); });
+    
+    ctx.fillStyle="#080000"; ctx.fillRect(0,0,ROOM.w, ROOM.h);
+    drawFloor();
+    
+    if(G.enemiesDefeated){ 
+        ctx.fillStyle="#600"; ctx.shadowBlur = 20; ctx.shadowColor = "red";
+        ctx.fillRect(ROOM.w/2-100, 0, 200, 80); 
+        ctx.shadowBlur = 0;
+    }
+
+    // Player Sprite
+    ctx.fillStyle="#fff"; ctx.shadowBlur = 15; ctx.shadowColor = "white";
+    ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle="#000"; ctx.beginPath(); ctx.arc(player.x-8, player.y-5, 3, 0, Math.PI*2); ctx.arc(player.x+8, player.y-5, 3, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Enemies Sprites
+    enemies.forEach(en=>{ 
+        ctx.fillStyle=en.type==='boss'?"#800":en.type==='fast'?"#f00":en.type==='tank'?"#400":"#300"; 
+        ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle="#f00"; // Olhos
+        ctx.beginPath(); ctx.arc(en.x-en.r/3, en.y-en.r/4, en.r/6, 0, Math.PI*2); ctx.arc(en.x+en.r/3, en.y-en.r/4, en.r/6, 0, Math.PI*2); ctx.fill();
+    });
+
+    // Projectiles
+    projectiles.forEach(p=>{ 
+        ctx.fillStyle="cyan"; ctx.shadowBlur = 10; ctx.shadowColor = "cyan";
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill(); 
+        ctx.shadowBlur = 0;
+    });
+
     ctx.restore();
     document.getElementById('hp-fill').style.width = (G.hp/G.maxHp*100) + "%";
     document.getElementById('ammo-fill').style.width = (G.ammo/G.maxAmmo*100) + "%";
@@ -269,18 +338,32 @@ function draw() {
     requestAnimationFrame(draw);
 }
 
-function setupJoy(id, type) {
-    const c = document.getElementById(id); const s = c.querySelector('.joy-stick');
-    const h = (e) => { e.preventDefault(); const t = e.touches[0]; const r = c.getBoundingClientRect();
-        let dx = t.clientX - (r.left + 65); let dy = t.clientY - (r.top + 65);
-        const d = Math.hypot(dx, dy); if (d > 40) { dx *= 40/d; dy *= 40/d; }
-        s.style.transform = `translate(${dx}px, ${dy}px)`; joyInput[type+'X'] = dx/40; joyInput[type+'Y'] = dy/40; };
-    c.addEventListener('touchstart', h); c.addEventListener('touchmove', h);
-    c.addEventListener('touchend', () => { s.style.transform = 'translate(0,0)'; joyInput[type+'X']=0; joyInput[type+'Y']=0; });
+// --- INPUTS ---
+function handleJoy(areaId, stickId, type) {
+    const area = document.getElementById(areaId); const stick = document.getElementById(stickId);
+    const updateJoy = (e) => {
+        e.preventDefault(); const touch = [...e.touches].find(t => t.target === area || area.contains(t.target));
+        if(!touch) return; const rect = area.getBoundingClientRect();
+        const cx = rect.left + rect.width/2; const cy = rect.top + rect.height/2;
+        let dx = touch.clientX - cx; let dy = touch.clientY - cy;
+        const dist = Math.hypot(dx, dy); if(dist > 50) { dx *= 50/dist; dy *= 50/dist; }
+        stick.style.transform = `translate(${dx}px, ${dy}px)`; joyInput[type+'X'] = dx/50; joyInput[type+'Y'] = dy/50;
+    };
+    area.addEventListener('touchstart', updateJoy); area.addEventListener('touchmove', updateJoy);
+    area.addEventListener('touchend', () => { stick.style.transform='translate(0,0)'; joyInput[type+'X']=0; joyInput[type+'Y']=0; });
 }
 
-window.onload = () => { if(localStorage.getItem('den_shadow_save')) document.getElementById('btn-continue').style.display='block'; setupJoy('move-joy','move'); setupJoy('aim-joy','aim'); draw(); };
-window.addEventListener('keydown', e => { const k = e.key.toLowerCase(); keys[k] = true; devCode += k; if (devCode.includes("kadtr")) { G.kadtr = true; document.getElementById('dev-tag').style.display = 'inline'; } if (devCode.length > 10) devCode = ""; });
+window.onload = () => {
+    if(localStorage.getItem('den_shadow_save')) document.getElementById('btn-continue').style.display='block';
+    handleJoy('move-area', 'move-stick', 'move'); handleJoy('aim-area', 'aim-stick', 'aim');
+    draw();
+};
+
+window.addEventListener('keydown', e => {
+    const k = e.key.toLowerCase(); keys[k] = true; devCode += k;
+    if(devCode.includes("kadtr")){ G.kadtr=true; document.getElementById('dev-tag').style.display='inline'; }
+    if(devCode.length > 15) devCode="";
+});
 window.addEventListener('keyup', e => delete keys[e.key.toLowerCase()]);
 </script>
 </body>
