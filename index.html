@@ -2,343 +2,201 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 Darkest Soul</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capivara Merge</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&family=Special+Elite&display=swap');
-        * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
-        body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; }
-        canvas { display: block; width: 100vw; height: 100vh; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+        }
 
-        .ui-screen { position: absolute; inset: 0; background: radial-gradient(circle at center, #1a0000 0%, #000000 100%); z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
-        #start-screen h1 { font-family: 'Nosifer', cursive; font-size: clamp(30px, 8vw, 70px); color: #880000; text-shadow: 0 0 20px #f00; margin-bottom: 20px; }
-        .btn-main { padding: 15px 50px; font-size: 18px; background: transparent; border: 2px solid #550000; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 10px; transition: 0.3s; pointer-events: auto; }
-        .btn-main:hover { background: #550000; box-shadow: 0 0 40px #ff0000; }
-        
-        #hud { position: absolute; top: 15px; left: 15px; z-index: 1000; display: none; pointer-events: none; width: calc(100% - 30px); }
-        .hud-group { background: rgba(0,0,0,0.8); padding: 8px; border-left: 3px solid #f00; margin-bottom: 5px; width: 220px; }
-        .bar-bg { width: 100%; height: 8px; background: #222; margin-top: 5px; }
-        .bar-fill { height: 100%; transition: width 0.2s; }
-        #room-ui { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.8); padding: 10px 20px; border-right: 3px solid #660; color: #fff; font-size: 18px; }
+        #game-container {
+            background-color: #34495e;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+        }
 
-        #upgrade-screen { display:none; }
-        .upgrade-container { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; max-width: 1000px; }
-        .upgrade-card { background: linear-gradient(145deg, #1a0000, #000); border: 2px solid #400; padding: 20px; width: 180px; cursor: pointer; pointer-events: auto; transition: 0.3s; }
-        .upgrade-card:hover { border-color: #f00; transform: translateY(-5px); box-shadow: 0 0 20px #600; }
-        .upgrade-card h3 { font-family: 'Nosifer'; font-size: 10px; color: #f00; margin-bottom: 10px; }
-        .upgrade-card p { font-family: 'Special Elite'; font-size: 12px; color: #ccc; }
+        .header {
+            margin-bottom: 20px;
+        }
 
-        .mobile-ui { position: absolute; bottom: 30px; width: 100%; display: none; justify-content: space-between; padding: 0 20px; z-index: 4000; pointer-events: none; }
-        .joy-area { width: 110px; height: 110px; background: rgba(255,0,0,0.05); border: 2px solid rgba(255,0,0,0.2); border-radius: 50%; position: relative; pointer-events: auto; }
-        .joy-stick { width: 40px; height: 40px; background: rgba(255,0,0,0.4); border: 2px solid #f00; border-radius: 50%; position: absolute; top: 35px; left: 35px; pointer-events: none; }
-        .action-btns { display: flex; flex-direction: column; gap: 10px; pointer-events: auto; }
-        .btn-circle { width: 55px; height: 55px; background: rgba(50,0,0,0.8); border: 2px solid #a00; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; }
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 10px;
+            background-color: #2c3e50;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .slot {
+            width: 100px;
+            height: 100px;
+            background-color: #5d6d7e;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .capivara {
+            width: 80px;
+            height: 80px;
+            background-color: #8d6e63;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            user-select: none;
+            font-weight: bold;
+            font-size: 12px;
+            box-shadow: 0 4px 0 #5d4037;
+        }
+
+        .capivara:active { cursor: grabbing; }
+
+        .lvl-1 { background-color: #a1887f; }
+        .lvl-2 { background-color: #8d6e63; }
+        .lvl-3 { background-color: #6d4c41; color: gold; border: 2px solid gold; }
+
+        #buy-btn {
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        #buy-btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
 
-<div id="start-screen" class="ui-screen">
-    <h1>DEN OF SHADOW</h1>
-    <button class="btn-main" onclick="initGameFlow()">ACEITAR O FARDO</button>
-    <button id="btn-continue" class="btn-main" style="display:none; border-color: #660;" onclick="loadGame()">CONTINUAR JORNADA</button>
-</div>
+    <div id="game-container">
+        <div class="header">
+            <h1>Capivara Merge 🐾</h1>
+            <h3>Moedas: <span id="coins">100</span></h3>
+        </div>
 
-<div id="cutscene-screen" class="ui-screen" style="display:none;" onclick="advanceCutscene()">
-    <div id="cutscene-text" style="font-family: 'Special Elite'; font-size: 22px; color: #a00; max-width: 700px;"></div>
-</div>
+        <div id="grid">
+            <div class="slot" data-index="0"></div>
+            <div class="slot" data-index="1"></div>
+            <div class="slot" data-index="2"></div>
+            <div class="slot" data-index="3"></div>
+            <div class="slot" data-index="4"></div>
+            <div class="slot" data-index="5"></div>
+            <div class="slot" data-index="6"></div>
+            <div class="slot" data-index="7"></div>
+            <div class="slot" data-index="8"></div>
+        </div>
 
-<div id="upgrade-screen" class="ui-screen">
-    <h2 style="font-family:'Nosifer'; color:#660; margin-bottom: 20px;">PODERES OBSCUROS</h2>
-    <div id="upgrade-list" class="upgrade-container"></div>
-</div>
-
-<div id="hud">
-    <div class="hud-group">
-        <div>VITALIDADE <span id="dev-tag" style="color:yellow; font-size:9px; display:none;">[SOMBRA MESTRA]</span></div>
-        <div class="bar-bg"><div id="hp-fill" class="bar-fill" style="background:#800; width: 100%;"></div></div>
+        <button id="buy-btn">Comprar Capivara (10💰)</button>
     </div>
-    <div class="hud-group" style="border-color:#660;">
-        <div>ARMA: <span id="weapon-name" style="font-size:10px;">BÁSICA</span></div>
-        <div class="bar-bg"><div id="ammo-fill" class="bar-fill" style="background:#660; width: 100%;"></div></div>
-    </div>
-    <div id="room-ui">SALA: <span id="room-txt">0</span> / 100</div>
-</div>
 
-<div id="mobile-controls" class="mobile-ui">
-    <div class="joy-area" id="move-area"><div class="joy-stick" id="move-stick"></div></div>
-    <div class="action-btns">
-        <div class="btn-circle" onclick="triggerDash()">DASH</div>
-        <div class="btn-circle" onclick="switchWeapon()">ARMS</div>
-    </div>
-    <div class="joy-area" id="aim-area"><div class="joy-stick" id="aim-stick"></div></div>
-</div>
+    <script>
+        let coins = 100;
+        const buyPrice = 10;
+        const gridSlots = document.querySelectorAll('.slot');
+        const coinDisplay = document.getElementById('coins');
+        const buyBtn = document.getElementById('buy-btn');
 
-<canvas id="gameCanvas"></canvas>
+        let draggedElement = null;
 
-<script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+        // Função para criar uma capivara
+        function createCapivara(level) {
+            const div = document.createElement('div');
+            div.classList.add('capivara', `lvl-${level}`);
+            div.setAttribute('draggable', 'true');
+            div.dataset.level = level;
+            div.innerHTML = `🦫<br>Lvl ${level}`;
+            
+            // Eventos de Drag and Drop
+            div.addEventListener('dragstart', (e) => {
+                draggedElement = div;
+                setTimeout(() => div.style.display = 'none', 0);
+            });
 
-let audioCtx;
-const ROOM = { w: 1600, h: 1000, wall: 80 };
-const G = {
-    play: false, room: 0, hp: 100, maxHp: 100, ammo: 25, maxAmmo: 25,
-    enemiesDefeated: false, inCutscene: false, kadtr: false, lastShot: 0,
-    dmgMult: 1, spdMult: 1, projSize: 6, lifeSteal: 0,
-    dashTime: 0, dashCooldown: 0, currentWeaponIdx: 0,
-    ricochet: false, shield: 0
-};
+            div.addEventListener('dragend', () => {
+                div.style.display = 'flex';
+                draggedElement = null;
+            });
 
-const WEAPONS = [
-    { n: "Básica", d: 50, s: 200, r: 0, c: "cyan" },
-    { n: "Alma Corrompida", d: 75, s: 180, r: 10, c: "#0f0" },
-    { n: "Grito do Vazio", d: 110, s: 150, r: 25, c: "#a0f" },
-    { n: "Vingança Final", d: 200, s: 100, r: 35, c: "#f00" }
-];
-
-const STORY = {
-  init: ["Você não é um herói.", "Nunca foi... as sombras o traiu.", "A torre é o seu caminho para a vingança.", "O topo é a única saída."],
-    boss10: ["O Guardião foi silenciado.", "Ele também já teve uma família.", "Você sente o peso de cada vida?"],
-    boss20: ["A Filha do Rei implora por misericórdia...", "Mas aqui, apenas a morte é real."],
-    boss30: ["Eles imploram em línguas esquecidas.", "O Den of Shadow se alimenta da sua raiva."],
-    boss40: ["O Arquiteto das Sombras caiu.", "Ele construiu esta torre para manter algo lá fora...", "Ou para manter você aqui dentro?"],
-    boss50: ["Metade da subida.", "Não há nada lá atrás para você."],
-    boss60: ["O Carrasco das Almas não tortura mais.", "Ele gritou exatamente como suas vítimas."],
-    boss70: ["A Sombra do Passado foi dissipada.", "Você está matando suas próprias memórias para subir."],
-    boss80: ["Você está quase lá.", "Mas o que restará de você no topo?"],
-    boss90: ["O Purgatório Final.", "A escuridão aqui é tão densa que você quase pode tocá-la.", "O último teste antes do Rei."],
-    final: ["O REI DAS SOMBRAS CAIU.", "Você recuperou seu trono.", "Mas agora, você é a coisa mais sombria neste lugar."]
-};
-
-let particles = [];
-let enemies = [], projectiles = [], joyInput = { moveX: 0, moveY: 0, aimX: 0, aimY: 0 };
-const keys = {};
-let player = { x: 800, y: 800, r: 25, spd: 7.5 };
-let devCode = "";
-
-function drawPolygon(x, y, r, sides, angle) {
-    ctx.beginPath();
-    for(let i=0; i<sides; i++){
-        let a = angle + (i * Math.PI * 2 / sides);
-        ctx.lineTo(x + r * Math.cos(a), y + r * Math.sin(a));
-    }
-    ctx.closePath(); ctx.fill(); ctx.stroke();
-}
-
-function triggerDash() {
-    if (Date.now() > G.dashCooldown) {
-        G.dashTime = Date.now() + 150; G.dashCooldown = Date.now() + 800;
-        for(let i=0;i<5;i++) particles.push({x:player.x, y:player.y, vx:(Math.random()-0.5)*5, vy:(Math.random()-0.5)*5, life:1.0, color:"white"});
-    }
-}
-
-function switchWeapon() {
-    let available = WEAPONS.filter(w => G.kadtr || G.room >= w.r);
-    G.currentWeaponIdx = (G.currentWeaponIdx + 1) % available.length;
-    document.getElementById('weapon-name').innerText = available[G.currentWeaponIdx].n.toUpperCase();
-}
-
-function initGameFlow() { 
-    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    document.getElementById('start-screen').style.display='none'; 
-    if(G.room===0) startCutscene('init'); else startGame(); 
-}
-
-function startGame() {
-    G.play=true; G.inCutscene=false;
-    document.getElementById('hud').style.display='block';
-    if('ontouchstart' in window) document.getElementById('mobile-controls').style.display='flex';
-    initRoom();
-}
-
-function startCutscene(k) {
-    G.play=false; G.inCutscene=true; storyIdx=0;
-    currentStory = STORY[k] || ["A escuridão se aprofunda..."];
-    document.getElementById('cutscene-screen').style.display='flex';
-    advanceCutscene();
-}
-
-function advanceCutscene() {
-    if(storyIdx < currentStory.length) document.getElementById('cutscene-text').innerText = currentStory[storyIdx++];
-    else {
-        document.getElementById('cutscene-screen').style.display='none';
-        if(G.room > 0 && G.room % 10 === 0 && enemies.length === 0) openUpgradeMenu();
-        else startGame();
-    }
-}
-
-function openUpgradeMenu() {
-    G.play=false; const list = document.getElementById('upgrade-list'); list.innerHTML='';
-    document.getElementById('upgrade-screen').style.display='flex';
-    const allOpts = [
-        {n:"CARNE PODRE", p:"+50 HP Máximo", f:()=>G.maxHp+=50},
-        {n:"ÓDIO VESTIGIAL", p:"+40% Dano", f:()=>G.dmgMult+=0.4},
-        {n:"PASSO SOMBRIO", p:"+20% Velocidade", f:()=>G.spdMult+=0.2},
-        {n:"TOQUE DA MORTE", p:"Cura ao abater", f:()=>G.lifeSteal+=4},
-        {n:"BALAS REBELDES", p:"Tiros ricocheteiam", f:()=>G.ricochet=true},
-        {n:"ESCUDO DE ALMAS", p:"Bloqueia um golpe", f:()=>G.shield++},
-        {n:"MUNIÇÃO INFINITA", p:"Recuperação rápida", f:()=>G.maxAmmo+=10},
-        {n:"OLHAR DO ABISMO", p:"Projéteis gigantes", f:()=>G.projSize+=8},
-        {n:"FESTA DE SANGUE", p:"Dano dobrado", f:()=>G.dmgMult*=2},
-        {n:"IMORTALIDADE", p:"Recupera HP ao dash", f:()=>G.lifeSteal+=1}
-    ];
-    allOpts.sort(()=>Math.random()-0.5).slice(0,3).forEach(o => {
-        const c = document.createElement('div'); c.className='upgrade-card';
-        c.innerHTML=`<h3>${o.n}</h3><p>${o.p}</p>`;
-        c.onclick=()=>{ o.f(); G.hp=G.maxHp; document.getElementById('upgrade-screen').style.display='none'; G.room++; startGame(); };
-        list.appendChild(c);
-    });
-}
-
-function initRoom() {
-    enemies=[]; projectiles=[]; G.enemiesDefeated=false;
-    player.x=ROOM.w/2; player.y=ROOM.h-150;
-    let available = WEAPONS.filter(w => G.kadtr || G.room >= w.r);
-    G.currentWeaponIdx = available.length - 1;
-    document.getElementById('weapon-name').innerText = available[G.currentWeaponIdx].n.toUpperCase();
-    
-    if(G.room > 0 && G.room % 10 === 0) {
-        let type = G.room % 30 === 10 ? 'pent' : (G.room % 30 === 20 ? 'tri' : 'hex');
-        if(G.room === 100) type = 'king';
-        enemies.push({x:ROOM.w/2, y:300, hp:1200+(G.room*100), r:90, spd:2, type:type, timer:0, angle:0});
-    } else if(G.room > 0) {
-        let n = 4 + Math.floor(G.room*0.3);
-        for(let i=0; i<n; i++) enemies.push({x:Math.random()*1400+100, y:Math.random()*400+100, hp:80, r:30, spd:2.5, type:'minion'});
-    } else G.enemiesDefeated=true;
-}
-
-function update() {
-    if(!G.play || G.inCutscene) return;
-    
-    let mx = joyInput.moveX; let my = joyInput.moveY;
-    if(keys['w']) my=-1; if(keys['s']) my=1; if(keys['a']) mx=-1; if(keys['d']) mx=1;
-    let dashing = Date.now() < G.dashTime;
-    let s = player.spd * G.spdMult * (dashing ? 3 : 1);
-    player.x = Math.max(ROOM.wall, Math.min(ROOM.w-ROOM.wall, player.x + mx*s));
-    player.y = Math.max(ROOM.wall, Math.min(ROOM.h-ROOM.wall, player.y + my*s));
-
-    let ax = joyInput.aimX, ay = joyInput.aimY;
-    if(keys['arrowup']) ay=-1; if(keys['arrowdown']) ay=1;
-    if(keys['arrowleft']) ax=-1; if(keys['arrowright']) ax=1;
-
-    let w = WEAPONS.filter(wa => G.kadtr || G.room >= wa.r)[G.currentWeaponIdx];
-    if((Math.abs(ax)>0.3 || Math.abs(ay)>0.3) && G.ammo>0 && Date.now()-G.lastShot > w.s) {
-        projectiles.push({x:player.x, y:player.y, vx:ax*18, vy:ay*18, dmg:(G.kadtr?99999:w.d)*G.dmgMult, c:w.c, b:0});
-        G.ammo--; G.lastShot=Date.now();
-    } else if(mx===0 && my===0 && G.ammo<G.maxAmmo) G.ammo += 0.2;
-
-    enemies.forEach((en, i) => {
-        en.angle += 0.05;
-        if(en.type === 'tri') { 
-            en.timer++; if(en.timer > 60) { en.spd = 15; if(en.timer > 75) { en.timer = 0; en.spd = 2; } }
+            return div;
         }
-        if(en.type === 'pent' && Math.random() < 0.05) {
-            projectiles.push({x:en.x, y:en.y, vx:Math.cos(en.angle)*8, vy:Math.sin(en.angle)*8, dmg:10, c:"#f00", b:-1});
-        }
-        let ang = Math.atan2(player.y-en.y, player.x-en.x);
-        en.x += Math.cos(ang)*en.spd; en.y += Math.sin(ang)*en.spd;
-        if(Math.hypot(player.x-en.x, player.y-en.y) < player.r+en.r && !dashing && !G.kadtr) {
-            if(G.shield > 0) G.shield--; else G.hp -= 0.8;
-            if(G.hp<=0) location.reload();
-        }
-    });
 
-    projectiles.forEach((p, pi) => {
-        p.x+=p.vx; p.y+=p.vy;
-        if(p.b !== -1) { 
-            enemies.forEach((en, ei) => {
-                if(Math.hypot(p.x-en.x, p.y-en.y)<en.r){
-                    en.hp-=p.dmg; 
-                    if(G.ricochet && p.b < 2) { p.vx *= -1; p.vy *= -1; p.b++; } else projectiles.splice(pi, 1);
-                    if(en.hp<=0){ 
-                        for(let k=0;k<10;k++) particles.push({x:en.x,y:en.y,vx:(Math.random()-0.5)*10,vy:(Math.random()-0.5)*10,life:1,color:p.c});
-                        G.hp = Math.min(G.maxHp, G.hp+G.lifeSteal); enemies.splice(ei, 1); 
-                        if(enemies.length===0) G.enemiesDefeated=true; 
+        // Lógica de compra
+        buyBtn.addEventListener('click', () => {
+            if (coins >= buyPrice) {
+                const emptySlot = Array.from(gridSlots).find(slot => slot.children.length === 0);
+                if (emptySlot) {
+                    coins -= buyPrice;
+                    updateUI();
+                    emptySlot.appendChild(createCapivara(1));
+                } else {
+                    alert("Grade cheia!");
+                }
+            } else {
+                alert("Moedas insuficientes!");
+            }
+        });
+
+        // Configuração dos slots para receber o drop
+        gridSlots.forEach(slot => {
+            slot.addEventListener('dragover', (e) => e.preventDefault());
+
+            slot.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const targetSlot = slot;
+                const sourceSlot = draggedElement.parentElement;
+
+                if (targetSlot.children.length === 0) {
+                    // Mover para slot vazio
+                    targetSlot.appendChild(draggedElement);
+                } else {
+                    const targetCapivara = targetSlot.children[0];
+                    const levelA = parseInt(draggedElement.dataset.level);
+                    const levelB = parseInt(targetCapivara.dataset.level);
+
+                    if (levelA === levelB) {
+                        // Realizar Merge!
+                        targetSlot.removeChild(targetCapivara);
+                        targetSlot.appendChild(createCapivara(levelA + 1));
+                        coins += levelA * 20; // Recompensa por fusão
+                        updateUI();
                     }
                 }
             });
-        } else if(Math.hypot(p.x-player.x, p.y-player.y)<player.r && !G.kadtr) { G.hp-=5; projectiles.splice(pi,1); }
-    });
+        });
 
-    particles.forEach((p, i) => { p.x+=p.vx; p.y+=p.vy; p.life-=0.02; if(p.life<=0) particles.splice(i,1); });
+        function updateUI() {
+            coinDisplay.innerText = coins;
+        }
 
-    // LÓGICA DA PORTA (CONSERTADA)
-    if((G.enemiesDefeated || G.kadtr) && player.y < 110 && Math.abs(player.x - ROOM.w/2) < 120) {
-        if(G.room > 0 && G.room % 10 === 0 && enemies.length === 0) startCutscene('boss'+G.room);
-        else { G.room++; if(G.room === 101) startCutscene('boss100'); else initRoom(); }
-    }
-}
-
-function draw() {
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    if(G.play) update();
-    ctx.fillStyle="#000"; ctx.fillRect(0,0,canvas.width, canvas.height);
-    if(!G.play && !G.inCutscene) { requestAnimationFrame(draw); return; }
-    
-    ctx.save();
-    let sc = Math.min(canvas.width/ROOM.w, canvas.height/ROOM.h)*0.95;
-    ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(sc, sc); ctx.translate(-ROOM.w/2, -ROOM.h/2);
-    ctx.fillStyle="#080000"; ctx.fillRect(0,0,ROOM.w, ROOM.h);
-    
-    // Porta
-    if(G.enemiesDefeated || G.kadtr){ 
-        ctx.fillStyle="#600"; ctx.shadowBlur=20; ctx.shadowColor="red";
-        ctx.fillRect(ROOM.w/2-100, 0, 200, 85); 
-        ctx.shadowBlur=0;
-    }
-    
-    particles.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill(); });
-    ctx.globalAlpha = 1;
-
-    ctx.fillStyle = Date.now() < G.dashTime ? "white" : "#eee";
-    ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
-    if(G.shield > 0) { ctx.strokeStyle="cyan"; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(player.x, player.y, player.r+5, 0, Math.PI*2); ctx.stroke(); }
-
-    enemies.forEach(en=>{ 
-        ctx.fillStyle="#400"; ctx.strokeStyle="#f00"; ctx.lineWidth=4;
-        if(en.type === 'minion') { ctx.fillStyle="#300"; ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill(); }
-        else if(en.type === 'tri') drawPolygon(en.x, en.y, en.r, 3, en.angle);
-        else if(en.type === 'pent') drawPolygon(en.x, en.y, en.r, 5, en.angle);
-        else if(en.type === 'hex') drawPolygon(en.x, en.y, en.r, 6, en.angle);
-        else if(en.type === 'king') drawPolygon(en.x, en.y, en.r, 10, en.angle);
-    });
-
-    projectiles.forEach(p=>{ ctx.fillStyle=p.c; ctx.beginPath(); ctx.arc(p.x, p.y, G.projSize, 0, Math.PI*2); ctx.fill(); });
-    ctx.restore();
-    
-    document.getElementById('hp-fill').style.width = (G.hp/G.maxHp*100) + "%";
-    document.getElementById('ammo-fill').style.width = (G.ammo/G.maxAmmo*100) + "%";
-    document.getElementById('room-txt').innerText = G.room;
-    requestAnimationFrame(draw);
-}
-
-function handleJoy(id, stick, type) {
-    const a = document.getElementById(id), s = document.getElementById(stick);
-    const up = (e) => {
-        e.preventDefault(); const t = [...e.touches].find(x => x.target === a || a.contains(x.target));
-        if(!t) return; const r = a.getBoundingClientRect();
-        let dx = t.clientX - (r.left + r.width/2), dy = t.clientY - (r.top + r.height/2);
-        const d = Math.hypot(dx, dy); if(d>50){ dx*=50/d; dy*=50/d; }
-        s.style.transform = `translate(${dx}px, ${dy}px)`; joyInput[type+'X']=dx/50; joyInput[type+'Y']=dy/50;
-    };
-    a.addEventListener('touchstart', up); a.addEventListener('touchmove', up);
-    a.addEventListener('touchend', () => { s.style.transform='translate(0,0)'; joyInput[type+'X']=0; joyInput[type+'Y']=0; });
-}
-
-window.onload = () => { handleJoy('move-area', 'move-stick', 'move'); handleJoy('aim-area', 'aim-stick', 'aim'); draw(); };
-window.addEventListener('keydown', e => { 
-    const k = e.key.toLowerCase(); keys[k] = true; 
-    if(k === 'shift') triggerDash(); if(k === 'q') switchWeapon();
-    devCode += k; if(devCode.includes("kadtr")){ 
-        G.kadtr = true; 
-        document.getElementById('dev-tag').style.display='inline'; 
-        G.hp = G.maxHp = 999999;
-        switchWeapon(); 
-        devCode = ""; // Reseta para não acumular
-    }
-    if(devCode.length > 10) devCode = devCode.slice(-10);
-});
-window.addEventListener('keyup', e => delete keys[e.key.toLowerCase()]);
-</script>
+        // Ganhar moedas passivamente
+        setInterval(() => {
+            const allCapivaras = document.querySelectorAll('.capivara');
+            allCapivaras.forEach(capi => {
+                coins += parseInt(capi.dataset.level);
+            });
+            updateUI();
+        }, 2000);
+    </script>
 </body>
 </html>
