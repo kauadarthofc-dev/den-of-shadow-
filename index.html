@@ -2,306 +2,267 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Capivaras vs Estudantes Zumbis</title>
+    <title>Capivaras vs Estudantes: Final Fix</title>
     <style>
         :root {
-            --bg: #1e1e26;
-            --grid-bg: #2d2d3a;
-            --slot-empty: rgba(255, 255, 255, 0.05);
-            --defense-line: #3a3a4d;
+            --bg: #1a1a1a;
+            --slot: #2d2d2d;
+            --defense: #3d3d3d;
         }
         body {
             margin: 0;
             background: var(--bg);
             color: white;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Arial', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            user-select: none;
         }
 
-        #game-header {
-            padding: 20px;
-            text-align: center;
-        }
+        #header { padding: 20px; text-align: center; }
+        .stats { color: #ffd700; font-size: 24px; font-weight: bold; }
 
-        /* Container Principal */
-        #game-world {
+        #game-box {
             display: flex;
-            gap: 30px;
-            background: #252531;
-            padding: 20px;
-            border-radius: 20px;
-            border: 4px solid #444;
-            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
-        }
-
-        /* Grade de Inventário/Merge */
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(3, 80px);
-            grid-template-rows: repeat(3, 80px);
-            gap: 10px;
-            background: var(--grid-bg);
+            gap: 15px;
+            background: #333;
             padding: 15px;
             border-radius: 12px;
+            border: 4px solid #444;
         }
 
-        /* Linha de Defesa (Onde o player coloca as capis) */
-        #defense-slots {
+        /* Grade de Merge */
+        .inventory {
+            display: grid;
+            grid-template-columns: repeat(3, 80px);
+            gap: 8px;
+        }
+
+        /* Linha de Defesa */
+        #defense-line {
             display: flex;
             flex-direction: column;
-            justify-content: space-around;
-            background: var(--defense-line);
-            padding: 10px;
-            border-radius: 12px;
-            border-right: 5px dashed #555;
+            justify-content: space-between;
+            background: var(--defense);
+            padding: 8px;
+            border-radius: 8px;
         }
 
-        /* Campo de Batalha (Onde os estudantes andam) */
-        #battle-field {
-            width: 350px;
-            height: 300px;
-            background: #1a1a24;
+        /* Campo de Batalha */
+        #field {
+            width: 400px;
+            height: 270px;
+            background: #111;
             position: relative;
             overflow: hidden;
-            border-radius: 12px;
+            border-radius: 0 8px 8px 0;
         }
 
         .slot {
             width: 80px;
             height: 80px;
-            background: var(--slot-empty);
-            border-radius: 10px;
+            background: var(--slot);
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid transparent;
-        }
-        .slot.drag-over { border-color: #ffd700; background: rgba(255,215,0,0.1); }
-
-        /* Sprites */
-        .capi {
-            width: 60px;
-            height: 60px;
-            cursor: grab;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
             position: relative;
-            transition: transform 0.2s;
-            image-rendering: pixelated;
         }
-        .capi:active { cursor: grabbing; }
-        .capi-lvl {
-            position: absolute;
-            bottom: -5px;
-            background: #000;
-            color: gold;
-            font-size: 10px;
-            padding: 2px 5px;
-            border-radius: 5px;
+
+        /* Sprites corrigidos (Pixel Art) */
+        .sprite {
+            width: 64px;
+            height: 64px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            image-rendering: pixelated;
+            cursor: grab;
         }
 
         .student {
             position: absolute;
-            font-size: 40px;
-            right: -50px;
-            transition: right 0.05s linear;
+            width: 50px;
+            height: 50px;
+            right: -60px;
+            background-image: url('https://cdn-icons-png.flaticon.com/512/3468/3468192.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            z-index: 5;
         }
 
         .bullet {
             position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #ffec3d;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #fadb14;
+            width: 12px;
+            height: 6px;
+            background: #ffcc00;
+            border-radius: 3px;
+            box-shadow: 0 0 5px orange;
         }
 
-        #buy-area { margin-top: 20px; }
-        #buy-btn {
-            background: #52c41a;
-            border: none;
-            color: white;
+        #btn-buy {
+            margin-top: 20px;
             padding: 15px 40px;
-            border-radius: 10px;
-            font-size: 18px;
-            cursor: pointer;
+            background: #2ecc71;
+            border: none;
+            border-radius: 8px;
+            color: white;
             font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px #27ae60;
         }
+        #btn-buy:active { transform: translateY(2px); box-shadow: 0 2px #27ae60; }
     </style>
 </head>
 <body>
 
-    <div id="game-header">
-        <h1>Capivara Defense: School Breakout 🏫</h1>
-        <h2>💰 Moedas: <span id="coin-txt">100</span></h2>
+    <div id="header">
+        <div class="stats">💰 <span id="money">100</span></div>
+        <p>Arraste as capivaras para os slots de defesa à direita!</p>
     </div>
 
-    <div id="game-world">
-        <div class="grid-container" id="inventory">
-            <div class="slot merge-slot"></div><div class="slot merge-slot"></div><div class="slot merge-slot"></div>
-            <div class="slot merge-slot"></div><div class="slot merge-slot"></div><div class="slot merge-slot"></div>
-            <div class="slot merge-slot"></div><div class="slot merge-slot"></div><div class="slot merge-slot"></div>
+    <div id="game-box">
+        <div class="inventory" id="inv">
+            <div class="slot merge-s"></div><div class="slot merge-s"></div><div class="slot merge-s"></div>
+            <div class="slot merge-s"></div><div class="slot merge-s"></div><div class="slot merge-s"></div>
+            <div class="slot merge-s"></div><div class="slot merge-s"></div><div class="slot merge-s"></div>
         </div>
 
-        <div id="defense-slots">
-            <div class="slot combat-slot" data-row="0"></div>
-            <div class="slot combat-slot" data-row="1"></div>
-            <div class="slot combat-slot" data-row="2"></div>
+        <div id="defense-line">
+            <div class="slot def-s" data-row="0"></div>
+            <div class="slot def-s" data-row="1"></div>
+            <div class="slot def-s" data-row="2"></div>
         </div>
 
-        <div id="battle-field"></div>
+        <div id="field"></div>
     </div>
 
-    <div id="buy-area">
-        <button id="buy-btn">COMPRAR CAPIVARA (20💰)</button>
-    </div>
+    <button id="btn-buy">COMPRAR CAPIVARA (20💰)</button>
 
     <script>
-        const CAPI_DATA = {
-            1: { emoji: '🐹', power: 10 },
-            2: { emoji: '🦦', power: 25 },
-            3: { emoji: '🦫', power: 60 },
-            4: { emoji: '🐾', power: 150 }
-        };
+        // Imagens Garantidas (Pixel Art)
+        const IMGS = [
+            'https://i.ibb.co/Vmq9fH0/capy1.png',
+            'https://i.ibb.co/9H6S0m6/capy2.png',
+            'https://i.ibb.co/L5pGz17/capy3.png',
+            'https://i.ibb.co/Lkh6YmP/capy4.png'
+        ];
 
         let coins = 100;
-        let draggedElement = null;
+        let dragged = null;
 
-        // --- SISTEMA DE ARRASTAR E SOLTAR ---
-        function setupDraggable(el) {
-            el.draggable = true;
-            el.ondragstart = (e) => {
-                draggedElement = el;
-                el.style.opacity = '0.5';
-            };
-            el.ondragend = () => {
-                el.style.opacity = '1';
-                draggedElement = null;
-            };
+        // --- SISTEMA DE CAPIVARAS ---
+        function createCapi(lvl) {
+            const div = document.createElement('div');
+            div.className = 'sprite';
+            div.style.backgroundImage = `url('${IMGS[lvl]}')`;
+            div.dataset.lvl = lvl;
+            div.dataset.lastShot = 0; // Para controlar a cadência
+            div.draggable = true;
+            
+            div.ondragstart = () => { dragged = div; setTimeout(() => div.style.opacity = "0.5", 0); };
+            div.ondragend = () => { div.style.opacity = "1"; dragged = null; };
+            return div;
         }
 
+        // --- DRAG AND DROP ---
         document.querySelectorAll('.slot').forEach(slot => {
-            slot.ondragover = e => {
-                e.preventDefault();
-                slot.classList.add('drag-over');
-            };
-            slot.ondragleave = () => slot.classList.remove('drag-over');
-            
-            slot.ondrop = (e) => {
-                slot.classList.remove('drag-over');
-                const sourceSlot = draggedElement.parentElement;
-                
+            slot.ondragover = e => e.preventDefault();
+            slot.ondrop = () => {
                 if (!slot.hasChildNodes()) {
-                    // Mover para slot vazio
-                    slot.appendChild(draggedElement);
+                    slot.appendChild(dragged);
                 } else {
-                    const targetCapi = slot.firstChild;
-                    // Lógica de MERGE (Somente se for na grade de inventário ou entre si)
-                    if (targetCapi.dataset.level === draggedElement.dataset.level && targetCapi !== draggedElement) {
-                        const nextLvl = parseInt(targetCapi.dataset.level) + 1;
-                        if (CAPI_DATA[nextLvl]) {
-                            targetCapi.remove();
-                            draggedElement.remove();
-                            const newCapi = createCapi(nextLvl);
-                            slot.appendChild(newCapi);
-                        }
+                    const target = slot.firstChild;
+                    if (target.dataset.lvl == dragged.dataset.lvl && target.dataset.lvl < 3) {
+                        const newLvl = parseInt(target.dataset.lvl) + 1;
+                        target.remove();
+                        dragged.remove();
+                        slot.appendChild(createCapi(newLvl));
                     }
                 }
             };
         });
 
-        function createCapi(lvl) {
-            const div = document.createElement('div');
-            div.className = 'capi';
-            div.dataset.level = lvl;
-            div.innerHTML = `${CAPI_DATA[lvl].emoji} <span class="capi-lvl">Lvl ${lvl}</span>`;
-            setupDraggable(div);
-            return div;
-        }
-
         // --- COMPRA ---
-        document.getElementById('buy-btn').onclick = () => {
+        document.getElementById('btn-buy').onclick = () => {
             if (coins >= 20) {
-                const emptySlot = Array.from(document.querySelectorAll('.merge-slot')).find(s => !s.hasChildNodes());
-                if (emptySlot) {
+                const empty = Array.from(document.querySelectorAll('.merge-s')).find(s => !s.hasChildNodes());
+                if (empty) {
                     coins -= 20;
-                    emptySlot.appendChild(createCapi(1));
-                    document.getElementById('coin-txt').innerText = coins;
+                    empty.appendChild(createCapi(0));
+                    document.getElementById('money').innerText = coins;
                 }
             }
         };
 
-        // --- SISTEMA DE COMBATE ---
+        // --- LÓGICA DE TIRO E INIMIGOS ---
         function spawnStudent() {
             const row = Math.floor(Math.random() * 3);
-            const student = document.createElement('div');
-            student.className = 'student';
-            student.innerHTML = '🧑‍🎓'; // Estudante zumbi
-            student.dataset.hp = 100;
-            student.dataset.row = row;
-            student.style.top = (row * 100 + 20) + 'px';
-            document.getElementById('battle-field').appendChild(student);
+            const st = document.createElement('div');
+            st.className = 'student';
+            st.dataset.hp = 100;
+            st.dataset.row = row;
+            st.style.top = (row * 90 + 20) + 'px';
+            document.getElementById('field').appendChild(st);
         }
 
-        function gameLoop() {
-            // Mover estudantes
+        function update() {
+            // Mover estudantes (lento)
             document.querySelectorAll('.student').forEach(st => {
-                let right = parseFloat(st.style.right) || -50;
-                st.style.right = (right + 1.5) + 'px';
-                if (right > 350) st.remove();
+                let r = parseFloat(st.style.right) || -60;
+                st.style.right = (r + 1.2) + 'px';
+                if (r > 400) st.remove();
             });
 
-            // Atacar
-            document.querySelectorAll('.combat-slot').forEach(slot => {
+            // Atirar com CADÊNCIA CONTROLADA
+            const now = Date.now();
+            document.querySelectorAll('.def-s').forEach(slot => {
                 if (slot.hasChildNodes()) {
                     const capi = slot.firstChild;
-                    const row = slot.dataset.row;
-                    const targets = Array.from(document.querySelectorAll('.student'))
-                                         .filter(s => s.dataset.row == row);
-                    
-                    if (targets.length > 0) shoot(slot, targets[0], CAPI_DATA[capi.dataset.level].power);
+                    const cooldown = 1200 - (capi.dataset.lvl * 200); // Lvl 0 atira a cada 1.2s, Lvl 3 a cada 0.6s
+
+                    if (now - capi.dataset.lastShot > cooldown) {
+                        const target = Array.from(document.querySelectorAll('.student'))
+                                            .find(s => s.dataset.row == slot.dataset.row);
+                        if (target) {
+                            shoot(slot, target, (parseInt(capi.dataset.lvl) + 1) * 20);
+                            capi.dataset.lastShot = now;
+                        }
+                    }
                 }
             });
 
-            if (Math.random() > 0.97) spawnStudent();
+            if (Math.random() > 0.98) spawnStudent();
         }
 
-        function shoot(slot, target, pwr) {
-            const bullet = document.createElement('div');
-            bullet.className = 'bullet';
-            const field = document.getElementById('battle-field');
-            field.appendChild(bullet);
+        function shoot(slot, target, dmg) {
+            const b = document.createElement('div');
+            b.className = 'bullet';
+            b.style.top = (slot.dataset.row * 90 + 45) + 'px';
+            b.style.left = '0px';
+            document.getElementById('field').appendChild(b);
 
-            let bLeft = 0;
-            bullet.style.top = (slot.dataset.row * 100 + 45) + 'px';
-            bullet.style.left = bLeft + 'px';
-
-            const moveBullet = setInterval(() => {
-                bLeft += 8;
-                bullet.style.left = bLeft + 'px';
-
-                const targetRight = 350 - parseFloat(target.style.right);
-                if (bLeft >= targetRight - 20) {
-                    clearInterval(moveBullet);
-                    bullet.remove();
-                    target.dataset.hp -= pwr;
+            let pos = 0;
+            const moveB = setInterval(() => {
+                pos += 8;
+                b.style.left = pos + 'px';
+                const tPos = 400 - parseFloat(target.style.right);
+                
+                if (pos >= tPos - 20) {
+                    clearInterval(moveB);
+                    b.remove();
+                    target.dataset.hp -= dmg;
                     if (target.dataset.hp <= 0) {
                         target.remove();
                         coins += 10;
-                        document.getElementById('coin-txt').innerText = coins;
+                        document.getElementById('money').innerText = coins;
                     }
                 }
-                if (bLeft > 350) { clearInterval(moveBullet); bullet.remove(); }
+                if (pos > 400) { clearInterval(moveB); b.remove(); }
             }, 20);
         }
 
-        setInterval(gameLoop, 100);
+        setInterval(update, 50);
     </script>
 </body>
 </html>
