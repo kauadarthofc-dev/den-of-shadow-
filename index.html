@@ -21,28 +21,27 @@
         
         .social-links { margin-bottom: 25px; display: flex; gap: 15px; z-index: 3001; }
         .social-links a { color: #ff0000; text-decoration: none; font-size: 11px; border: 1px solid #500; padding: 6px 12px; background: rgba(0,0,0,0.5); transition: 0.3s; pointer-events: auto; }
-        .social-links a:hover { background: #600; color: #fff; box-shadow: 0 0 15px #f00; }
 
         .btn-main { padding: 15px 50px; font-size: 18px; background: transparent; border: 2px solid #550000; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 10px; transition: 0.3s; pointer-events: auto; }
         .btn-main:hover { background: #550000; box-shadow: 0 0 40px #ff0000; }
         
         #cutscene-screen { background: black; cursor: pointer; z-index: 5000; display:none; }
-        #cutscene-text { font-family: 'Special Elite', serif; font-size: clamp(18px, 4vw, 24px); color: #bb0000; max-width: 800px; line-height: 1.6; pointer-events: none; }
+        #cutscene-text { font-family: 'Special Elite', serif; font-size: clamp(18px, 4vw, 24px); color: #bb0000; max-width: 800px; line-height: 1.6; }
 
         #hud { position: absolute; top: 15px; left: 15px; z-index: 1000; display: none; pointer-events: none; }
         .hud-group { background: rgba(0,0,0,0.8); padding: 8px; border-left: 3px solid #f00; margin-bottom: 5px; min-width: 180px; }
         .bar-bg { width: 100%; height: 8px; background: #222; margin-top: 5px; }
         .bar-fill { height: 100%; transition: width 0.2s; }
 
-        .upgrade-card { background: rgba(30, 0, 0, 0.9); border: 1px solid #500; padding: 20px; width: 220px; transition: 0.3s; cursor: pointer; pointer-events: auto; }
-        .upgrade-card:hover { border-color: #f00; box-shadow: 0 0 20px #800; transform: translateY(-5px); }
-        .upgrade-card h3 { color: #f00; margin: 0 0 10px 0; font-size: 16px; }
-        .upgrade-card p { font-size: 12px; color: #aaa; line-height: 1.4; }
+        #game-over-screen { display: none; z-index: 6000; background: rgba(0,0,0,0.95); }
+        #game-over-screen h2 { font-family: 'Nosifer', cursive; color: #f00; font-size: 50px; }
 
+        .upgrade-card { background: rgba(30, 0, 0, 0.9); border: 1px solid #500; padding: 20px; width: 220px; cursor: pointer; pointer-events: auto; }
+        
         .mobile-ui { position: absolute; bottom: 40px; width: 100%; display: none; justify-content: space-between; align-items: flex-end; padding: 0 30px; z-index: 2500; pointer-events: none; }
-        .joy-container { width: 130px; height: 130px; background: rgba(255,0,0,0.05); border: 2px solid rgba(255,0,0,0.2); border-radius: 50%; position: relative; pointer-events: auto; }
-        .joy-stick { width: 50px; height: 50px; background: rgba(255,0,0,0.4); border: 2px solid red; border-radius: 50%; position: absolute; top: 38px; left: 38px; pointer-events: none; }
-        .btn-dash { width: 85px; height: 85px; background: rgba(255,0,0,0.2); border: 2px solid red; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; pointer-events: auto; color: white; }
+        .joy-container { width: 120px; height: 120px; background: rgba(255,0,0,0.05); border: 2px solid rgba(255,0,0,0.2); border-radius: 50%; position: relative; pointer-events: auto; }
+        .joy-stick { width: 40px; height: 40px; background: rgba(255,0,0,0.4); border: 2px solid red; border-radius: 50%; position: absolute; top: 38px; left: 38px; }
+        .btn-dash { width: 80px; height: 80px; background: rgba(255,0,0,0.2); border: 2px solid red; border-radius: 50%; display: flex; align-items: center; justify-content: center; pointer-events: auto; color: white; }
     </style>
 </head>
 <body>
@@ -54,10 +53,17 @@
         <a href="https://youtube.com/@kaua_darth" target="_blank">YouTube @kaua_darth</a>
     </div>
     <button class="btn-main" onclick="initGameFlow()">ACEITAR O FARDO</button>
+    <button id="btn-continue" class="btn-main" style="display:none; border-color: #660;" onclick="loadGame()">CONTINUAR JORNADA</button>
 </div>
 
 <div id="cutscene-screen" class="ui-screen" onclick="advanceCutscene()">
     <div id="cutscene-text"></div>
+</div>
+
+<div id="game-over-screen" class="ui-screen">
+    <h2>VOCÊ CAIU</h2>
+    <p id="death-msg">A escuridão finalmente te alcançou.</p>
+    <button class="btn-main" onclick="location.reload()">TENTAR NOVAMENTE</button>
 </div>
 
 <div id="upgrade-screen" class="ui-screen" style="display:none">
@@ -66,14 +72,14 @@
 </div>
 
 <div id="hud">
-    <div class="hud-group"><div>VITALIDADE</div><div class="bar-bg"><div id="hp-fill" class="bar-fill" style="background:#800; width: 100%;"></div></div></div>
+    <div class="hud-group"><div>VITALIDADE <span id="dev-tag" style="color:yellow; font-size:9px; display:none;">[MODO KADTR]</span></div><div class="bar-bg"><div id="hp-fill" class="bar-fill" style="background:#800; width: 100%;"></div></div></div>
     <div class="hud-group" style="border-color:#660;"><div>ALMA</div><div class="bar-bg"><div id="ammo-fill" class="bar-fill" style="background:#660; width: 100%;"></div></div></div>
     <div style="font-size:14px; background: rgba(0,0,0,0.7); padding: 5px;">PROFUNDIDADE: <span id="room-txt">0</span>/100</div>
 </div>
 
 <div id="mobile-controls" class="mobile-ui">
     <div class="joy-container" id="move-joy"><div class="joy-stick" id="move-stick"></div></div>
-    <div class="right-controls" style="display:flex; gap:30px; align-items:center; pointer-events:none;">
+    <div style="display:flex; gap:20px; align-items:center; pointer-events:none;">
         <div class="joy-container" id="aim-joy"><div class="joy-stick" id="aim-stick"></div></div>
         <div class="btn-dash" ontouchstart="btnK('shift',1)" ontouchend="btnK('shift',0)">DASH</div>
     </div>
@@ -85,22 +91,22 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-let audioCtx;
-let bufferInimigo, bufferFilha;
+let audioCtx, bufferInimigo, bufferFilha;
+let devCode = "";
 
+// Sistema de Áudio
 async function initAudio() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         try {
             const [r1, r2] = await Promise.all([
-                fetch('cry-of-pain-357978.mp3'),
-                fetch('creepy-woman-cry-407580.mp3')
+                fetch('https://raw.githubusercontent.com/KauaDarth/Assets/main/cry-of-pain-357978.mp3'),
+                fetch('https://raw.githubusercontent.com/KauaDarth/Assets/main/creepy-woman-cry-407580.mp3')
             ]);
             bufferInimigo = await audioCtx.decodeAudioData(await r1.arrayBuffer());
             bufferFilha = await audioCtx.decodeAudioData(await r2.arrayBuffer());
-        } catch(e) { console.warn("Áudio não carregado."); }
+        } catch(e) {}
     }
-    if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 
 function playScream(isBoss, isDaughter) {
@@ -114,33 +120,28 @@ function playScream(isBoss, isDaughter) {
     source.start(0);
 }
 
+// Lógica Global
 const ROOM = { w: 1600, h: 1000, wall: 80 };
 const G = {
     play: false, room: 0, hp: 100, maxHp: 100, ammo: 25, maxAmmo: 25,
     enemiesDefeated: false, lastShot: 0, dashCooldown: 0,
-    inCutscene: false, iframe: 0, dmgMult: 1, spdMult: 1, floorMsg: null
+    inCutscene: false, iframe: 0, dmgMult: 1, spdMult: 1, floorMsg: null,
+    kadtr: false
 };
 
 const STORY = {
-    init: ["Você não é um herói.", "Nunca foi... as sombras o traiu.", "A torre é o seu caminho para a vingança.", "O topo é a única saída."],
-    boss10: ["O Guardião foi silenciado.", "Ele também já teve uma família.", "Você sente o peso de cada vida?"],
-    boss20: ["A Filha do Rei implora por misericórdia...", "Mas aqui, apenas a morte é real."],
-    boss30: ["Eles imploram em línguas esquecidas.", "O Den of Shadow se alimenta da sua raiva."],
-    boss40: ["O Arquiteto das Sombras caiu.", "Ele construiu esta torre para manter algo lá fora...", "Ou para manter você aqui dentro?"],
+    init: ["Você não é um herói.", "O Rei das Sombras lhe tirou tudo.", "O topo é a única saída."],
+    boss10: ["O Guardião foi silenciado.", "Você sente o peso de cada vida?"],
     boss50: ["Metade da subida.", "Não há nada lá atrás para você."],
-    boss60: ["O Carrasco das Almas não tortura mais.", "Ele gritou exatamente como suas vítimas."],
-    boss70: ["A Sombra do Passado foi dissipada.", "Você está matando suas próprias memórias para subir."],
-    boss80: ["Você está quase lá.", "Mas o que restará de você no topo?"],
-    boss90: ["O Purgatório Final.", "A escuridão aqui é tão densa que você quase pode tocá-la.", "O último teste antes do Rei."],
-    final: ["O REI DAS SOMBRAS CAIU.", "Você recuperou seu trono.", "Mas agora, você é a coisa mais sombria neste lugar."]
+    final: ["O REI DAS SOMBRAS CAIU.", "Agora, você é a coisa mais sombria neste lugar."]
 };
 
 const FLOOR_TEXTS = {
-    55: "Você consegue ouvir os sussurros sob seus pés?",
-    65: "Suas mãos estão manchadas. A água não limpa este sangue.",
-    75: "O Rei está observando... ele sempre esteve.",
-    85: "Ninguém que subiu até aqui voltou sendo humano.",
-    95: "O fim está próximo. O abraço da sombra é quente."
+    55: "Você consegue ouvir os sussurros?",
+    65: "Suas mãos estão manchadas de sangue.",
+    75: "O Rei está observando...",
+    85: "Ninguém volta sendo humano.",
+    95: "O abraço da sombra é quente."
 };
 
 let currentStory = [], storyIdx = 0;
@@ -149,40 +150,24 @@ let player = { x: 800, y: 800, r: 25, spd: 7.5, dash: 0 };
 let enemies = [], projectiles = [], enemyProjectiles = [], drops = [];
 let joyInput = { moveX: 0, moveY: 0, aimX: 0, aimY: 0 };
 
-function setupJoystick(containerId, stickId, type) {
-    const container = document.getElementById(containerId);
-    const stick = document.getElementById(stickId);
-    let touchId = null;
-    const handleInput = (e) => {
-        let touch = null;
-        if (touchId === null) { touch = e.changedTouches[0]; touchId = touch.identifier; }
-        else { for(let i=0; i<e.touches.length; i++) if(e.touches[i].identifier === touchId) touch = e.touches[i]; }
-        if (!touch) return;
-        const rect = container.getBoundingClientRect();
-        const dx = touch.clientX - (rect.left + rect.width / 2);
-        const dy = touch.clientY - (rect.top + rect.height / 2);
-        const dist = Math.min(50, Math.hypot(dx, dy));
-        const ang = Math.atan2(dy, dx);
-        const mx = Math.cos(ang) * dist; const my = Math.sin(ang) * dist;
-        stick.style.transform = `translate(${mx}px, ${my}px)`;
-        if (type === 'move') { joyInput.moveX = mx / 50; joyInput.moveY = my / 50; }
-        if (type === 'aim') { joyInput.aimX = mx / 50; joyInput.aimY = my / 50; }
-    };
-    container.addEventListener('touchstart', handleInput);
-    container.addEventListener('touchmove', e => e.preventDefault());
-    container.addEventListener('touchmove', handleInput);
-    container.addEventListener('touchend', e => { 
-        for(let i=0; i<e.changedTouches.length; i++) if(e.changedTouches[i].identifier === touchId){
-            touchId = null; stick.style.transform = `translate(0,0)`;
-            if (type === 'move') { joyInput.moveX = 0; joyInput.moveY = 0; }
-            if (type === 'aim') { joyInput.aimX = 0; joyInput.aimY = 0; }
-        }
-    });
+// Salvamento
+function saveGame() {
+    const data = { room: G.room, maxHp: G.maxHp, dmg: G.dmgMult, spd: G.spdMult };
+    localStorage.setItem('den_shadow_save', JSON.stringify(data));
 }
 
-function btnK(k, v) { if(v) keys[k] = true; else delete keys[k]; }
+function loadGame() {
+    const saved = localStorage.getItem('den_shadow_save');
+    if (saved) {
+        const data = JSON.parse(saved);
+        G.room = data.room; G.maxHp = data.maxHp; G.hp = data.maxHp;
+        G.dmgMult = data.dmg; G.spdMult = data.spd;
+        initAudio();
+        startGame();
+    }
+}
 
-// Início do Jogo chamando a cutscene 1
+// Inicialização
 function initGameFlow() {
     initAudio();
     document.getElementById('start-screen').style.display = 'none';
@@ -191,21 +176,17 @@ function initGameFlow() {
 
 function startGame() {
     G.play = true; G.inCutscene = false;
+    document.getElementById('start-screen').style.display = 'none';
     document.getElementById('hud').style.display = 'block';
-    if('ontouchstart' in window) {
-        document.getElementById('mobile-controls').style.display = 'flex';
-        setupJoystick('move-joy', 'move-stick', 'move');
-        setupJoystick('aim-joy', 'aim-stick', 'aim');
-    }
+    if('ontouchstart' in window) document.getElementById('mobile-controls').style.display = 'flex';
     initRoom();
 }
 
 function startCutscene(key) {
     G.play = false; G.inCutscene = true;
     storyIdx = 0;
-    currentStory = STORY[key] || ["..."];
+    currentStory = STORY[key] || ["O silêncio é absoluto."];
     document.getElementById('cutscene-screen').style.display = 'flex';
-    document.getElementById('mobile-controls').style.display = 'none';
     advanceCutscene();
 }
 
@@ -214,7 +195,7 @@ function advanceCutscene() {
         document.getElementById('cutscene-text').innerText = currentStory[storyIdx++];
     } else {
         document.getElementById('cutscene-screen').style.display = 'none';
-        if (G.room > 0 && G.room % 10 === 0 && enemies.length === 0) openUpgradeMenu();
+        if (G.room > 0 && G.room % 10 === 0) openUpgradeMenu();
         else startGame();
     }
 }
@@ -225,15 +206,15 @@ function openUpgradeMenu() {
     list.innerHTML = '';
     document.getElementById('upgrade-screen').style.display = 'flex';
     const opts = [
-        {n:"CARNE MORTA", d:"Vida máxima +50. A dor torna-se seu escudo.", f:()=>G.maxHp+=50},
-        {n:"ÓDIO PURO", d:"Dano +40%. Sua raiva é uma lâmina afiada.", f:()=>G.dmgMult+=0.4},
-        {n:"DESESPERO", d:"Velocidade +20%. O medo dá asas aos seus pés.", f:()=>G.spdMult+=0.2}
+        {n:"CARNE MORTA", f:()=>G.maxHp+=50},
+        {n:"ÓDIO PURO", f:()=>G.dmgMult+=0.4},
+        {n:"DESESPERO", f:()=>G.spdMult+=0.2}
     ];
     opts.forEach(o => {
         const card = document.createElement('div');
         card.className = 'upgrade-card';
-        card.innerHTML = `<h3>${o.n}</h3><p>${o.d}</p>`;
-        card.onclick = () => { o.f(); G.hp=G.maxHp; G.ammo=G.maxAmmo; document.getElementById('upgrade-screen').style.display='none'; startGame(); };
+        card.innerHTML = `<h3>${o.n}</h3>`;
+        card.onclick = () => { o.f(); G.hp=G.maxHp; document.getElementById('upgrade-screen').style.display='none'; startGame(); };
         list.appendChild(card);
     });
 }
@@ -242,9 +223,10 @@ function initRoom() {
     enemies = []; projectiles = []; enemyProjectiles = []; drops = [];
     G.enemiesDefeated = false; G.floorMsg = null;
     player.x = ROOM.w/2; player.y = ROOM.h - 150;
+    saveGame();
 
     if (G.room > 50 && G.room % 5 === 0 && G.room % 10 !== 0) {
-        G.floorMsg = { text: FLOOR_TEXTS[G.room] || "As vozes...", x: ROOM.w/2, y: ROOM.h/2, active: false };
+        G.floorMsg = { text: FLOOR_TEXTS[G.room] || "...", x: ROOM.w/2, y: ROOM.h/2, active: false };
     }
 
     if (G.room > 0 && G.room % 10 === 0) {
@@ -252,90 +234,73 @@ function initRoom() {
     } else if (G.room > 0) {
         let n = 4 + Math.floor(G.room * 0.4);
         for(let i=0; i<n; i++) {
-            enemies.push({ 
-                x: Math.random()*(ROOM.w-200)+100, y: Math.random()*400+100, 
-                hp: 60+G.room*15, r: 30, spd: 1.5 + Math.random(), isShooter: Math.random()>0.7, lastShot: 0
-            });
+            enemies.push({ x: Math.random()*1400+100, y: Math.random()*400+100, hp: 60+G.room*15, r: 30, spd: 1.5+Math.random(), isShooter: Math.random()>0.7, lastShot: 0 });
         }
-    } else G.enemiesDefeated = true; // Sala 0 inicial
+    } else G.enemiesDefeated = true;
 }
 
 function update() {
     if (!G.play || G.inCutscene) return;
     if (G.iframe > 0) G.iframe--;
 
+    // Movimento
     let mx = joyInput.moveX; let my = joyInput.moveY;
     if (keys['w']) my = -1; if (keys['s']) my = 1; if (keys['a']) mx = -1; if (keys['d']) mx = 1;
-    if (keys['shift'] && G.dashCooldown <= 0) { player.dash = 14; G.dashCooldown = 60; }
-    if (G.dashCooldown > 0) G.dashCooldown--;
     let s = (player.dash > 0 ? player.spd * 3 : player.spd) * G.spdMult;
     if (player.dash > 0) player.dash--;
 
     player.x = Math.max(ROOM.wall+player.r, Math.min(ROOM.w-ROOM.wall-player.r, player.x + mx*s));
     player.y = Math.max(ROOM.wall+player.r, Math.min(ROOM.h-ROOM.wall-player.r, player.y + my*s));
 
-    if (G.floorMsg && !G.floorMsg.active) {
-        if (Math.hypot(player.x - G.floorMsg.x, player.y - G.floorMsg.y) < 150) {
-            G.floorMsg.active = true; playScream(false, true);
-        }
-    }
-
+    // Tiro
     let ax = joyInput.aimX; let ay = joyInput.aimY;
-    if (keys['arrowup']||keys['up']) ay = -1; if (keys['arrowdown']||keys['down']) ay = 1; 
-    if (keys['arrowleft']||keys['left']) ax = -1; if (keys['arrowright']||keys['right']) ax = 1;
+    if (keys['arrowup']) ay = -1; if (keys['arrowdown']) ay = 1;
+    if (keys['arrowleft']) ax = -1; if (keys['arrowright']) ax = 1;
     
-    if ((Math.abs(ax) > 0.4 || Math.abs(ay) > 0.4) && G.ammo > 0 && Date.now() - G.lastShot > 180) {
-        projectiles.push({ x: player.x, y: player.y, vx: ax*18, vy: ay*18, dmg: 50*G.dmgMult });
+    if ((Math.abs(ax)>0.4 || Math.abs(ay)>0.4) && G.ammo>0 && Date.now()-G.lastShot>180) {
+        projectiles.push({ x: player.x, y: player.y, vx: ax*18, vy: ay*18, dmg: (G.kadtr?9999:50)*G.dmgMult });
         G.ammo--; G.lastShot = Date.now();
-    } else if (mx === 0 && my === 0 && Date.now() - G.lastShot > 1500) {
-        if (G.ammo < G.maxAmmo) G.ammo++;
-    }
+    } else if (mx===0 && my===0 && Date.now()-G.lastShot>1500 && G.ammo<G.maxAmmo) G.ammo++;
 
-    enemies.forEach((en) => {
-        let ang = Math.atan2(player.y - en.y, player.x - en.x);
-        en.x += Math.cos(ang) * en.spd; en.y += Math.sin(ang) * en.spd;
-        if (Math.hypot(player.x-en.x, player.y-en.y) < player.r+en.r && G.iframe <= 0 && player.dash <= 0) {
+    // Colisões e Inimigos
+    enemies.forEach(en => {
+        let ang = Math.atan2(player.y-en.y, player.x-en.x);
+        en.x += Math.cos(ang)*en.spd; en.y += Math.sin(ang)*en.spd;
+        if (Math.hypot(player.x-en.x, player.y-en.y)<player.r+en.r && G.iframe<=0 && !G.kadtr) {
             G.hp -= 20; G.iframe = 60;
-        }
-        if ((en.isShooter || en.isBoss) && Date.now() - en.lastShot > (en.isBoss ? 1200 : 2500)) {
-            enemyProjectiles.push({ x: en.x, y: en.y, vx: Math.cos(ang)*8, vy: Math.sin(ang)*8 });
-            en.lastShot = Date.now();
+            if (G.hp <= 0) gameOver();
         }
     });
 
     projectiles.forEach((p, pi) => {
         p.x += p.vx; p.y += p.vy;
         enemies.forEach((en, ei) => {
-            if (Math.hypot(p.x-en.x, p.y-en.y) < en.r) {
+            if (Math.hypot(p.x-en.x, p.y-en.y)<en.r) {
                 en.hp -= p.dmg; projectiles.splice(pi, 1);
-                if (en.hp <= 0) {
+                if (en.hp<=0) {
                     playScream(en.isBoss, false);
-                    if (Math.random()<0.3 || en.isBoss) drops.push({x: en.x, y: en.y});
                     enemies.splice(ei, 1);
-                    if (enemies.length === 0) G.enemiesDefeated = true;
+                    if (enemies.length===0) G.enemiesDefeated = true;
                 }
             }
         });
     });
 
-    enemyProjectiles.forEach((ep, epi) => {
-        ep.x += ep.vx; ep.y += ep.vy;
-        if (Math.hypot(player.x-ep.x, player.y-ep.y) < player.r && G.iframe <= 0) {
-            G.hp -= 15; G.iframe = 60; enemyProjectiles.splice(epi, 1);
-        }
-    });
+    if (G.floorMsg && !G.floorMsg.active && Math.hypot(player.x-G.floorMsg.x, player.y-G.floorMsg.y)<150) {
+        G.floorMsg.active = true; playScream(false, true);
+    }
 
-    drops.forEach((d, di) => { if (Math.hypot(player.x-d.x, player.y-d.y) < 50) { G.hp = Math.min(G.maxHp, G.hp+20); drops.splice(di, 1); } });
-
-    if (G.enemiesDefeated && player.y < 120 && Math.abs(player.x - ROOM.w/2) < 120) {
-        if (G.room > 0 && G.room % 10 === 0) {
-            startCutscene('boss' + G.room);
-        }
+    if (G.enemiesDefeated && player.y < 120 && Math.abs(player.x-ROOM.w/2)<120) {
+        if (G.room>0 && G.room%10===0) startCutscene('boss'+G.room);
         G.room++;
         if (G.room === 101) startCutscene('final');
         else initRoom();
     }
-    if (G.hp <= 0) location.reload();
+}
+
+function gameOver() {
+    G.play = false;
+    document.getElementById('game-over-screen').style.display = 'flex';
 }
 
 function draw() {
@@ -343,9 +308,9 @@ function draw() {
     if (G.play) update();
     ctx.fillStyle = "#000"; ctx.fillRect(0,0,canvas.width, canvas.height);
     if (!G.play && !G.inCutscene) { requestAnimationFrame(draw); return; }
-    
+
     ctx.save();
-    let sc = Math.min(canvas.width/ROOM.w, canvas.height/ROOM.h) * 0.95;
+    let sc = Math.min(canvas.width/ROOM.w, canvas.height/ROOM.h)*0.95;
     ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(sc, sc); ctx.translate(-ROOM.w/2, -ROOM.h/2);
     ctx.fillStyle = "#050000"; ctx.fillRect(0,0,ROOM.w, ROOM.h);
 
@@ -356,13 +321,10 @@ function draw() {
         ctx.fillText(G.floorMsg.text, G.floorMsg.x, G.floorMsg.y);
     }
 
-    ctx.fillStyle = "#100"; ctx.fillRect(0,0,ROOM.w, ROOM.wall); ctx.fillRect(0, ROOM.h-80, ROOM.w, 80);
-    if(G.enemiesDefeated) { ctx.fillStyle = "#600"; ctx.fillRect(ROOM.w/2-120, 0, 240, ROOM.wall); }
-    if (G.iframe % 4 < 2) { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill(); }
-    enemies.forEach(en => { ctx.fillStyle = en.isBoss ? "#600" : "#300"; ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill(); });
+    if(G.enemiesDefeated) { ctx.fillStyle = "#600"; ctx.fillRect(ROOM.w/2-120, 0, 240, 80); }
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
+    enemies.forEach(en => { ctx.fillStyle = en.isBoss?"#600":"#300"; ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill(); });
     projectiles.forEach(p => { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI*2); ctx.fill(); });
-    enemyProjectiles.forEach(ep => { ctx.fillStyle = "red"; ctx.beginPath(); ctx.arc(ep.x, ep.y, 7, 0, Math.PI*2); ctx.fill(); });
-    drops.forEach(d => { ctx.fillStyle = "red"; ctx.beginPath(); ctx.arc(d.x, d.y, 12, 0, Math.PI*2); ctx.fill(); });
     ctx.restore();
 
     document.getElementById('hp-fill').style.width = (G.hp/G.maxHp*100) + "%";
@@ -370,8 +332,38 @@ function draw() {
     document.getElementById('room-txt').innerText = G.room;
     requestAnimationFrame(draw);
 }
-draw();
-window.addEventListener('keydown', e => btnK(e.key.toLowerCase(), 1));
+
+// Mobile Joystick setup simplificado
+function quickJoy(id, type) {
+    const c = document.getElementById(id);
+    c.addEventListener('touchstart', e => {
+        const r = c.getBoundingClientRect();
+        const touch = e.touches[0];
+        const dx = (touch.clientX - (r.left+60))/60;
+        const dy = (touch.clientY - (r.top+60))/60;
+        joyInput[type+'X'] = dx; joyInput[type+'Y'] = dy;
+    });
+    c.addEventListener('touchend', () => { joyInput[type+'X'] = 0; joyInput[type+'Y'] = 0; });
+}
+
+window.onload = () => {
+    if(localStorage.getItem('den_shadow_save')) document.getElementById('btn-continue').style.display = 'block';
+    quickJoy('move-joy', 'move'); quickJoy('aim-joy', 'aim');
+    draw();
+};
+
+window.addEventListener('keydown', e => {
+    const k = e.key.toLowerCase();
+    keys[k] = true;
+    devCode += k;
+    if (devCode.includes("kadtr")) {
+        G.kadtr = true;
+        G.hp = 999; G.maxHp = 999;
+        document.getElementById('dev-tag').style.display = 'inline';
+        devCode = "";
+    }
+    if (devCode.length > 10) devCode = devCode.slice(-5);
+});
 window.addEventListener('keyup', e => delete keys[e.key.toLowerCase()]);
 </script>
 </body>
