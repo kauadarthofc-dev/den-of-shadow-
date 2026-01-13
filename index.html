@@ -2,170 +2,169 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Capivaras vs Estudantes: Final Fix</title>
+    <title>Capivaras vs Estudantes - Final</title>
     <style>
-        :root {
-            --bg: #1a1a1a;
-            --slot: #2d2d2d;
-            --defense: #3d3d3d;
-        }
         body {
-            margin: 0;
-            background: var(--bg);
+            background: #121212;
             color: white;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
+            margin: 0;
+            overflow: hidden;
         }
 
-        #header { padding: 20px; text-align: center; }
-        .stats { color: #ffd700; font-size: 24px; font-weight: bold; }
+        #ui { padding: 20px; text-align: center; }
+        .money { color: #2ecc71; font-size: 28px; font-weight: bold; }
 
-        #game-box {
+        #game-container {
             display: flex;
             gap: 15px;
-            background: #333;
+            background: #252525;
             padding: 15px;
-            border-radius: 12px;
+            border-radius: 15px;
             border: 4px solid #444;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        /* Grade de Merge */
-        .inventory {
+        /* Área de Inventário (Merge) */
+        .grid {
             display: grid;
-            grid-template-columns: repeat(3, 80px);
-            gap: 8px;
+            grid-template-columns: repeat(3, 85px);
+            gap: 10px;
         }
 
-        /* Linha de Defesa */
-        #defense-line {
+        /* Slots de Defesa */
+        #defense-slots {
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            background: var(--defense);
-            padding: 8px;
-            border-radius: 8px;
+            justify-content: space-around;
+            background: #333;
+            padding: 10px;
+            border-radius: 10px;
+            border-right: 4px dashed #555;
         }
 
         /* Campo de Batalha */
-        #field {
-            width: 400px;
-            height: 270px;
-            background: #111;
+        #battlefield {
+            width: 450px;
+            height: 300px;
+            background: #1a1a1a;
             position: relative;
             overflow: hidden;
-            border-radius: 0 8px 8px 0;
+            border-radius: 10px;
+            background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 100% 100px;
         }
 
         .slot {
-            width: 80px;
-            height: 80px;
-            background: var(--slot);
-            border-radius: 8px;
+            width: 85px;
+            height: 85px;
+            background: #2a2a2a;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
+            border: 2px solid transparent;
         }
 
-        /* Sprites corrigidos (Pixel Art) */
+        /* Estilização dos Sprites */
         .sprite {
-            width: 64px;
-            height: 64px;
+            width: 75px;
+            height: 75px;
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
             image-rendering: pixelated;
             cursor: grab;
+            position: relative;
         }
 
         .student {
             position: absolute;
-            width: 50px;
-            height: 50px;
-            right: -60px;
-            background-image: url('https://cdn-icons-png.flaticon.com/512/3468/3468192.png');
+            width: 65px;
+            height: 65px;
+            right: -80px;
             background-size: contain;
             background-repeat: no-repeat;
-            z-index: 5;
+            transition: right 0.1s linear;
         }
 
         .bullet {
             position: absolute;
-            width: 12px;
-            height: 6px;
-            background: #ffcc00;
-            border-radius: 3px;
-            box-shadow: 0 0 5px orange;
+            width: 14px;
+            height: 7px;
+            background: #f1c40f;
+            border-radius: 4px;
+            box-shadow: 0 0 10px #f39c12;
         }
 
-        #btn-buy {
-            margin-top: 20px;
-            padding: 15px 40px;
-            background: #2ecc71;
-            border: none;
-            border-radius: 8px;
+        #buy-btn {
+            margin-top: 25px;
+            padding: 15px 50px;
+            background: #27ae60;
             color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 20px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 4px #27ae60;
+            box-shadow: 0 5px #1e8449;
         }
-        #btn-buy:active { transform: translateY(2px); box-shadow: 0 2px #27ae60; }
+        #buy-btn:active { transform: translateY(3px); box-shadow: 0 2px #1e8449; }
     </style>
 </head>
 <body>
 
-    <div id="header">
-        <div class="stats">💰 <span id="money">100</span></div>
-        <p>Arraste as capivaras para os slots de defesa à direita!</p>
+    <div id="ui">
+        <div class="money">💰 Moedas: <span id="coin-val">100</span></div>
+        <p>Arraste a capivara para o slot de defesa para atirar!</p>
     </div>
 
-    <div id="game-box">
-        <div class="inventory" id="inv">
-            <div class="slot merge-s"></div><div class="slot merge-s"></div><div class="slot merge-s"></div>
-            <div class="slot merge-s"></div><div class="slot merge-s"></div><div class="slot merge-s"></div>
-            <div class="slot merge-s"></div><div class="slot merge-s"></div><div class="slot merge-s"></div>
+    <div id="game-container">
+        <div class="grid" id="inventory">
+            <div class="slot merge-slot"></div><div class="slot merge-slot"></div><div class="slot merge-slot"></div>
+            <div class="slot merge-slot"></div><div class="slot merge-slot"></div><div class="slot merge-slot"></div>
+            <div class="slot merge-slot"></div><div class="slot merge-slot"></div><div class="slot merge-slot"></div>
         </div>
 
-        <div id="defense-line">
-            <div class="slot def-s" data-row="0"></div>
-            <div class="slot def-s" data-row="1"></div>
-            <div class="slot def-s" data-row="2"></div>
+        <div id="defense-slots">
+            <div class="slot def-slot" data-row="0"></div>
+            <div class="slot def-slot" data-row="1"></div>
+            <div class="slot def-slot" data-row="2"></div>
         </div>
 
-        <div id="field"></div>
+        <div id="battlefield"></div>
     </div>
 
-    <button id="btn-buy">COMPRAR CAPIVARA (20💰)</button>
+    <button id="buy-btn">NOVA CAPIVARA (20💰)</button>
 
     <script>
-        // Imagens Garantidas (Pixel Art)
-        const IMGS = [
-            'https://i.ibb.co/Vmq9fH0/capy1.png',
-            'https://i.ibb.co/9H6S0m6/capy2.png',
-            'https://i.ibb.co/L5pGz17/capy3.png',
-            'https://i.ibb.co/Lkh6YmP/capy4.png'
-        ];
+        // Imagens embutidas para garantir que NUNCA fiquem sem foto
+        const IMAGES = {
+            capis: [
+                'https://cdn-icons-png.flaticon.com/512/9616/9616990.png', // Lvl 1
+                'https://cdn-icons-png.flaticon.com/512/9617/9617013.png', // Lvl 2
+                'https://cdn-icons-png.flaticon.com/512/9617/9617028.png'  // Lvl 3
+            ],
+            student: 'https://cdn-icons-png.flaticon.com/512/3468/3468192.png'
+        };
 
         let coins = 100;
         let dragged = null;
 
-        // --- SISTEMA DE CAPIVARAS ---
         function createCapi(lvl) {
             const div = document.createElement('div');
             div.className = 'sprite';
-            div.style.backgroundImage = `url('${IMGS[lvl]}')`;
+            div.style.backgroundImage = `url('${IMAGES.capis[lvl]}')`;
             div.dataset.lvl = lvl;
-            div.dataset.lastShot = 0; // Para controlar a cadência
+            div.dataset.lastShot = 0;
             div.draggable = true;
-            
-            div.ondragstart = () => { dragged = div; setTimeout(() => div.style.opacity = "0.5", 0); };
-            div.ondragend = () => { div.style.opacity = "1"; dragged = null; };
+            div.ondragstart = () => { dragged = div; };
             return div;
         }
 
-        // --- DRAG AND DROP ---
         document.querySelectorAll('.slot').forEach(slot => {
             slot.ondragover = e => e.preventDefault();
             slot.ondrop = () => {
@@ -173,7 +172,7 @@
                     slot.appendChild(dragged);
                 } else {
                     const target = slot.firstChild;
-                    if (target.dataset.lvl == dragged.dataset.lvl && target.dataset.lvl < 3) {
+                    if (target.dataset.lvl == dragged.dataset.lvl && target.dataset.lvl < 2) {
                         const newLvl = parseInt(target.dataset.lvl) + 1;
                         target.remove();
                         dragged.remove();
@@ -183,49 +182,49 @@
             };
         });
 
-        // --- COMPRA ---
-        document.getElementById('btn-buy').onclick = () => {
+        document.getElementById('buy-btn').onclick = () => {
             if (coins >= 20) {
-                const empty = Array.from(document.querySelectorAll('.merge-s')).find(s => !s.hasChildNodes());
+                const empty = Array.from(document.querySelectorAll('.merge-slot')).find(s => !s.hasChildNodes());
                 if (empty) {
                     coins -= 20;
                     empty.appendChild(createCapi(0));
-                    document.getElementById('money').innerText = coins;
+                    document.getElementById('coin-val').innerText = coins;
                 }
             }
         };
 
-        // --- LÓGICA DE TIRO E INIMIGOS ---
         function spawnStudent() {
             const row = Math.floor(Math.random() * 3);
             const st = document.createElement('div');
             st.className = 'student';
+            st.style.backgroundImage = `url('${IMAGES.student}')`;
             st.dataset.hp = 100;
             st.dataset.row = row;
-            st.style.top = (row * 90 + 20) + 'px';
-            document.getElementById('field').appendChild(st);
+            st.style.top = (row * 100 + 15) + 'px';
+            document.getElementById('battlefield').appendChild(st);
         }
 
-        function update() {
-            // Mover estudantes (lento)
+        // Loop principal
+        setInterval(() => {
+            // Mover estudantes
             document.querySelectorAll('.student').forEach(st => {
-                let r = parseFloat(st.style.right) || -60;
-                st.style.right = (r + 1.2) + 'px';
-                if (r > 400) st.remove();
+                let r = parseFloat(st.style.right) || -80;
+                st.style.right = (r + 1.5) + 'px';
+                if (r > 450) st.remove();
             });
 
-            // Atirar com CADÊNCIA CONTROLADA
+            // Atirar com cadência equilibrada
             const now = Date.now();
-            document.querySelectorAll('.def-s').forEach(slot => {
+            document.querySelectorAll('.def-slot').forEach(slot => {
                 if (slot.hasChildNodes()) {
                     const capi = slot.firstChild;
-                    const cooldown = 1200 - (capi.dataset.lvl * 200); // Lvl 0 atira a cada 1.2s, Lvl 3 a cada 0.6s
-
+                    const cooldown = 1500 - (capi.dataset.lvl * 300); // 1.5s, 1.2s ou 0.9s
+                    
                     if (now - capi.dataset.lastShot > cooldown) {
                         const target = Array.from(document.querySelectorAll('.student'))
                                             .find(s => s.dataset.row == slot.dataset.row);
                         if (target) {
-                            shoot(slot, target, (parseInt(capi.dataset.lvl) + 1) * 20);
+                            shoot(slot, target, (parseInt(capi.dataset.lvl) + 1) * 35);
                             capi.dataset.lastShot = now;
                         }
                     }
@@ -233,36 +232,34 @@
             });
 
             if (Math.random() > 0.98) spawnStudent();
-        }
+        }, 50);
 
         function shoot(slot, target, dmg) {
             const b = document.createElement('div');
             b.className = 'bullet';
-            b.style.top = (slot.dataset.row * 90 + 45) + 'px';
+            b.style.top = (slot.dataset.row * 100 + 50) + 'px';
             b.style.left = '0px';
-            document.getElementById('field').appendChild(b);
+            document.getElementById('battlefield').appendChild(b);
 
             let pos = 0;
-            const moveB = setInterval(() => {
-                pos += 8;
+            const bInt = setInterval(() => {
+                pos += 10;
                 b.style.left = pos + 'px';
-                const tPos = 400 - parseFloat(target.style.right);
+                const tPos = 450 - parseFloat(target.style.right);
                 
-                if (pos >= tPos - 20) {
-                    clearInterval(moveB);
+                if (pos >= tPos - 30) {
+                    clearInterval(bInt);
                     b.remove();
                     target.dataset.hp -= dmg;
                     if (target.dataset.hp <= 0) {
                         target.remove();
-                        coins += 10;
-                        document.getElementById('money').innerText = coins;
+                        coins += 15;
+                        document.getElementById('coin-val').innerText = coins;
                     }
                 }
-                if (pos > 400) { clearInterval(moveB); b.remove(); }
+                if (pos > 450) { clearInterval(bInt); b.remove(); }
             }, 20);
         }
-
-        setInterval(update, 50);
     </script>
 </body>
 </html>
