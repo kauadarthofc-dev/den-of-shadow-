@@ -2,314 +2,306 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Capivara vs Zombies: Merge Art</title>
+    <title>Capivaras vs Estudantes Zumbis</title>
     <style>
         :root {
-            --bg: #1a1a1a;
-            --slot: #3d2b1f;
-            --accent: #8b5a2b;
+            --bg: #1e1e26;
+            --grid-bg: #2d2d3a;
+            --slot-empty: rgba(255, 255, 255, 0.05);
+            --defense-line: #3a3a4d;
         }
         body {
             margin: 0;
             background: var(--bg);
             color: white;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Segoe UI', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            overflow-x: hidden;
+            user-select: none;
         }
 
-        /* Estilização das Entidades */
-        .sprite {
-            width: 64px;
-            height: 64px;
-            image-rendering: pixelated; /* Mantém o aspecto de Pixel Art */
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-
-        /* Área Superior */
-        #ui-top {
-            width: 100%;
-            max-width: 800px;
+        #game-header {
             padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            text-align: center;
         }
 
-        #progress-container {
-            width: 200px;
-            height: 15px;
-            background: #333;
-            border: 3px solid #000;
-            border-radius: 5px;
-        }
-        #progress-bar {
-            width: 0%;
-            height: 100%;
-            background: #ffd700;
-            transition: width 0.3s;
-        }
-
-        /* Layout Principal */
-        #main-container {
+        /* Container Principal */
+        #game-world {
             display: flex;
-            gap: 20px;
-            padding: 10px;
-            background: #2c2c2c;
-            border-radius: 15px;
+            gap: 30px;
+            background: #252531;
+            padding: 20px;
+            border-radius: 20px;
             border: 4px solid #444;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
         }
 
-        /* Grade de Merge */
-        #grid {
+        /* Grade de Inventário/Merge */
+        .grid-container {
             display: grid;
-            grid-template-columns: repeat(3, 85px);
-            grid-template-rows: repeat(3, 85px);
-            gap: 8px;
-            background: var(--slot);
-            padding: 10px;
-            border-radius: 8px;
+            grid-template-columns: repeat(3, 80px);
+            grid-template-rows: repeat(3, 80px);
+            gap: 10px;
+            background: var(--grid-bg);
+            padding: 15px;
+            border-radius: 12px;
         }
+
+        /* Linha de Defesa (Onde o player coloca as capis) */
+        #defense-slots {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            background: var(--defense-line);
+            padding: 10px;
+            border-radius: 12px;
+            border-right: 5px dashed #555;
+        }
+
+        /* Campo de Batalha (Onde os estudantes andam) */
+        #battle-field {
+            width: 350px;
+            height: 300px;
+            background: #1a1a24;
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
         .slot {
-            width: 85px;
-            height: 85px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 5px;
+            width: 80px;
+            height: 80px;
+            background: var(--slot-empty);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
+            border: 2px solid transparent;
         }
+        .slot.drag-over { border-color: #ffd700; background: rgba(255,215,0,0.1); }
 
-        /* Campo de Batalha Procedural */
-        #battle-field {
-            width: 400px;
-            height: 280px;
-            background: #252525;
+        /* Sprites */
+        .capi {
+            width: 60px;
+            height: 60px;
+            cursor: grab;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
             position: relative;
-            border-radius: 8px;
-            border-left: 4px solid #555;
-            background-image: linear-gradient(#333 1px, transparent 1px);
-            background-size: 100% 90px;
+            transition: transform 0.2s;
+            image-rendering: pixelated;
         }
-
-        /* Inimigos e Capis na Luta */
-        .enemy { position: absolute; right: -70px; transition: right 0.1s linear; }
-        .capi-battle { position: absolute; left: 10px; }
-
-        .hp-bar {
+        .capi:active { cursor: grabbing; }
+        .capi-lvl {
             position: absolute;
-            top: -5px;
-            width: 100%;
-            height: 4px;
-            background: #500;
+            bottom: -5px;
+            background: #000;
+            color: gold;
+            font-size: 10px;
+            padding: 2px 5px;
+            border-radius: 5px;
         }
-        .hp-fill { height: 100%; background: #f00; width: 100%; }
 
-        /* Controles */
-        #controls { margin-top: 20px; }
+        .student {
+            position: absolute;
+            font-size: 40px;
+            right: -50px;
+            transition: right 0.05s linear;
+        }
+
+        .bullet {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ffec3d;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #fadb14;
+        }
+
+        #buy-area { margin-top: 20px; }
         #buy-btn {
-            background: #4caf50;
+            background: #52c41a;
             border: none;
             color: white;
             padding: 15px 40px;
-            font-size: 20px;
-            font-weight: bold;
             border-radius: 10px;
+            font-size: 18px;
             cursor: pointer;
-            box-shadow: 0 5px #2e7d32;
-        }
-        #buy-btn:active { transform: translateY(3px); box-shadow: 0 2px #2e7d32; }
-
-        /* Estilo do Projétil */
-        .bullet {
-            position: absolute;
-            width: 12px;
-            height: 6px;
-            background: #ffa500;
-            border-radius: 3px;
-            box-shadow: 0 0 5px #ff4500;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-    <div id="ui-top">
-        <div>💰 Moedas: <span id="coins">50</span></div>
-        <div id="progress-container"><div id="progress-bar"></div></div>
+    <div id="game-header">
+        <h1>Capivara Defense: School Breakout 🏫</h1>
+        <h2>💰 Moedas: <span id="coin-txt">100</span></h2>
     </div>
 
-    <div id="main-container">
-        <div id="grid">
-            <div class="slot" data-index="0"></div><div class="slot" data-index="1"></div><div class="slot" data-index="2"></div>
-            <div class="slot" data-index="3"></div><div class="slot" data-index="4"></div><div class="slot" data-index="5"></div>
-            <div class="slot" data-index="6"></div><div class="slot" data-index="7"></div><div class="slot" data-index="8"></div>
+    <div id="game-world">
+        <div class="grid-container" id="inventory">
+            <div class="slot merge-slot"></div><div class="slot merge-slot"></div><div class="slot merge-slot"></div>
+            <div class="slot merge-slot"></div><div class="slot merge-slot"></div><div class="slot merge-slot"></div>
+            <div class="slot merge-slot"></div><div class="slot merge-slot"></div><div class="slot merge-slot"></div>
         </div>
 
-        <div id="battle-field">
-            </div>
+        <div id="defense-slots">
+            <div class="slot combat-slot" data-row="0"></div>
+            <div class="slot combat-slot" data-row="1"></div>
+            <div class="slot combat-slot" data-row="2"></div>
+        </div>
+
+        <div id="battle-field"></div>
     </div>
 
-    <div id="controls">
-        <button id="buy-btn">NOVA CAPIVARA (15💰)</button>
+    <div id="buy-area">
+        <button id="buy-btn">COMPRAR CAPIVARA (20💰)</button>
     </div>
 
     <script>
-        // Imagens de Sprites (Pixel Art)
-        const SPRITES = {
-            capi: [
-                'https://i.ibb.co/Vmq9fH0/capy1.png', // Lvl 1
-                'https://i.ibb.co/9H6S0m6/capy2.png', // Lvl 2
-                'https://i.ibb.co/L5pGz17/capy3.png'  // Lvl 3
-            ],
-            zombie: 'https://i.ibb.co/yYv7p7X/zombie.png'
+        const CAPI_DATA = {
+            1: { emoji: '🐹', power: 10 },
+            2: { emoji: '🦦', power: 25 },
+            3: { emoji: '🦫', power: 60 },
+            4: { emoji: '🐾', power: 150 }
         };
 
-        let coins = 50;
-        let xp = 0;
-        let dragged = null;
+        let coins = 100;
+        let draggedElement = null;
 
-        // Configurações
-        const levels = [
-            { img: 'https://cdn-icons-png.flaticon.com/512/9616/9616990.png', power: 10 }, // Baby Capi
-            { img: 'https://cdn-icons-png.flaticon.com/512/9617/9617013.png', power: 30 }, // Knight Capi
-            { img: 'https://cdn-icons-png.flaticon.com/512/9617/9617028.png', power: 80 }  // King Capi
-        ];
-
-        // Lógica de Compra e Drag/Drop
-        document.getElementById('buy-btn').onclick = () => {
-            if (coins >= 15) {
-                const emptySlot = Array.from(document.querySelectorAll('.slot')).find(s => !s.hasChildNodes());
-                if (emptySlot) {
-                    coins -= 15;
-                    createCapi(0, emptySlot);
-                    updateUI();
-                }
-            }
-        };
-
-        function createCapi(lvl, target) {
-            const div = document.createElement('div');
-            div.className = 'sprite';
-            div.style.backgroundImage = `url(${levels[lvl].img})`;
-            div.draggable = true;
-            div.dataset.lvl = lvl;
-            
-            div.ondragstart = () => { dragged = div; };
-            target.appendChild(div);
-            syncBattle();
+        // --- SISTEMA DE ARRASTAR E SOLTAR ---
+        function setupDraggable(el) {
+            el.draggable = true;
+            el.ondragstart = (e) => {
+                draggedElement = el;
+                el.style.opacity = '0.5';
+            };
+            el.ondragend = () => {
+                el.style.opacity = '1';
+                draggedElement = null;
+            };
         }
 
         document.querySelectorAll('.slot').forEach(slot => {
-            slot.ondragover = e => e.preventDefault();
-            slot.ondrop = () => {
+            slot.ondragover = e => {
+                e.preventDefault();
+                slot.classList.add('drag-over');
+            };
+            slot.ondragleave = () => slot.classList.remove('drag-over');
+            
+            slot.ondrop = (e) => {
+                slot.classList.remove('drag-over');
+                const sourceSlot = draggedElement.parentElement;
+                
                 if (!slot.hasChildNodes()) {
-                    slot.appendChild(dragged);
+                    // Mover para slot vazio
+                    slot.appendChild(draggedElement);
                 } else {
-                    const target = slot.firstChild;
-                    if (target.dataset.lvl == dragged.dataset.lvl && target.dataset.lvl < levels.length - 1) {
-                        const nextLvl = parseInt(target.dataset.lvl) + 1;
-                        target.remove();
-                        dragged.remove();
-                        createCapi(nextLvl, slot);
-                        xp += 20;
+                    const targetCapi = slot.firstChild;
+                    // Lógica de MERGE (Somente se for na grade de inventário ou entre si)
+                    if (targetCapi.dataset.level === draggedElement.dataset.level && targetCapi !== draggedElement) {
+                        const nextLvl = parseInt(targetCapi.dataset.level) + 1;
+                        if (CAPI_DATA[nextLvl]) {
+                            targetCapi.remove();
+                            draggedElement.remove();
+                            const newCapi = createCapi(nextLvl);
+                            slot.appendChild(newCapi);
+                        }
                     }
                 }
-                syncBattle();
-                updateUI();
             };
         });
 
-        // Campo de Batalha
-        function syncBattle() {
-            const field = document.getElementById('battle-field');
-            field.querySelectorAll('.capi-battle').forEach(c => c.remove());
-            
-            // Pega as 3 capivaras mais fortes para as 3 linhas
-            const allCapis = Array.from(document.querySelectorAll('.slot .sprite'))
-                                .sort((a,b) => b.dataset.lvl - a.dataset.lvl);
-
-            allCapis.slice(0, 3).forEach((capi, i) => {
-                const bCapi = capi.cloneNode(true);
-                bCapi.className = 'sprite capi-battle';
-                bCapi.style.top = (i * 90 + 15) + 'px';
-                bCapi.dataset.row = i;
-                bCapi.dataset.pwr = levels[capi.dataset.lvl].power;
-                field.appendChild(bCapi);
-            });
+        function createCapi(lvl) {
+            const div = document.createElement('div');
+            div.className = 'capi';
+            div.dataset.level = lvl;
+            div.innerHTML = `${CAPI_DATA[lvl].emoji} <span class="capi-lvl">Lvl ${lvl}</span>`;
+            setupDraggable(div);
+            return div;
         }
 
-        function spawnZombie() {
+        // --- COMPRA ---
+        document.getElementById('buy-btn').onclick = () => {
+            if (coins >= 20) {
+                const emptySlot = Array.from(document.querySelectorAll('.merge-slot')).find(s => !s.hasChildNodes());
+                if (emptySlot) {
+                    coins -= 20;
+                    emptySlot.appendChild(createCapi(1));
+                    document.getElementById('coin-txt').innerText = coins;
+                }
+            }
+        };
+
+        // --- SISTEMA DE COMBATE ---
+        function spawnStudent() {
             const row = Math.floor(Math.random() * 3);
-            const zombie = document.createElement('div');
-            zombie.className = 'sprite enemy';
-            zombie.style.backgroundImage = `url('https://cdn-icons-png.flaticon.com/512/1141/1141771.png')`;
-            zombie.style.top = (row * 90 + 15) + 'px';
-            zombie.dataset.hp = 100;
-            zombie.dataset.row = row;
-            zombie.innerHTML = `<div class="hp-bar"><div class="hp-fill"></div></div>`;
-            document.getElementById('battle-field').appendChild(zombie);
+            const student = document.createElement('div');
+            student.className = 'student';
+            student.innerHTML = '🧑‍🎓'; // Estudante zumbi
+            student.dataset.hp = 100;
+            student.dataset.row = row;
+            student.style.top = (row * 100 + 20) + 'px';
+            document.getElementById('battle-field').appendChild(student);
         }
 
-        // Loop de Movimento e Ataque
-        setInterval(() => {
-            // Mover Zumbis
-            document.querySelectorAll('.enemy').forEach(z => {
-                let currentRight = parseInt(z.style.right) || -70;
-                z.style.right = (currentRight + 2) + 'px';
-                if (currentRight > 350) z.remove(); // Chegou na base
+        function gameLoop() {
+            // Mover estudantes
+            document.querySelectorAll('.student').forEach(st => {
+                let right = parseFloat(st.style.right) || -50;
+                st.style.right = (right + 1.5) + 'px';
+                if (right > 350) st.remove();
             });
 
-            // Capivaras Atacam
-            document.querySelectorAll('.capi-battle').forEach(c => {
-                const target = Array.from(document.querySelectorAll('.enemy'))
-                                    .find(z => z.dataset.row == c.dataset.row);
-                if (target) shoot(c, target);
+            // Atacar
+            document.querySelectorAll('.combat-slot').forEach(slot => {
+                if (slot.hasChildNodes()) {
+                    const capi = slot.firstChild;
+                    const row = slot.dataset.row;
+                    const targets = Array.from(document.querySelectorAll('.student'))
+                                         .filter(s => s.dataset.row == row);
+                    
+                    if (targets.length > 0) shoot(slot, targets[0], CAPI_DATA[capi.dataset.level].power);
+                }
             });
 
-            if (Math.random() > 0.95) spawnZombie();
-        }, 1000);
+            if (Math.random() > 0.97) spawnStudent();
+        }
 
-        function shoot(from, to) {
+        function shoot(slot, target, pwr) {
             const bullet = document.createElement('div');
             bullet.className = 'bullet';
-            bullet.style.left = '70px';
-            bullet.style.top = (parseInt(from.style.top) + 32) + 'px';
-            document.getElementById('battle-field').appendChild(bullet);
+            const field = document.getElementById('battle-field');
+            field.appendChild(bullet);
 
-            let bPos = 70;
-            const bInt = setInterval(() => {
-                bPos += 10;
-                bullet.style.left = bPos + 'px';
-                
-                // Colisão simples por posição
-                const zPos = 400 - parseInt(to.style.right);
-                if (bPos >= zPos - 20) {
-                    clearInterval(bInt);
+            let bLeft = 0;
+            bullet.style.top = (slot.dataset.row * 100 + 45) + 'px';
+            bullet.style.left = bLeft + 'px';
+
+            const moveBullet = setInterval(() => {
+                bLeft += 8;
+                bullet.style.left = bLeft + 'px';
+
+                const targetRight = 350 - parseFloat(target.style.right);
+                if (bLeft >= targetRight - 20) {
+                    clearInterval(moveBullet);
                     bullet.remove();
-                    hitZombie(to, from.dataset.pwr);
+                    target.dataset.hp -= pwr;
+                    if (target.dataset.hp <= 0) {
+                        target.remove();
+                        coins += 10;
+                        document.getElementById('coin-txt').innerText = coins;
+                    }
                 }
-                if (bPos > 400) { clearInterval(bInt); bullet.remove(); }
-            }, 30);
+                if (bLeft > 350) { clearInterval(moveBullet); bullet.remove(); }
+            }, 20);
         }
 
-        function hitZombie(z, pwr) {
-            z.dataset.hp -= pwr;
-            z.querySelector('.hp-fill').style.width = z.dataset.hp + '%';
-            if (z.dataset.hp <= 0) {
-                z.remove();
-                coins += 5;
-                updateUI();
-            }
-        }
-
-        function updateUI() {
-            document.getElementById('coins').innerText = coins;
-            document.getElementById('progress-bar').style.width = (xp % 100) + '%';
-        }
+        setInterval(gameLoop, 100);
     </script>
 </body>
 </html>
