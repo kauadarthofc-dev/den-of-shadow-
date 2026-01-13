@@ -22,24 +22,22 @@
         #room-ui { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.8); padding: 10px 20px; border-right: 3px solid #660; color: #fff; font-size: 18px; }
 
         #upgrade-screen { display:none; }
-        .upgrade-container { display: flex; gap: 20px; perspective: 1000px; flex-wrap: wrap; justify-content: center; }
+        .upgrade-container { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; max-width: 1000px; }
         .upgrade-card { 
             background: linear-gradient(145deg, #1a0000, #000); 
-            border: 2px solid #400; padding: 25px; width: 220px; 
-            cursor: pointer; pointer-events: auto; transition: 0.4s;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            position: relative; overflow: hidden;
+            border: 2px solid #400; padding: 20px; width: 180px; 
+            cursor: pointer; pointer-events: auto; transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
-        .upgrade-card:hover { border-color: #f00; transform: translateY(-10px) rotateY(5deg); box-shadow: 0 0 30px #500; }
-        .upgrade-card h3 { font-family: 'Nosifer'; font-size: 12px; color: #f00; margin-bottom: 15px; }
-        .upgrade-card p { font-family: 'Special Elite'; font-size: 14px; color: #ccc; }
+        .upgrade-card:hover { border-color: #f00; transform: translateY(-5px); box-shadow: 0 0 20px #600; }
+        .upgrade-card h3 { font-family: 'Nosifer'; font-size: 10px; color: #f00; margin-bottom: 10px; }
+        .upgrade-card p { font-family: 'Special Elite'; font-size: 12px; color: #ccc; }
 
         .mobile-ui { position: absolute; bottom: 30px; width: 100%; display: none; justify-content: space-between; padding: 0 20px; z-index: 4000; pointer-events: none; }
         .joy-area { width: 120px; height: 120px; background: rgba(255,0,0,0.05); border: 2px solid rgba(255,0,0,0.2); border-radius: 50%; position: relative; pointer-events: auto; }
         .joy-stick { width: 40px; height: 40px; background: rgba(255,0,0,0.4); border: 2px solid #f00; border-radius: 50%; position: absolute; top: 40px; left: 40px; pointer-events: none; }
-        .action-btns { display: flex; flex-direction: column; gap: 15px; pointer-events: auto; }
-        .btn-circle { width: 65px; height: 65px; background: rgba(40,0,0,0.7); border: 2px solid #800; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; box-shadow: 0 0 10px #000; }
-        .btn-circle:active { background: #f00; }
+        .action-btns { display: flex; flex-direction: column; gap: 10px; pointer-events: auto; }
+        .btn-circle { width: 60px; height: 60px; background: rgba(50,0,0,0.8); border: 2px solid #a00; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -51,17 +49,17 @@
 </div>
 
 <div id="cutscene-screen" class="ui-screen" style="display:none;" onclick="advanceCutscene()">
-    <div id="cutscene-text" style="font-family: 'Special Elite'; font-size: 24px; color: #800;"></div>
+    <div id="cutscene-text" style="font-family: 'Special Elite'; font-size: 22px; color: #a00; max-width: 700px;"></div>
 </div>
 
 <div id="upgrade-screen" class="ui-screen">
-    <h2 style="font-family:'Nosifer'; color:#660; margin-bottom: 40px;">RESTOS DE PODER</h2>
+    <h2 style="font-family:'Nosifer'; color:#660; margin-bottom: 20px;">PODERES OBSCUROS</h2>
     <div id="upgrade-list" class="upgrade-container"></div>
 </div>
 
 <div id="hud">
     <div class="hud-group">
-        <div>VITALIDADE <span id="dev-tag" style="color:yellow; font-size:9px; display:none;">[SÁBIO DAS SOMBRAS]</span></div>
+        <div>VITALIDADE <span id="dev-tag" style="color:yellow; font-size:9px; display:none;">[ENTIDADE SUPREMA]</span></div>
         <div class="bar-bg"><div id="hp-fill" class="bar-fill" style="background:#800; width: 100%;"></div></div>
     </div>
     <div class="hud-group" style="border-color:#660;">
@@ -92,22 +90,23 @@ const G = {
     play: false, room: 0, hp: 100, maxHp: 100, ammo: 25, maxAmmo: 25,
     enemiesDefeated: false, inCutscene: false, kadtr: false, lastShot: 0,
     dmgMult: 1, spdMult: 1, projSize: 6, lifeSteal: 0,
-    dashTime: 0, dashCooldown: 0, currentWeaponIdx: 0
+    dashTime: 0, dashCooldown: 0, currentWeaponIdx: 0,
+    ricochet: false, shield: 0
 };
 
 const WEAPONS = [
-    { n: "Básica", d: 50, s: 200, r: 0 },
-    { n: "Alma Corrompida", d: 75, s: 180, r: 10 },
-    { n: "Grito do Vazio", d: 110, s: 150, r: 25 },
-    { n: "Vingança Final", d: 180, s: 120, r: 35 }
+    { n: "Básica", d: 50, s: 200, r: 0, c: "cyan" },
+    { n: "Alma Corrompida", d: 75, s: 180, r: 10, c: "#0f0" },
+    { n: "Grito do Vazio", d: 110, s: 150, r: 25, c: "#a0f" },
+    { n: "Vingança Final", d: 200, s: 100, r: 35, c: "#f00" }
 ];
 
 const STORY = {
     init: ["Você não é um herói.", "O Rei das Sombras lhe tirou tudo.", "A torre é o seu caminho.", "O topo é a única saída."],
-    boss10: ["O Guardião foi silenciado.", "Ele também já teve uma família.", "Você sente o peso de cada vida?"],
-    boss20: ["A Filha do Rei implora por misericórdia...", "Mas aqui, apenas a morte é real."],
-    boss30: ["Eles imploram em línguas esquecidas."],
-    boss100: ["O REI DAS SOMBRAS CAIU.", "Agora você é a coisa mais sombria aqui."]
+    boss10: ["O Pentágono do Medo ruiu.", "O Guardião foi silenciado.", "Você sente o peso de cada vida?"],
+    boss20: ["O Triângulo Áureo foi partido.", "A Filha do Rei implora por misericórdia...", "Mas aqui, apenas a morte é real."],
+    boss30: ["O Hexágono da Angústia silenciou.", "Eles imploram em línguas esquecidas."],
+    boss100: ["O REI DAS SOMBRAS CAIU.", "Você recuperou seu trono.", "Mas agora, você é a coisa mais sombria neste lugar."]
 };
 
 let particles = [];
@@ -115,35 +114,27 @@ let enemies = [], projectiles = [], joyInput = { moveX: 0, moveY: 0, aimX: 0, ai
 const keys = {};
 let player = { x: 800, y: 800, r: 25, spd: 7.5 };
 
+// --- AUXILIARES ---
+function drawPolygon(x, y, r, sides, angle) {
+    ctx.beginPath();
+    for(let i=0; i<sides; i++){
+        let a = angle + (i * Math.PI * 2 / sides);
+        ctx.lineTo(x + r * Math.cos(a), y + r * Math.sin(a));
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+}
+
 async function setupAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') await audioCtx.resume();
-    const load = async (u) => { try { const r = await fetch(u); return await audioCtx.decodeAudioData(await r.arrayBuffer()); } catch(e){return null;} };
-    if(!bufferInimigo) bufferInimigo = await load('https://www.soundjay.com/misc/sounds/death-01.mp3');
-    if(!bufferFilha) bufferFilha = await load('https://www.soundjay.com/misc/sounds/scream-01.mp3');
 }
 
-function spawnDeathParticles(x, y, color) {
-    for(let i=0; i<15; i++) {
-        particles.push({
-            x, y, 
-            vx: (Math.random()-0.5)*10, 
-            vy: (Math.random()-0.5)*10, 
-            life: 1.0, 
-            color
-        });
+function spawnParticles(x, y, color, count=10) {
+    for(let i=0; i<count; i++) {
+        particles.push({ x, y, vx: (Math.random()-0.5)*12, vy: (Math.random()-0.5)*12, life: 1.0, color });
     }
-}
-
-function playScream(isBoss, isDaughter) {
-    if (!audioCtx || !bufferInimigo) return;
-    const s = audioCtx.createBufferSource();
-    const g = audioCtx.createGain();
-    s.buffer = (isDaughter && bufferFilha) ? bufferFilha : bufferInimigo;
-    s.playbackRate.value = isBoss ? 0.6 : 1.2;
-    g.gain.value = 0.2;
-    s.connect(g); g.connect(audioCtx.destination);
-    s.start(0);
 }
 
 function switchWeapon() {
@@ -154,18 +145,12 @@ function switchWeapon() {
 
 function triggerDash() {
     if (Date.now() > G.dashCooldown) {
-        G.dashTime = Date.now() + 150;
-        G.dashCooldown = Date.now() + 800;
-        spawnDeathParticles(player.x, player.y, "rgba(255,255,255,0.3)");
+        G.dashTime = Date.now() + 150; G.dashCooldown = Date.now() + 800;
+        spawnParticles(player.x, player.y, "white", 5);
     }
 }
 
-function initGameFlow() { 
-    setupAudio().then(() => { 
-        document.getElementById('start-screen').style.display='none'; 
-        if(G.room===0) startCutscene('init'); else startGame(); 
-    }); 
-}
+function initGameFlow() { setupAudio().then(() => { document.getElementById('start-screen').style.display='none'; if(G.room===0) startCutscene('init'); else startGame(); }); }
 
 function startGame() {
     G.play=true; G.inCutscene=false;
@@ -176,7 +161,7 @@ function startGame() {
 
 function startCutscene(k) {
     G.play=false; G.inCutscene=true; storyIdx=0;
-    currentStory = STORY[k] || ["..."];
+    currentStory = STORY[k] || ["A escuridão se aprofunda..."];
     document.getElementById('cutscene-screen').style.display='flex';
     advanceCutscene();
 }
@@ -193,13 +178,19 @@ function advanceCutscene() {
 function openUpgradeMenu() {
     G.play=false; const list = document.getElementById('upgrade-list'); list.innerHTML='';
     document.getElementById('upgrade-screen').style.display='flex';
-    const opts = [
-        {n:"CARNE PODRE", p:"Aumenta sua vida máxima permanentemente.", f:()=>G.maxHp+=50},
-        {n:"ÓDIO VESTIGIAL", p:"Seus tiros causam 40% a mais de dano.", f:()=>G.dmgMult+=0.4},
-        {n:"PASSO SOMBRIO", p:"Velocidade de movimento aumentada.", f:()=>G.spdMult+=0.2},
-        {n:"TOQUE DA MORTE", p:"Cura uma pequena porção ao abater inimigos.", f:()=>G.lifeSteal+=3}
+    const allOpts = [
+        {n:"CARNE PODRE", p:"+50 HP Máximo", f:()=>G.maxHp+=50},
+        {n:"ÓDIO VESTIGIAL", p:"+40% Dano", f:()=>G.dmgMult+=0.4},
+        {n:"PASSO SOMBRIO", p:"+20% Velocidade", f:()=>G.spdMult+=0.2},
+        {n:"TOQUE DA MORTE", p:"Cura ao abater", f:()=>G.lifeSteal+=4},
+        {n:"BALAS REBELDES", p:"Tiros ricocheteiam", f:()=>G.ricochet=true},
+        {n:"ESCUDO DE ALMAS", p:"Bloqueia um golpe", f:()=>G.shield++},
+        {n:"MUNIÇÃO INFINITA", p:"Recuperação rápida", f:()=>G.maxAmmo+=10},
+        {n:"OLHAR DO ABISMO", p:"Projéteis gigantes", f:()=>G.projSize+=8},
+        {n:"FESTA DE SANGUE", p:"Dano dobrado", f:()=>G.dmgMult*=2},
+        {n:"IMORTALIDADE", p:"Recupera HP ao dash", f:()=>G.lifeSteal+=1}
     ];
-    opts.sort(()=>Math.random()-0.5).slice(0,3).forEach(o => {
+    allOpts.sort(()=>Math.random()-0.5).slice(0,3).forEach(o => {
         const c = document.createElement('div'); c.className='upgrade-card';
         c.innerHTML=`<h3>${o.n}</h3><p>${o.p}</p>`;
         c.onclick=()=>{ o.f(); G.hp=G.maxHp; document.getElementById('upgrade-screen').style.display='none'; G.room++; startGame(); };
@@ -213,10 +204,14 @@ function initRoom() {
     let available = WEAPONS.filter(w => G.kadtr || G.room >= w.r);
     G.currentWeaponIdx = available.length - 1;
     document.getElementById('weapon-name').innerText = available[G.currentWeaponIdx].n.toUpperCase();
-    if(G.room > 0 && G.room % 10 === 0) enemies.push({x:ROOM.w/2, y:300, hp:1000+(G.room*80), r:85, spd:2.2, type:'boss'});
-    else if(G.room > 0) {
+    
+    if(G.room > 0 && G.room % 10 === 0) {
+        let type = G.room % 30 === 10 ? 'pent' : (G.room % 30 === 20 ? 'tri' : 'hex');
+        if(G.room === 100) type = 'king';
+        enemies.push({x:ROOM.w/2, y:300, hp:1200+(G.room*100), r:90, spd:2, type:type, state:0, timer:0, angle:0});
+    } else if(G.room > 0) {
         let n = 4 + Math.floor(G.room*0.3);
-        for(let i=0; i<n; i++) enemies.push({x:Math.random()*1400+100, y:Math.random()*400+100, hp:80, r:30, spd:2, type:'normal'});
+        for(let i=0; i<n; i++) enemies.push({x:Math.random()*1400+100, y:Math.random()*400+100, hp:80, r:30, spd:2.5, type:'minion'});
     } else G.enemiesDefeated=true;
 }
 
@@ -234,36 +229,45 @@ function update() {
     if(keys['arrowup']) ay=-1; if(keys['arrowdown']) ay=1;
     if(keys['arrowleft']) ax=-1; if(keys['arrowright']) ax=1;
 
-    let w = WEAPONS.filter(w => G.kadtr || G.room >= w.r)[G.currentWeaponIdx];
+    let w = WEAPONS.filter(wa => G.kadtr || G.room >= wa.r)[G.currentWeaponIdx];
     if((Math.abs(ax)>0.3 || Math.abs(ay)>0.3) && G.ammo>0 && Date.now()-G.lastShot > w.s) {
-        projectiles.push({x:player.x, y:player.y, vx:ax*18, vy:ay*18, dmg:(G.kadtr?9999:w.d)*G.dmgMult});
+        projectiles.push({x:player.x, y:player.y, vx:ax*18, vy:ay*18, dmg:(G.kadtr?9999:w.d)*G.dmgMult, c:w.c, b:0});
         G.ammo--; G.lastShot=Date.now();
-    } else if(mx===0 && my===0 && G.ammo<G.maxAmmo) G.ammo += 0.15;
+    } else if(mx===0 && my===0 && G.ammo<G.maxAmmo) G.ammo += 0.2;
 
     enemies.forEach((en, i) => {
+        en.angle += 0.05;
+        if(en.type === 'tri') { // Move: Investida
+            en.timer++; if(en.timer > 60) { en.spd = 15; if(en.timer > 75) { en.timer = 0; en.spd = 2; } }
+        }
+        if(en.type === 'pent') { // Move: Giro de Tiros
+            if(Math.random() < 0.05) projectiles.push({x:en.x, y:en.y, vx:Math.cos(en.angle)*8, vy:Math.sin(en.angle)*8, dmg:10, c:"#f00", b:-1});
+        }
+        
+        let dist = Math.hypot(player.x-en.x, player.y-en.y);
         let ang = Math.atan2(player.y-en.y, player.x-en.x);
-        let nX = en.x + Math.cos(ang)*en.spd, nY = en.y + Math.sin(ang)*en.spd;
-        enemies.forEach((ot, j) => { if(i!==j && Math.hypot(nX-ot.x, nY-ot.y) < en.r+ot.r){ nX += Math.cos(Math.atan2(nY-ot.y, nX-ot.x))*4; nY += Math.sin(Math.atan2(nY-ot.y, nX-ot.x))*4; }});
-        en.x = nX; en.y = nY;
-        if(Math.hypot(player.x-en.x, player.y-en.y) < player.r+en.r && !G.kadtr && !dashing) {
-            G.hp -= 0.5; if(G.hp<=0) location.reload();
-            player.x += Math.cos(Math.atan2(player.y-en.y, player.x-en.x))*6;
+        en.x += Math.cos(ang)*en.spd; en.y += Math.sin(ang)*en.spd;
+
+        if(dist < player.r+en.r && !dashing) {
+            if(G.shield > 0) G.shield--; else G.hp -= 0.8;
+            if(G.hp<=0) location.reload();
+            player.x += Math.cos(ang)*10; player.y += Math.sin(ang)*10;
         }
     });
 
     projectiles.forEach((p, pi) => {
         p.x+=p.vx; p.y+=p.vy;
-        enemies.forEach((en, ei) => {
-            if(Math.hypot(p.x-en.x, p.y-en.y)<en.r){
-                en.hp-=p.dmg; projectiles.splice(pi, 1);
-                if(en.hp<=0){ 
-                    spawnDeathParticles(en.x, en.y, en.type==='boss'?"#f00":"#400");
-                    playScream(en.type==='boss', G.room===20); 
-                    G.hp = Math.min(G.maxHp, G.hp+G.lifeSteal); 
-                    enemies.splice(ei, 1); if(enemies.length===0) G.enemiesDefeated=true; 
+        if(p.b !== -1) { // Tiros do Player
+            enemies.forEach((en, ei) => {
+                if(Math.hypot(p.x-en.x, p.y-en.y)<en.r){
+                    en.hp-=p.dmg; 
+                    if(G.ricochet && p.b < 2) { p.vx *= -1; p.vy *= -1; p.b++; } else projectiles.splice(pi, 1);
+                    if(en.hp<=0){ spawnParticles(en.x, en.y, p.c, 15); G.hp = Math.min(G.maxHp, G.hp+G.lifeSteal); enemies.splice(ei, 1); if(enemies.length===0) G.enemiesDefeated=true; }
                 }
-            }
-        });
+            });
+        } else { // Tiros do Boss
+            if(Math.hypot(p.x-player.x, p.y-player.y)<player.r) { G.hp-=5; projectiles.splice(pi,1); }
+        }
     });
 
     particles.forEach((p, i) => { p.x+=p.vx; p.y+=p.vy; p.life-=0.02; if(p.life<=0) particles.splice(i,1); });
@@ -274,6 +278,7 @@ function draw() {
     if(G.play) update();
     ctx.fillStyle="#000"; ctx.fillRect(0,0,canvas.width, canvas.height);
     if(!G.play && !G.inCutscene) { requestAnimationFrame(draw); return; }
+    
     ctx.save();
     let sc = Math.min(canvas.width/ROOM.w, canvas.height/ROOM.h)*0.95;
     ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(sc, sc); ctx.translate(-ROOM.w/2, -ROOM.h/2);
@@ -284,11 +289,22 @@ function draw() {
     particles.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill(); });
     ctx.globalAlpha = 1;
 
-    ctx.fillStyle = Date.now() < G.dashTime ? "cyan" : "#fff";
+    // Player
+    ctx.fillStyle = Date.now() < G.dashTime ? "white" : "#eee";
     ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
-    
-    enemies.forEach(en=>{ ctx.fillStyle=en.type==='boss'?"#800":"#300"; ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill(); });
-    projectiles.forEach(p=>{ ctx.fillStyle="cyan"; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI*2); ctx.fill(); });
+    if(G.shield > 0) { ctx.strokeStyle="cyan"; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(player.x, player.y, player.r+5, 0, Math.PI*2); ctx.stroke(); }
+
+    // Inimigos com Formas
+    enemies.forEach(en=>{ 
+        ctx.fillStyle="#400"; ctx.strokeStyle="#f00"; ctx.lineWidth=4;
+        if(en.type === 'minion') { ctx.fillStyle="#300"; ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill(); }
+        else if(en.type === 'tri') drawPolygon(en.x, en.y, en.r, 3, en.angle);
+        else if(en.type === 'pent') drawPolygon(en.x, en.y, en.r, 5, en.angle);
+        else if(en.type === 'hex') drawPolygon(en.x, en.y, en.r, 6, en.angle);
+        else if(en.type === 'king') drawPolygon(en.x, en.y, en.r, 10, en.angle);
+    });
+
+    projectiles.forEach(p=>{ ctx.fillStyle=p.c; ctx.beginPath(); ctx.arc(p.x, p.y, G.projSize, 0, Math.PI*2); ctx.fill(); });
     ctx.restore();
     
     document.getElementById('hp-fill').style.width = (G.hp/G.maxHp*100) + "%";
