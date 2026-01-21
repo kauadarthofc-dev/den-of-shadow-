@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 V11.0</title>
+    <title>Den of Shadow 💀 V12.0</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&display=swap');
         * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
@@ -11,76 +11,77 @@
         canvas { display: block; width: 100vw; height: 100vh; }
 
         /* UI Screens */
-        .ui-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 4000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(15px); }
-        .glass-panel { background: rgba(20,0,0,0.6); border: 1px solid #f00; padding: 30px; border-radius: 15px; width: 90%; max-width: 450px; text-align: center; }
+        .ui-screen { position: absolute; inset: 0; background: radial-gradient(circle, #200 0%, #000 100%); z-index: 4000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .glass-panel { background: rgba(0,0,0,0.8); border: 2px solid #f00; padding: 40px; border-radius: 20px; width: 90%; max-width: 450px; text-align: center; box-shadow: 0 0 30px #400; }
         
-        .btn-main { padding: 12px; font-size: 13px; background: rgba(255,0,0,0.1); border: 1px solid #800; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 5px 0; width: 100%; transition: 0.3s; }
-        .btn-main:hover:not(:disabled) { background: #f00; color: #000; box-shadow: 0 0 20px #f00; }
-        .btn-main:disabled { opacity: 0.3; cursor: not-allowed; border-color: #444; }
+        .btn-main { padding: 15px; background: transparent; border: 1px solid #800; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 10px 0; width: 100%; transition: 0.3s; text-transform: uppercase; }
+        .btn-main:hover { background: #f00; color: #000; box-shadow: 0 0 20px #f00; }
 
-        /* Minimap & HUD */
-        #minimap-container { position: absolute; top: 20px; right: 20px; width: 150px; height: 150px; border: 2px solid #f00; border-radius: 50%; background: rgba(0,0,0,0.7); overflow: hidden; z-index: 1000; display: none; }
-        #minimap { width: 100%; height: 100%; }
+        .links { margin-top: 20px; display: flex; gap: 15px; justify-content: center; }
+        .links a { color: #f00; text-decoration: none; font-size: 12px; border-bottom: 1px solid #f00; }
 
-        #hud { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; width: 95%; max-width: 600px; pointer-events: none; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.8); padding: 15px; border: 1px solid #500; border-radius: 10px; }
-        .bar-bg { width: 100%; height: 8px; background: #222; margin-top: 4px; border-radius: 4px; overflow: hidden; }
+        /* HUD */
+        #minimap { position: absolute; top: 20px; right: 20px; width: 150px; height: 150px; border: 2px solid #f00; background: rgba(0,0,0,0.8); z-index: 1000; display: none; }
+        #hud { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; width: 90%; max-width: 600px; pointer-events: none; }
+        .hud-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; background: rgba(0,0,0,0.9); padding: 15px; border-radius: 10px; border: 1px solid #300; }
+        .bar { width: 100%; height: 8px; background: #222; margin-top: 5px; border-radius: 4px; overflow: hidden; }
         .bar-fill { height: 100%; width: 100%; background: #f00; transition: width 0.3s; }
         
-        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; border: 1px solid rgba(255,255,255,0.3); border-radius: 50%; z-index: 1500; display: none; }
-        #crosshair::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 4px; height: 4px; background: #f00; border-radius: 50%; }
-
-        #pause-btn { position: absolute; top: 20px; left: 20px; width: 45px; height: 45px; background: rgba(0,0,0,0.6); border: 1px solid #f00; border-radius: 50%; z-index: 3500; display: none; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
+        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 10px; height: 10px; border: 2px solid #f00; border-radius: 50%; z-index: 1500; display: none; }
+        #pause-btn { position: absolute; top: 20px; left: 20px; width: 50px; height: 50px; background: rgba(0,0,0,0.7); border: 1px solid #f00; border-radius: 10px; z-index: 3500; display: none; align-items: center; justify-content: center; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="start-screen" class="ui-screen">
     <div class="glass-panel">
-        <h1 style="font-family:'Nosifer'; color:#f00; font-size: 2.5rem;">DEN OF SHADOW</h1>
-        <p style="color:#888; font-size: 10px; margin-bottom: 20px;">V11.0 OVERHAUL</p>
+        <h1 style="font-family:'Nosifer'; color:#f00; font-size: 2.5rem; margin: 0;">DEN OF SHADOW</h1>
+        <p style="color:#666; font-size: 12px; margin-bottom: 30px;">ULTRA FIDELITY V12.0</p>
         <button class="btn-main" onclick="startGame()">INICIAR RITUAL</button>
-        <button class="btn-main" onclick="showScreen('config-screen')">CONFIGURAÇÕES</button>
+        <button class="btn-main" onclick="showConfig(true)">CONFIGURAÇÕES</button>
+        <div class="links">
+            <a href="#">DISCORD</a>
+            <a href="#">YOUTUBE</a>
+            <a href="#">GITHUB</a>
+        </div>
     </div>
 </div>
 
 <div id="config-screen" class="ui-screen" style="display:none;">
     <div class="glass-panel">
-        <h2 id="txt-config-title">AJUSTES</h2>
-        <div style="text-align:left; margin: 15px 0;">
+        <h2>CONFIGURAÇÕES</h2>
+        <div style="text-align:left; margin: 20px 0;">
             <label style="font-size:10px; color:#f00;">RESOLUÇÃO</label>
-            <select id="res-select" onchange="G.res = parseFloat(this.value)" style="width:100%; background:#111; color:#fff; padding:10px; border:1fr solid #500;">
-                <option value="4">Performance (Baixa)</option>
-                <option value="2">Equilibrado (Média)</option>
-                <option value="1" selected>Qualidade (Alta)</option>
+            <select id="res-select" onchange="G.res = parseFloat(this.value)" style="width:100%; background:#111; color:#fff; padding:10px; border:1px solid #500;">
+                <option value="4">Baixa</option>
+                <option value="2">Média</option>
+                <option value="1" selected>Alta (Nativa)</option>
             </select>
         </div>
-        <button class="btn-main" onclick="showScreen('start-screen')">VOLTAR</button>
+        <button class="btn-main" onclick="showConfig(false)">VOLTAR</button>
     </div>
 </div>
 
 <div id="pause-screen" class="ui-screen" style="display:none;">
     <div class="glass-panel">
-        <h2 style="font-family:'Nosifer'; color:#f00;">MELHORIAS</h2>
-        <p style="font-size:12px;">Almas Coletadas: <span id="soul-count" style="color:#ff0;">0</span></p>
-        <button class="btn-main" id="up-dmg" onclick="buyUpgrade('dmg')">Dano (+) [5 Almas]</button>
-        <button class="btn-main" id="up-hp" onclick="buyUpgrade('hp')">Vida (+) [8 Almas]</button>
+        <h1 style="font-family:'Nosifer'; color:#f00;">PAUSA</h1>
         <button class="btn-main" onclick="togglePause()">CONTINUAR</button>
+        <button class="btn-main" onclick="location.reload()">SAIR</button>
     </div>
 </div>
 
 <div id="pause-btn" onclick="togglePause()">⚙️</div>
 <div id="crosshair"></div>
-<div id="minimap-container"><canvas id="minimap"></canvas></div>
+<canvas id="minimap"></canvas>
 
 <div id="hud">
-    <div class="stats-grid">
+    <div class="hud-grid">
         <div>
-            <div style="font-size:9px; color:#888;">VITALIDADE</div>
-            <div class="bar-bg"><div id="hp-fill" class="bar-fill"></div></div>
+            <div style="font-size:9px; color:#888;">VIDA</div>
+            <div class="bar"><div id="hp-fill" class="bar-fill"></div></div>
         </div>
         <div style="text-align:center;">
-            <div id="biome-name" style="font-size:9px; color:#f00; text-transform: uppercase;">LABIRINTO</div>
+            <div style="font-size:9px; color:#888;">CÂMARA</div>
             <div id="room-txt" style="font-size:18px; font-weight:bold;">1</div>
         </div>
         <div style="text-align:right;">
@@ -97,15 +98,9 @@ const G = {
     play: false, paused: false, room: 1, 
     hp: 100, maxHp: 100, souls: 0, res: 1, 
     dmgMult: 1, lastDmg: 0,
-    biome: { name: "Abismo", color: [255, 0, 0] }
+    devMode: false,
+    roomsData: {} // Persistência das salas
 };
-
-const BIOMES = [
-    { name: "Inferno", color: [255, 20, 0] },
-    { name: "Abismo Azul", color: [0, 100, 255] },
-    { name: "Veneno", color: [50, 255, 50] },
-    { name: "Vazio", color: [180, 0, 255] }
-];
 
 const player = { x: 0, y: 0, angle: 0, pitch: 0, fov: Math.PI / 3, moveDir: {x:0, y:0} };
 const canvas = document.getElementById('gameCanvas');
@@ -115,96 +110,105 @@ const mCtx = mCanvas.getContext('2d');
 
 const TILE_SIZE = 64, MAP_SIZE = 24;
 let map = [], enemies = [], bullets = [];
+let devKeyBuffer = "";
 
-// --- SISTEMA DE JOGO ---
+// --- INICIALIZAÇÃO ---
 function startGame() {
     document.getElementById('start-screen').style.display = 'none';
-    document.querySelectorAll('#hud, #crosshair, #pause-btn, #minimap-container').forEach(el => el.style.display = 'block');
+    document.querySelectorAll('#hud, #crosshair, #pause-btn, #minimap').forEach(el => el.style.display = 'block');
     if(!('ontouchstart' in window)) canvas.requestPointerLock();
-    setupRoom();
+    setupRoom(1);
     G.play = true;
     requestAnimationFrame(gameLoop);
 }
 
-function setupRoom() {
-    // Escolher Bioma
-    G.biome = BIOMES[Math.floor(Math.random() * BIOMES.length)];
-    document.getElementById('biome-name').innerText = G.biome.name;
-    document.getElementById('biome-name').style.color = `rgb(${G.biome.color.join(',')})`;
-
-    // Gerar Mapa
+function setupRoom(roomNum) {
+    G.room = roomNum;
     map = Array(MAP_SIZE * MAP_SIZE).fill(0);
+    // Paredes externas
     for(let i=0; i<MAP_SIZE; i++) {
         map[i] = 1; map[i + (MAP_SIZE*(MAP_SIZE-1))] = 1;
         map[i * MAP_SIZE] = 1; map[i * MAP_SIZE + (MAP_SIZE-1)] = 1;
     }
-    // Adicionar pilares/obstáculos
-    for(let i=0; i<15; i++) {
-        let rx = 5 + Math.floor(Math.random()*14), ry = 5 + Math.floor(Math.random()*14);
-        map[ry * MAP_SIZE + rx] = 1;
-    }
-    map[Math.floor(MAP_SIZE/2)] = 2; // Saída
     
+    // Portas
+    map[Math.floor(MAP_SIZE/2)] = 2; // Saída
+    if(G.room > 1) map[MAP_SIZE*(MAP_SIZE-1) + Math.floor(MAP_SIZE/2)] = 3; // Entrada
+
     player.x = (MAP_SIZE/2) * TILE_SIZE;
     player.y = (MAP_SIZE - 4) * TILE_SIZE;
     player.angle = -Math.PI/2;
-    
-    spawnEnemies();
+
+    // Carregar inimigos se a sala não foi limpa
+    if(!G.roomsData[G.room]) {
+        spawnEnemies();
+    } else {
+        enemies = G.roomsData[G.room].enemies.filter(e => e.alive);
+    }
+    bullets = [];
 }
 
 function spawnEnemies() {
     enemies = [];
-    const types = [
-        { name: 'Shadow', hp: 80, speed: 1.5, size: 45, color: '#000' },
-        { name: 'Stalker', hp: 40, speed: 2.5, size: 25, color: '#200' },
-        { name: 'Behemoth', hp: 250, speed: 0.8, size: 70, color: '#100' }
-    ];
-    let count = 4 + Math.floor(G.room * 0.6);
+    let count = 3 + Math.floor(G.room * 0.5);
     for(let i=0; i<count; i++) {
-        let type = types[Math.floor(Math.random() * types.length)];
         enemies.push({
             x: (6 + Math.random()*12)*TILE_SIZE,
             y: (6 + Math.random()*12)*TILE_SIZE,
-            ...type, alive: true
+            hp: 100, alive: true, size: 50
         });
     }
-}
-
-function buyUpgrade(type) {
-    if(type === 'dmg' && G.souls >= 5) { G.souls -= 5; G.dmgMult += 0.5; }
-    if(type === 'hp' && G.souls >= 8) { G.souls -= 8; G.maxHp += 20; G.hp = G.maxHp; }
-    updateHUD();
+    G.roomsData[G.room] = { enemies: enemies };
 }
 
 function togglePause() {
     G.paused = !G.paused;
     document.getElementById('pause-screen').style.display = G.paused ? 'flex' : 'none';
-    document.getElementById('soul-count').innerText = Math.floor(G.souls);
     if(!G.paused && !('ontouchstart' in window)) canvas.requestPointerLock();
 }
 
-function showScreen(id) {
-    document.querySelectorAll('.ui-screen').forEach(s => s.style.display = 'none');
-    document.getElementById(id).style.display = 'flex';
-}
+function showConfig(show) { document.getElementById('config-screen').style.display = show ? 'flex' : 'none'; }
 
-// --- INPUTS ---
+// --- ENTRADAS ---
 const keys = {};
-window.onkeydown = e => { if(e.key === 'Escape') togglePause(); keys[e.key.toLowerCase()] = true; };
+window.onkeydown = e => {
+    keys[e.key.toLowerCase()] = true;
+    if(e.key === 'Escape') togglePause();
+    
+    // Código Dev KADTR
+    devKeyBuffer += e.key.toLowerCase();
+    if(devKeyBuffer.includes("kadtr")) {
+        G.devMode = true; G.hp = 9999; G.dmgMult = 100;
+        alert("GOD MODE ACTIVED");
+        devKeyBuffer = "";
+    }
+    if(devKeyBuffer.length > 10) devKeyBuffer = "";
+};
 window.onkeyup = e => delete keys[e.key.toLowerCase()];
+
 document.addEventListener('mousemove', e => {
     if(document.pointerLockElement === canvas && !G.paused) {
         player.angle += e.movementX * 0.0025;
-        player.pitch = Math.max(-300, Math.min(300, player.pitch - e.movementY * 1.5));
-    }
-});
-document.addEventListener('mousedown', e => { 
-    if(G.play && !G.paused && e.button === 0) {
-        bullets.push({ x: player.x, y: player.y, vx: Math.cos(player.angle)*18, vy: Math.sin(player.angle)*18, life: 60 });
+        player.pitch = Math.max(-400, Math.min(400, player.pitch - e.movementY * 1.5));
     }
 });
 
-// --- LÓGICA ---
+document.addEventListener('mousedown', e => {
+    if(G.play && !G.paused && e.button === 0) shoot();
+});
+
+function shoot() {
+    const b = {
+        x: player.x,
+        y: player.y,
+        vx: Math.cos(player.angle) * 25,
+        vy: Math.sin(player.angle) * 25,
+        life: 100
+    };
+    bullets.push(b);
+}
+
+// --- LOGICA ---
 function update() {
     if(!G.play || G.paused) return;
 
@@ -217,73 +221,63 @@ function update() {
     let nx = player.x + mx*4, ny = player.y + my*4;
     if(map[Math.floor(ny/TILE_SIZE)*MAP_SIZE + Math.floor(nx/TILE_SIZE)] === 0) { player.x = nx; player.y = ny; }
 
-    // Inimigos e Colisão
-    enemies.forEach((en, i) => {
-        if(!en.alive) return;
-        let d = Math.hypot(player.x-en.x, player.y-en.y);
-        if(d < 40 && Date.now() - G.lastDmg > 600) { G.hp -= 15; G.lastDmg = Date.now(); }
-        else {
-            en.x += (player.x-en.x)/d * en.speed;
-            en.y += (player.y-en.y)/d * en.speed;
-        }
-        // Separação
-        enemies.forEach((en2, j) => {
-            if(i !== j && en2.alive) {
-                let ed = Math.hypot(en.x-en2.x, en.y-en2.y);
-                if(ed < 40) { en.x += (en.x-en2.x)/ed*2; en.y += (en.y-en2.y)/ed*2; }
-            }
-        });
-    });
-
-    // Balas
-    bullets.forEach((b, i) => {
+    // Balas e Inimigos
+    bullets.forEach((b, bi) => {
         b.x += b.vx; b.y += b.vy; b.life--;
-        if(map[Math.floor(b.y/TILE_SIZE)*MAP_SIZE + Math.floor(b.x/TILE_SIZE)] > 0 || b.life <= 0) bullets.splice(i,1);
+        if(map[Math.floor(b.y/TILE_SIZE)*MAP_SIZE + Math.floor(b.x/TILE_SIZE)] > 0 || b.life < 0) bullets.splice(bi, 1);
+        
         enemies.forEach(en => {
-            if(en.alive && Math.hypot(b.x-en.x, b.y-en.y) < en.size) {
-                en.hp -= 30 * G.dmgMult; bullets.splice(i,1);
-                if(en.hp <= 0) { en.alive = false; G.souls += 1; }
+            if(en.alive && Math.hypot(b.x - en.x, b.y - en.y) < 40) {
+                en.hp -= 40 * G.dmgMult;
+                bullets.splice(bi, 1);
+                if(en.hp <= 0) { en.alive = false; G.souls += 5; }
             }
         });
     });
 
-    // Saída
+    enemies.forEach(en => {
+        if(!en.alive) return;
+        let d = Math.hypot(player.x - en.x, player.y - en.y);
+        if(d < 45 && !G.devMode) { if(Date.now()-G.lastDmg > 500){ G.hp -= 10; G.lastDmg = Date.now(); }}
+        else { en.x += (player.x - en.x)/d * 1.5; en.y += (player.y - en.y)/d * 1.5; }
+    });
+
+    // Mudança de sala
     let tx = Math.floor(player.x/TILE_SIZE), ty = Math.floor(player.y/TILE_SIZE);
-    if(map[ty*MAP_SIZE+tx] === 2 && enemies.filter(e=>e.alive).length === 0) { G.room++; setupRoom(); }
+    if(map[ty*MAP_SIZE+tx] === 2 && enemies.filter(e=>e.alive).length === 0) setupRoom(G.room + 1);
+    if(map[ty*MAP_SIZE+tx] === 3) setupRoom(G.room - 1);
 
     if(G.hp <= 0) location.reload();
-    updateHUD();
-}
-
-function updateHUD() {
+    
     document.getElementById('hp-fill').style.width = (G.hp/G.maxHp*100) + "%";
-    document.getElementById('soul-hud').innerText = Math.floor(G.souls);
+    document.getElementById('soul-hud').innerText = G.souls;
     document.getElementById('room-txt').innerText = G.room;
 }
 
 // --- RENDER ---
 function draw() {
     ctx.fillStyle = "#050000"; ctx.fillRect(0,0,canvas.width, canvas.height/2 + player.pitch);
-    ctx.fillStyle = "#100505"; ctx.fillRect(0,canvas.height/2 + player.pitch, canvas.width, canvas.height);
+    ctx.fillStyle = "#150505"; ctx.fillRect(0,canvas.height/2 + player.pitch, canvas.width, canvas.height);
 
     const step = G.res;
     const numRays = canvas.width / step;
     for(let i=0; i<numRays; i++) {
         let ang = (player.angle - player.fov/2) + (i * (player.fov/numRays));
         let d=0, hit=false, cos=Math.cos(ang), sin=Math.sin(ang);
-        while(!hit && d < 1000) {
+        while(!hit && d < 1200) {
             d += 8;
             let tx=Math.floor((player.x+cos*d)/TILE_SIZE), ty=Math.floor((player.y+sin*d)/TILE_SIZE);
             if(map[ty*MAP_SIZE+tx] > 0) {
                 hit = true;
                 let h = (TILE_SIZE * canvas.height) / (d * Math.cos(player.angle-ang));
-                let lum = Math.max(10, (map[ty*MAP_SIZE+tx] === 2 ? 255 : 150) - d/6);
-                ctx.fillStyle = `rgb(${lum * (G.biome.color[0]/255)}, ${lum * (G.biome.color[1]/255)}, ${lum * (G.biome.color[2]/255)})`;
+                let color = map[ty*MAP_SIZE+tx] === 2 ? 255 : (map[ty*MAP_SIZE+tx] === 3 ? 100 : 150);
+                ctx.fillStyle = `rgb(${Math.max(10, color - d/6)}, 0, 0)`;
                 ctx.fillRect(i*step, (canvas.height-h)/2 + player.pitch, step, h);
             }
         }
     }
 
+    // Sprites
     enemies.forEach(en => {
         if(!en.alive) return;
         let ang = Math.atan2(en.y-player.y, en.x-player.x) - player.angle;
@@ -292,8 +286,8 @@ function draw() {
             let d = Math.hypot(player.x-en.x, player.y-en.y);
             let sx = (0.5 * (ang/(player.fov/2)) + 0.5) * canvas.width;
             let sh = (en.size * canvas.height) / d;
-            ctx.fillStyle = en.color;
-            ctx.shadowBlur = 15; ctx.shadowColor = `rgb(${G.biome.color.join(',')})`;
+            ctx.fillStyle = "#000";
+            ctx.shadowBlur = 15; ctx.shadowColor = "#f00";
             ctx.fillRect(sx-sh/2, (canvas.height-sh)/2 + player.pitch, sh, sh);
             ctx.shadowBlur = 0;
         }
@@ -305,19 +299,13 @@ function draw() {
 function drawMinimap() {
     mCtx.fillStyle = "#000"; mCtx.fillRect(0,0,150,150);
     const s = 150/MAP_SIZE;
-    mCtx.save();
-    mCtx.translate(75, 75);
-    mCtx.rotate(-player.angle - Math.PI/2);
-    mCtx.translate(-player.x/TILE_SIZE*s, -player.y/TILE_SIZE*s);
-    
     for(let y=0; y<MAP_SIZE; y++) {
         for(let x=0; x<MAP_SIZE; x++) {
-            if(map[y*MAP_SIZE+x] === 1) { mCtx.fillStyle = "#444"; mCtx.fillRect(x*s, y*s, s, s); }
+            if(map[y*MAP_SIZE+x] === 1) { mCtx.fillStyle = "#400"; mCtx.fillRect(x*s, y*s, s, s); }
             if(map[y*MAP_SIZE+x] === 2) { mCtx.fillStyle = "#f00"; mCtx.fillRect(x*s, y*s, s, s); }
         }
     }
-    mCtx.restore();
-    mCtx.fillStyle = "#f00"; mCtx.beginPath(); mCtx.arc(75,75,3,0,Math.PI*2); mCtx.fill();
+    mCtx.fillStyle = "#fff"; mCtx.fillRect((player.x/TILE_SIZE)*s-1, (player.y/TILE_SIZE)*s-1, 3, 3);
 }
 
 function gameLoop() { if(G.play) { update(); draw(); } requestAnimationFrame(gameLoop); }
