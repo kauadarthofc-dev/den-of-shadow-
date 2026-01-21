@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 V12.0</title>
+    <title>Den of Shadow 💀 V13.0</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&display=swap');
         * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
@@ -11,62 +11,87 @@
         canvas { display: block; width: 100vw; height: 100vh; }
 
         /* UI Screens */
-        .ui-screen { position: absolute; inset: 0; background: radial-gradient(circle, #200 0%, #000 100%); z-index: 4000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-        .glass-panel { background: rgba(0,0,0,0.8); border: 2px solid #f00; padding: 40px; border-radius: 20px; width: 90%; max-width: 450px; text-align: center; box-shadow: 0 0 30px #400; }
+        .ui-screen { position: absolute; inset: 0; background: radial-gradient(circle, #200 0%, #000 100%); z-index: 4000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); text-align: center; }
+        .glass-panel { background: rgba(0,0,0,0.85); border: 2px solid #f00; padding: 30px; border-radius: 20px; width: 90%; max-width: 450px; box-shadow: 0 0 30px #400; }
         
-        .btn-main { padding: 15px; background: transparent; border: 1px solid #800; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 10px 0; width: 100%; transition: 0.3s; text-transform: uppercase; }
-        .btn-main:hover { background: #f00; color: #000; box-shadow: 0 0 20px #f00; }
+        .btn-main { padding: 12px; background: rgba(255,0,0,0.1); border: 1px solid #800; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 8px 0; width: 100%; transition: 0.3s; text-transform: uppercase; font-size: 12px; }
+        .btn-main:hover:not(:disabled) { background: #f00; color: #000; box-shadow: 0 0 20px #f00; }
+        .btn-main:disabled { opacity: 0.3; cursor: not-allowed; }
 
-        .links { margin-top: 20px; display: flex; gap: 15px; justify-content: center; }
-        .links a { color: #f00; text-decoration: none; font-size: 12px; border-bottom: 1px solid #f00; }
+        .links { margin-top: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 11px; }
+        .links a { color: #f00; text-decoration: none; transition: 0.3s; }
+        .links a:hover { color: #fff; text-shadow: 0 0 10px #f00; }
 
         /* HUD */
-        #minimap { position: absolute; top: 20px; right: 20px; width: 150px; height: 150px; border: 2px solid #f00; background: rgba(0,0,0,0.8); z-index: 1000; display: none; }
-        #hud { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; width: 90%; max-width: 600px; pointer-events: none; }
+        #minimap { position: absolute; top: 20px; right: 20px; width: 130px; height: 130px; border: 2px solid #f00; background: rgba(0,0,0,0.8); z-index: 1000; display: none; border-radius: 10px; }
+        #hud { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; width: 95%; max-width: 600px; pointer-events: none; }
         .hud-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; background: rgba(0,0,0,0.9); padding: 15px; border-radius: 10px; border: 1px solid #300; }
-        .bar { width: 100%; height: 8px; background: #222; margin-top: 5px; border-radius: 4px; overflow: hidden; }
+        .bar { width: 100%; height: 6px; background: #222; margin-top: 5px; border-radius: 3px; overflow: hidden; }
         .bar-fill { height: 100%; width: 100%; background: #f00; transition: width 0.3s; }
         
-        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 10px; height: 10px; border: 2px solid #f00; border-radius: 50%; z-index: 1500; display: none; }
-        #pause-btn { position: absolute; top: 20px; left: 20px; width: 50px; height: 50px; background: rgba(0,0,0,0.7); border: 1px solid #f00; border-radius: 10px; z-index: 3500; display: none; align-items: center; justify-content: center; cursor: pointer; }
+        select, input[type="range"] { width: 100%; background: #111; color: #fff; border: 1px solid #500; padding: 8px; margin-top: 5px; font-family: 'Orbitron'; }
+        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 12px; height: 12px; border: 1px solid #f00; border-radius: 50%; z-index: 1500; display: none; pointer-events: none; }
+        #pause-btn { position: absolute; top: 20px; left: 20px; width: 45px; height: 45px; background: rgba(0,0,0,0.7); border: 1px solid #f00; border-radius: 50%; z-index: 3500; display: none; align-items: center; justify-content: center; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="start-screen" class="ui-screen">
     <div class="glass-panel">
-        <h1 style="font-family:'Nosifer'; color:#f00; font-size: 2.5rem; margin: 0;">DEN OF SHADOW</h1>
-        <p style="color:#666; font-size: 12px; margin-bottom: 30px;">ULTRA FIDELITY V12.0</p>
-        <button class="btn-main" onclick="startGame()">INICIAR RITUAL</button>
-        <button class="btn-main" onclick="showConfig(true)">CONFIGURAÇÕES</button>
+        <h1 style="font-family:'Nosifer'; color:#f00; font-size: 2rem; margin: 0;">DEN OF SHADOW</h1>
+        <p style="color:#666; font-size: 10px; margin-bottom: 25px;">V13.0 FINAL INTEGRITY</p>
+        <button class="btn-main" onclick="startGame()" id="txt-start">INICIAR RITUAL</button>
+        <button class="btn-main" onclick="showConfig(true)" id="txt-config">AJUSTES</button>
         <div class="links">
-            <a href="#">DISCORD</a>
-            <a href="#">YOUTUBE</a>
-            <a href="#">GITHUB</a>
+            <a href="#">DISCORD: killzone1561</a>
+            <a href="#">YOUTUBE: kaua_darth</a>
+            <a href="mailto:kauadarthofc@gmail.com">kauadarthofc@gmail.com</a>
         </div>
     </div>
 </div>
 
 <div id="config-screen" class="ui-screen" style="display:none;">
     <div class="glass-panel">
-        <h2>CONFIGURAÇÕES</h2>
-        <div style="text-align:left; margin: 20px 0;">
-            <label style="font-size:10px; color:#f00;">RESOLUÇÃO</label>
-            <select id="res-select" onchange="G.res = parseFloat(this.value)" style="width:100%; background:#111; color:#fff; padding:10px; border:1px solid #500;">
-                <option value="4">Baixa</option>
-                <option value="2">Média</option>
-                <option value="1" selected>Alta (Nativa)</option>
-            </select>
+        <h2 id="txt-config-title">AJUSTES</h2>
+        <div style="text-align:left; gap:10px; display:flex; flex-direction:column;">
+            <div>
+                <label id="txt-lang-label" style="font-size:10px; color:#f00;">IDIOMA</label>
+                <select id="lang-select" onchange="changeLang(this.value)">
+                    <option value="pt">Português</option>
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                    <option value="fr">Français</option>
+                    <option value="de">Deutsch</option>
+                    <option value="jp">日本語</option>
+                    <option value="ru">Русский</option>
+                </select>
+            </div>
+            <div>
+                <label id="txt-res-label" style="font-size:10px; color:#f00;">RESOLUÇÃO</label>
+                <select id="res-select" onchange="G.res = parseFloat(this.value)">
+                    <option value="4">Baixa</option>
+                    <option value="2">Média</option>
+                    <option value="1" selected>Alta (Nativa)</option>
+                </select>
+            </div>
+            <div>
+                <label id="txt-sens-label" style="font-size:10px; color:#f00;">SENSIBILIDADE</label>
+                <input type="range" min="0.5" max="4" step="0.1" value="1" oninput="G.sens = 0.0025 * this.value">
+            </div>
         </div>
-        <button class="btn-main" onclick="showConfig(false)">VOLTAR</button>
+        <button class="btn-main" onclick="showConfig(false)" id="txt-back" style="margin-top:20px;">VOLTAR</button>
     </div>
 </div>
 
 <div id="pause-screen" class="ui-screen" style="display:none;">
     <div class="glass-panel">
-        <h1 style="font-family:'Nosifer'; color:#f00;">PAUSA</h1>
-        <button class="btn-main" onclick="togglePause()">CONTINUAR</button>
-        <button class="btn-main" onclick="location.reload()">SAIR</button>
+        <h2 id="txt-pause-title" style="font-family:'Nosifer'; color:#f00; margin:0;">UPGRADES</h2>
+        <p style="font-size:12px; margin: 15px 0;">ALMAS: <span id="soul-count" style="color:#ff0;">0</span></p>
+        <button class="btn-main" id="up-dmg" onclick="buyUpgrade('dmg')">DANO (+) [10 ALMAS]</button>
+        <button class="btn-main" id="up-hp" onclick="buyUpgrade('hp')">VIDA (+) [15 ALMAS]</button>
+        <hr style="border:0; border-top:1px solid #300; margin:15px 0;">
+        <button class="btn-main" onclick="togglePause()" id="txt-resume">CONTINUAR</button>
+        <button class="btn-main" onclick="location.reload()" id="txt-exit">SAIR</button>
     </div>
 </div>
 
@@ -77,15 +102,15 @@
 <div id="hud">
     <div class="hud-grid">
         <div>
-            <div style="font-size:9px; color:#888;">VIDA</div>
+            <div id="txt-hp-hud" style="font-size:9px; color:#888;">VIDA</div>
             <div class="bar"><div id="hp-fill" class="bar-fill"></div></div>
         </div>
         <div style="text-align:center;">
-            <div style="font-size:9px; color:#888;">CÂMARA</div>
+            <div id="txt-chamber-hud" style="font-size:9px; color:#888;">CÂMARA</div>
             <div id="room-txt" style="font-size:18px; font-weight:bold;">1</div>
         </div>
         <div style="text-align:right;">
-            <div style="font-size:9px; color:#888;">ALMAS</div>
+            <div id="txt-souls-hud" style="font-size:9px; color:#888;">ALMAS</div>
             <div id="soul-hud" style="color:#ff0; font-size:18px; font-weight:bold;">0</div>
         </div>
     </div>
@@ -94,173 +119,163 @@
 <canvas id="gameCanvas"></canvas>
 
 <script>
+/**
+ * TRADUÇÕES
+ */
+const I18N = {
+    pt: { start: "INICIAR RITUAL", config: "AJUSTES", back: "VOLTAR", resume: "CONTINUAR", exit: "SAIR", hp: "VIDA", souls: "ALMAS", chamber: "CÂMARA", sens: "SENSIBILIDADE", lang: "IDIOMA", res: "RESOLUÇÃO", updmg: "DANO (+) [10 ALMAS]", uphp: "VIDA (+) [15 ALMAS]" },
+    en: { start: "START RITUAL", config: "SETTINGS", back: "BACK", resume: "RESUME", exit: "EXIT", hp: "HEALTH", souls: "SOULS", chamber: "CHAMBER", sens: "SENSITIVITY", lang: "LANGUAGE", res: "RESOLUTION", updmg: "DAMAGE (+) [10 SOULS]", uphp: "HEALTH (+) [15 SOULS]" },
+    es: { start: "INICIAR", config: "AJUSTES", back: "VOLVER", resume: "CONTINUAR", exit: "SALIR", hp: "VIDA", souls: "ALMAS", chamber: "CÁMARA", sens: "SENSIBILIDAD", lang: "IDIOMA", res: "RESOLUCIÓN", updmg: "DAÑO (+) [10 ALMAS]", uphp: "VIDA (+) [15 ALMAS]" },
+    fr: { start: "COMMENCER", config: "RÉGLAGES", back: "RETOUR", resume: "REPRENDRE", exit: "QUITTER", hp: "SANTÉ", souls: "ÂMES", chamber: "CHAMBRE", sens: "SENSIBILITÉ", lang: "LANGUE", res: "RÉSOLUTION", updmg: "DÉGÂTS (+) [10 ÂMES]", uphp: "SANTÉ (+) [15 ÂMES]" },
+    de: { start: "STARTEN", config: "EINSTELLUNGEN", back: "ZURÜCK", resume: "WEITER", exit: "BEENDEN", hp: "LEBEN", souls: "SEELEN", chamber: "KAMMER", sens: "EMPFINDLICHKEIT", lang: "SPRACHE", res: "AUFLÖSUNG", updmg: "SCHADEN (+) [10 SEELEN]", uphp: "LEBEN (+) [15 SEELEN]" },
+    jp: { start: "開始", config: "設定", back: "戻る", resume: "再開", exit: "終了", hp: "体力", souls: "魂", chamber: "部屋", sens: "感度", lang: "言語", res: "解像度", updmg: "ダメージ (+) [10 魂]", uphp: "体力 (+) [15 魂]" },
+    ru: { start: "НАЧАТЬ", config: "НАСТРОЙКИ", back: "НАЗАД", resume: "ПРОДОЛЖИТЬ", exit: "ВЫХОD", hp: "ЖИЗНЬ", souls: "ДУШИ", chamber: "КАМЕРА", sens: "ЧУВСТВИТЕЛЬНОСТЬ", lang: "ЯЗЫК", res: "РАЗРЕШЕНИЕ", updmg: "УРОН (+) [10 ДУШ]", uphp: "ЗДОРОВЬЕ (+) [15 ДУШ]" }
+};
+
+let curLang = 'pt';
 const G = {
     play: false, paused: false, room: 1, 
     hp: 100, maxHp: 100, souls: 0, res: 1, 
-    dmgMult: 1, lastDmg: 0,
-    devMode: false,
-    roomsData: {} // Persistência das salas
+    sens: 0.0025, dmgMult: 1, lastDmg: 0,
+    devMode: false, roomsData: {}
 };
 
-const player = { x: 0, y: 0, angle: 0, pitch: 0, fov: Math.PI / 3, moveDir: {x:0, y:0} };
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const mCanvas = document.getElementById('minimap');
 const mCtx = mCanvas.getContext('2d');
-
 const TILE_SIZE = 64, MAP_SIZE = 24;
-let map = [], enemies = [], bullets = [];
-let devKeyBuffer = "";
+let map = [], enemies = [], bullets = [], devKeyBuffer = "";
 
-// --- INICIALIZAÇÃO ---
-function startGame() {
-    document.getElementById('start-screen').style.display = 'none';
-    document.querySelectorAll('#hud, #crosshair, #pause-btn, #minimap').forEach(el => el.style.display = 'block');
-    if(!('ontouchstart' in window)) canvas.requestPointerLock();
-    setupRoom(1);
-    G.play = true;
-    requestAnimationFrame(gameLoop);
+function changeLang(lang) {
+    curLang = lang; const t = I18N[lang];
+    document.getElementById('txt-start').innerText = t.start;
+    document.getElementById('txt-config').innerText = t.config;
+    document.getElementById('txt-back').innerText = t.back;
+    document.getElementById('txt-resume').innerText = t.resume;
+    document.getElementById('txt-exit').innerText = t.exit;
+    document.getElementById('txt-hp-hud').innerText = t.hp;
+    document.getElementById('txt-souls-hud').innerText = t.souls;
+    document.getElementById('txt-chamber-hud').innerText = t.chamber;
+    document.getElementById('txt-lang-label').innerText = t.lang;
+    document.getElementById('txt-res-label').innerText = t.res;
+    document.getElementById('txt-sens-label').innerText = t.sens;
+    document.getElementById('up-dmg').innerText = t.updmg;
+    document.getElementById('up-hp').innerText = t.uphp;
 }
 
+// --- LOGICA DE JOGO ---
 function setupRoom(roomNum) {
     G.room = roomNum;
     map = Array(MAP_SIZE * MAP_SIZE).fill(0);
-    // Paredes externas
+    // Paredes
     for(let i=0; i<MAP_SIZE; i++) {
         map[i] = 1; map[i + (MAP_SIZE*(MAP_SIZE-1))] = 1;
         map[i * MAP_SIZE] = 1; map[i * MAP_SIZE + (MAP_SIZE-1)] = 1;
     }
-    
-    // Portas
+    // OBSTÁCULOS (V11)
+    for(let i=0; i<12; i++) {
+        let rx = 5 + Math.floor(Math.random()*14), ry = 5 + Math.floor(Math.random()*14);
+        map[ry * MAP_SIZE + rx] = 1;
+    }
     map[Math.floor(MAP_SIZE/2)] = 2; // Saída
-    if(G.room > 1) map[MAP_SIZE*(MAP_SIZE-1) + Math.floor(MAP_SIZE/2)] = 3; // Entrada
+    if(G.room > 1) map[MAP_SIZE*(MAP_SIZE-1) + Math.floor(MAP_SIZE/2)] = 3;
 
     player.x = (MAP_SIZE/2) * TILE_SIZE;
     player.y = (MAP_SIZE - 4) * TILE_SIZE;
     player.angle = -Math.PI/2;
 
-    // Carregar inimigos se a sala não foi limpa
     if(!G.roomsData[G.room]) {
-        spawnEnemies();
+        enemies = [];
+        let count = 4 + Math.floor(G.room * 0.6);
+        for(let i=0; i<count; i++) enemies.push({ x: (6+Math.random()*12)*TILE_SIZE, y: (6+Math.random()*12)*TILE_SIZE, hp: 100, alive: true });
+        G.roomsData[G.room] = { enemies: enemies };
     } else {
-        enemies = G.roomsData[G.room].enemies.filter(e => e.alive);
+        enemies = G.roomsData[G.room].enemies;
     }
     bullets = [];
 }
 
-function spawnEnemies() {
-    enemies = [];
-    let count = 3 + Math.floor(G.room * 0.5);
-    for(let i=0; i<count; i++) {
-        enemies.push({
-            x: (6 + Math.random()*12)*TILE_SIZE,
-            y: (6 + Math.random()*12)*TILE_SIZE,
-            hp: 100, alive: true, size: 50
-        });
-    }
-    G.roomsData[G.room] = { enemies: enemies };
+const player = { x: 0, y: 0, angle: 0, pitch: 0, fov: Math.PI / 3 };
+
+function startGame() {
+    document.getElementById('start-screen').style.display = 'none';
+    document.querySelectorAll('#hud, #crosshair, #pause-btn, #minimap').forEach(el => el.style.display = 'block');
+    if(!('ontouchstart' in window)) canvas.requestPointerLock();
+    setupRoom(1); G.play = true; requestAnimationFrame(gameLoop);
 }
 
-function togglePause() {
-    G.paused = !G.paused;
-    document.getElementById('pause-screen').style.display = G.paused ? 'flex' : 'none';
-    if(!G.paused && !('ontouchstart' in window)) canvas.requestPointerLock();
+function buyUpgrade(type) {
+    if(type === 'dmg' && G.souls >= 10) { G.souls -= 10; G.dmgMult += 0.5; }
+    if(type === 'hp' && G.souls >= 15) { G.souls -= 15; G.maxHp += 20; G.hp = G.maxHp; }
+    updateHUD();
 }
 
-function showConfig(show) { document.getElementById('config-screen').style.display = show ? 'flex' : 'none'; }
+function updateHUD() {
+    document.getElementById('hp-fill').style.width = (G.hp/G.maxHp*100) + "%";
+    document.getElementById('soul-hud').innerText = G.souls;
+    document.getElementById('soul-count').innerText = G.souls;
+    document.getElementById('room-txt').innerText = G.room;
+}
 
-// --- ENTRADAS ---
+// --- INPUTS ---
 const keys = {};
 window.onkeydown = e => {
     keys[e.key.toLowerCase()] = true;
     if(e.key === 'Escape') togglePause();
-    
-    // Código Dev KADTR
     devKeyBuffer += e.key.toLowerCase();
-    if(devKeyBuffer.includes("kadtr")) {
-        G.devMode = true; G.hp = 9999; G.dmgMult = 100;
-        alert("GOD MODE ACTIVED");
-        devKeyBuffer = "";
-    }
+    if(devKeyBuffer.includes("kadtr")) { G.devMode = true; G.hp = 9999; G.dmgMult = 100; alert("KADTR ACTIVE"); devKeyBuffer = ""; }
     if(devKeyBuffer.length > 10) devKeyBuffer = "";
 };
 window.onkeyup = e => delete keys[e.key.toLowerCase()];
-
 document.addEventListener('mousemove', e => {
     if(document.pointerLockElement === canvas && !G.paused) {
-        player.angle += e.movementX * 0.0025;
+        player.angle += e.movementX * G.sens;
         player.pitch = Math.max(-400, Math.min(400, player.pitch - e.movementY * 1.5));
     }
 });
+document.addEventListener('mousedown', e => { if(G.play && !G.paused && e.button === 0) bullets.push({ x: player.x, y: player.y, vx: Math.cos(player.angle)*25, vy: Math.sin(player.angle)*25, life: 80 }); });
 
-document.addEventListener('mousedown', e => {
-    if(G.play && !G.paused && e.button === 0) shoot();
-});
+function togglePause() { G.paused = !G.paused; document.getElementById('pause-screen').style.display = G.paused ? 'flex' : 'none'; updateHUD(); }
+function showConfig(s) { document.getElementById('config-screen').style.display = s ? 'flex' : 'none'; }
 
-function shoot() {
-    const b = {
-        x: player.x,
-        y: player.y,
-        vx: Math.cos(player.angle) * 25,
-        vy: Math.sin(player.angle) * 25,
-        life: 100
-    };
-    bullets.push(b);
-}
-
-// --- LOGICA ---
 function update() {
     if(!G.play || G.paused) return;
-
     let mx = 0, my = 0;
     if(keys['w']) { mx += Math.cos(player.angle); my += Math.sin(player.angle); }
     if(keys['s']) { mx -= Math.cos(player.angle); my -= Math.sin(player.angle); }
     if(keys['a']) { mx += Math.cos(player.angle-Math.PI/2); my += Math.sin(player.angle-Math.PI/2); }
     if(keys['d']) { mx += Math.cos(player.angle+Math.PI/2); my += Math.sin(player.angle+Math.PI/2); }
 
-    let nx = player.x + mx*4, ny = player.y + my*4;
+    let nx = player.x + mx*4.5, ny = player.y + my*4.5;
     if(map[Math.floor(ny/TILE_SIZE)*MAP_SIZE + Math.floor(nx/TILE_SIZE)] === 0) { player.x = nx; player.y = ny; }
 
-    // Balas e Inimigos
     bullets.forEach((b, bi) => {
         b.x += b.vx; b.y += b.vy; b.life--;
         if(map[Math.floor(b.y/TILE_SIZE)*MAP_SIZE + Math.floor(b.x/TILE_SIZE)] > 0 || b.life < 0) bullets.splice(bi, 1);
-        
         enemies.forEach(en => {
-            if(en.alive && Math.hypot(b.x - en.x, b.y - en.y) < 40) {
-                en.hp -= 40 * G.dmgMult;
-                bullets.splice(bi, 1);
-                if(en.hp <= 0) { en.alive = false; G.souls += 5; }
-            }
+            if(en.alive && Math.hypot(b.x-en.x, b.y-en.y) < 40) { en.hp -= 40*G.dmgMult; bullets.splice(bi,1); if(en.hp<=0){en.alive=false; G.souls+=5;} }
         });
     });
 
     enemies.forEach(en => {
         if(!en.alive) return;
-        let d = Math.hypot(player.x - en.x, player.y - en.y);
-        if(d < 45 && !G.devMode) { if(Date.now()-G.lastDmg > 500){ G.hp -= 10; G.lastDmg = Date.now(); }}
-        else { en.x += (player.x - en.x)/d * 1.5; en.y += (player.y - en.y)/d * 1.5; }
+        let d = Math.hypot(player.x-en.x, player.y-en.y);
+        if(d < 45 && !G.devMode) { if(Date.now()-G.lastDmg > 600){ G.hp -= 12; G.lastDmg = Date.now(); } }
+        else { en.x += (player.x-en.x)/d * 1.6; en.y += (player.y-en.y)/d * 1.6; }
     });
 
-    // Mudança de sala
     let tx = Math.floor(player.x/TILE_SIZE), ty = Math.floor(player.y/TILE_SIZE);
     if(map[ty*MAP_SIZE+tx] === 2 && enemies.filter(e=>e.alive).length === 0) setupRoom(G.room + 1);
     if(map[ty*MAP_SIZE+tx] === 3) setupRoom(G.room - 1);
-
     if(G.hp <= 0) location.reload();
-    
-    document.getElementById('hp-fill').style.width = (G.hp/G.maxHp*100) + "%";
-    document.getElementById('soul-hud').innerText = G.souls;
-    document.getElementById('room-txt').innerText = G.room;
+    updateHUD();
 }
 
-// --- RENDER ---
 function draw() {
     ctx.fillStyle = "#050000"; ctx.fillRect(0,0,canvas.width, canvas.height/2 + player.pitch);
     ctx.fillStyle = "#150505"; ctx.fillRect(0,canvas.height/2 + player.pitch, canvas.width, canvas.height);
-
-    const step = G.res;
-    const numRays = canvas.width / step;
+    const step = G.res, numRays = canvas.width / step;
     for(let i=0; i<numRays; i++) {
         let ang = (player.angle - player.fov/2) + (i * (player.fov/numRays));
         let d=0, hit=false, cos=Math.cos(ang), sin=Math.sin(ang);
@@ -276,41 +291,36 @@ function draw() {
             }
         }
     }
-
-    // Sprites
     enemies.forEach(en => {
         if(!en.alive) return;
         let ang = Math.atan2(en.y-player.y, en.x-player.x) - player.angle;
         while(ang < -Math.PI) ang += Math.PI*2; while(ang > Math.PI) ang -= Math.PI*2;
         if(Math.abs(ang) < player.fov) {
-            let d = Math.hypot(player.x-en.x, player.y-en.y);
-            let sx = (0.5 * (ang/(player.fov/2)) + 0.5) * canvas.width;
-            let sh = (en.size * canvas.height) / d;
-            ctx.fillStyle = "#000";
-            ctx.shadowBlur = 15; ctx.shadowColor = "#f00";
+            let d = Math.hypot(player.x-en.x, player.y-en.y), sx = (0.5 * (ang/(player.fov/2)) + 0.5) * canvas.width, sh = (50 * canvas.height) / d;
+            ctx.fillStyle = "#000"; ctx.shadowBlur = 15; ctx.shadowColor = "#f00";
             ctx.fillRect(sx-sh/2, (canvas.height-sh)/2 + player.pitch, sh, sh);
             ctx.shadowBlur = 0;
         }
     });
-
     drawMinimap();
 }
 
 function drawMinimap() {
-    mCtx.fillStyle = "#000"; mCtx.fillRect(0,0,150,150);
-    const s = 150/MAP_SIZE;
+    mCtx.fillStyle = "#000"; mCtx.fillRect(0,0,130,130);
+    const s = 130/MAP_SIZE;
     for(let y=0; y<MAP_SIZE; y++) {
         for(let x=0; x<MAP_SIZE; x++) {
             if(map[y*MAP_SIZE+x] === 1) { mCtx.fillStyle = "#400"; mCtx.fillRect(x*s, y*s, s, s); }
             if(map[y*MAP_SIZE+x] === 2) { mCtx.fillStyle = "#f00"; mCtx.fillRect(x*s, y*s, s, s); }
         }
     }
-    mCtx.fillStyle = "#fff"; mCtx.fillRect((player.x/TILE_SIZE)*s-1, (player.y/TILE_SIZE)*s-1, 3, 3);
+    mCtx.fillStyle = "#fff"; mCtx.fillRect((player.x/TILE_SIZE)*s-1, (player.y/TILE_SIZE)*s-1, 2, 2);
 }
 
 function gameLoop() { if(G.play) { update(); draw(); } requestAnimationFrame(gameLoop); }
-window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; mCanvas.width=150; mCanvas.height=150; };
+window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; mCanvas.width=130; mCanvas.height=130; };
 window.onresize();
+changeLang('pt');
 </script>
 </body>
 </html>
