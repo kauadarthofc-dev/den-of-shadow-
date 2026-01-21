@@ -3,84 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 V8.0</title>
+    <title>Den of Shadow 💀 V9.0</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&family=Special+Elite&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&display=swap');
         
         * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
         body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; }
-        
         canvas { display: block; width: 100vw; height: 100vh; }
 
-        /* Interface Screens */
-        .ui-screen { position: absolute; inset: 0; background: radial-gradient(circle, #1a0000 0%, #000 100%); z-index: 4000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .btn-main { padding: 18px 50px; font-size: 20px; background: rgba(50,0,0,0.5); border: 2px solid #800; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin-top: 30px; letter-spacing: 3px; box-shadow: 0 0 15px #400; }
-        .btn-main:hover { background: #800; box-shadow: 0 0 30px #f00; }
+        /* Screens */
+        .ui-screen { position: absolute; inset: 0; background: radial-gradient(circle, #1a0000 0%, #000 100%); z-index: 4000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        .btn-main { padding: 15px 40px; font-size: 16px; background: rgba(80,0,0,0.4); border: 2px solid #800; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 10px; min-width: 250px; transition: 0.3s; }
+        .btn-main:hover { background: #800; box-shadow: 0 0 20px #f00; }
 
-        /* HUD Clássica Melhorada */
+        /* Config Panel */
+        .config-box { background: rgba(0,0,0,0.9); border: 2px solid #500; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; display: none; flex-direction: column; gap: 15px; z-index: 5000; }
+        .config-box label { font-size: 12px; color: #aaa; margin-bottom: 5px; display: block; }
+        select, input[type="range"] { width: 100%; background: #200; color: white; border: 1px solid #800; padding: 10px; font-family: 'Orbitron'; cursor: pointer; }
+
+        /* HUD & Gameplay */
         #hud { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; width: 90%; max-width: 600px; pointer-events: none; }
-        .hud-stats { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.9); padding: 15px 25px; border: 2px solid #500; border-radius: 15px; box-shadow: 0 0 25px rgba(255,0,0,0.1); }
-        .stat-label { font-size: 10px; color: #888; margin-bottom: 5px; }
-        .bar-container { width: 140px; height: 10px; background: #111; border: 1px solid #333; overflow: hidden; border-radius: 5px; }
-        .bar-fill { height: 100%; transition: width 0.4s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
-
-        /* Minimapa Moderno */
-        #minimap { position: absolute; top: 25px; right: 25px; width: 150px; height: 150px; border: 2px solid #800; background: rgba(0,0,0,0.8); z-index: 1000; display: none; border-radius: 10px; opacity: 0.7; }
-
-        /* Mira Laser */
-        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 6px; height: 6px; background: #f00; border-radius: 50%; box-shadow: 0 0 10px #f00, 0 0 20px #f00; z-index: 1500; display: none; pointer-events: none; }
-
-        /* Arma Sprite Avançado */
-        #weapon-view { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); width: 400px; height: 300px; pointer-events: none; z-index: 500; display: none; }
-        .hand { position: absolute; bottom: 0; left: 50%; width: 120px; height: 200px; background: linear-gradient(to top, #000, #200); border-radius: 50% 50% 0 0; transform: translateX(-50%); filter: blur(2px); }
-        .weapon-glow { position: absolute; top: 40px; left: 50%; width: 30px; height: 30px; background: radial-gradient(circle, #f00, transparent); transform: translateX(-50%); border-radius: 50%; }
-
-        #interact-prompt { position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%); color: #fff; background: rgba(0,0,0,0.8); padding: 12px 25px; border-radius: 8px; display: none; z-index: 1100; border: 1px solid #f00; font-size: 14px; box-shadow: 0 0 20px #800; }
-        #pause-mobile { position: absolute; top: 25px; left: 25px; width: 50px; height: 50px; background: rgba(255,255,255,0.05); border: 1px solid #800; border-radius: 10px; z-index: 2500; display: none; align-items: center; justify-content: center; font-size: 20px; }
+        .hud-stats { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.9); padding: 15px; border: 2px solid #500; border-radius: 10px; }
+        .bar-container { width: 120px; height: 10px; background: #111; border: 1px solid #333; border-radius: 5px; overflow: hidden; }
+        .bar-fill { height: 100%; transition: width 0.4s; }
+        
+        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 6px; height: 6px; background: #f00; border-radius: 50%; box-shadow: 0 0 10px #f00; z-index: 1500; display: none; }
+        #weapon-view { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); width: 350px; height: 250px; pointer-events: none; z-index: 500; display: none; background: radial-gradient(circle at 50% 100%, #300 0%, transparent 70%); border-radius: 50% 50% 0 0; }
+        
+        #interact-prompt { position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%); color: #fff; background: rgba(130,0,0,0.9); padding: 10px 20px; border-radius: 5px; display: none; z-index: 1100; border: 1px solid #fff; font-size: 12px; }
+        #pause-btn { position: absolute; top: 25px; left: 25px; width: 50px; height: 50px; background: rgba(0,0,0,0.5); border: 1px solid #800; border-radius: 10px; z-index: 3000; display: none; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="start-screen" class="ui-screen">
-    <h1 style="font-family:'Nosifer'; color:#f00; font-size: clamp(30px, 10vw, 60px);">DEN OF SHADOW</h1>
-    <p style="font-size:14px; color:#666;">High Fidelity V8.0</p>
-    <button class="btn-main" onclick="startGame()">INICIAR RITUAL</button>
+    <h1 style="font-family:'Nosifer'; color:#f00; font-size: clamp(30px, 8vw, 60px);">DEN OF SHADOW</h1>
+    <button class="btn-main" onclick="startGame()" id="txt-start">INICIAR RITUAL</button>
+    <button class="btn-main" onclick="showConfig(true)" id="txt-config">CONFIGURAÇÕES</button>
+</div>
+
+<div id="config-screen" class="ui-screen" style="display:none; background: rgba(0,0,0,0.95);">
+    <div class="config-box" style="display:flex;">
+        <h2 id="txt-config-title">CONFIGURAÇÕES</h2>
+        <div>
+            <label id="txt-lang-label">IDIOMA / LANGUAGE</label>
+            <select id="lang-select" onchange="changeLang(this.value)">
+                <option value="pt">Português</option>
+                <option value="en">English</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+                <option value="jp">日本語</option>
+                <option value="ru">Русский</option>
+            </select>
+        </div>
+        <div>
+            <label id="txt-sens-label">SENSIBILIDADE</label>
+            <input type="range" id="sens-slider" min="0.1" max="5.0" step="0.1" value="1.0" oninput="updateSens(this.value)">
+        </div>
+        <button class="btn-main" onclick="showConfig(false)" id="txt-back">VOLTAR</button>
+    </div>
 </div>
 
 <div id="pause-screen" class="ui-screen" style="display:none;">
-    <h1 style="font-family:'Nosifer'; color:#f00;">PAUSADO</h1>
-    <button class="btn-main" onclick="togglePause()">CONTINUAR</button>
-    <button class="btn-main" onclick="location.reload()">SAIR</button>
+    <h1 style="font-family:'Nosifer'; color:#f00;">PAUSA</h1>
+    <button class="btn-main" onclick="togglePause()" id="txt-resume">CONTINUAR</button>
+    <button class="btn-main" onclick="showConfig(true)" id="txt-config-pause">CONFIGURAÇÕES</button>
+    <button class="btn-main" onclick="location.reload()" id="txt-exit">SAIR</button>
 </div>
 
-<div id="death-screen" class="ui-screen" style="display:none;">
-    <h1 style="font-family:'Nosifer'; color:#f00;">CONSUMIDO</h1>
-    <button class="btn-main" onclick="location.reload()">REENCARNAR</button>
-</div>
-
-<div id="pause-mobile" onclick="togglePause()">⚙️</div>
+<div id="pause-btn" onclick="togglePause()">⚙️</div>
 <div id="interact-prompt">INTERAGIR</div>
-<canvas id="minimap"></canvas>
 <div id="crosshair"></div>
-
-<div id="weapon-view">
-    <div class="hand"></div>
-    <div id="muzzle-flash" class="weapon-glow"></div>
-</div>
+<div id="weapon-view"></div>
 
 <div id="hud">
     <div class="hud-stats">
         <div>
-            <div class="stat-label">VITALIDADE</div>
-            <div class="bar-container"><div id="hp-fill" class="bar-fill" style="background: linear-gradient(90deg, #600, #f00);"></div></div>
+            <div id="txt-hp-label" style="font-size:10px; color:#888;">VITALIDADE</div>
+            <div class="bar-container"><div id="hp-fill" class="bar-fill" style="background: #a00;"></div></div>
         </div>
         <div style="text-align:center;">
-            <div class="stat-label">CÂMARA</div>
-            <span id="room-txt" style="color:#f00; font-size: 24px; font-weight: bold;">0</span>
+            <div id="txt-room-label" style="font-size:10px; color:#888;">CÂMARA</div>
+            <span id="room-txt" style="color:#f00; font-size: 20px; font-weight: bold;">0</span>
         </div>
         <div>
-            <div class="stat-label">ALMA</div>
-            <div class="bar-container"><div id="ammo-fill" class="bar-fill" style="background: linear-gradient(90deg, #880, #ff0);"></div></div>
+            <div id="txt-alma-label" style="font-size:10px; color:#888;">ALMA</div>
+            <div class="bar-container"><div id="ammo-fill" class="bar-fill" style="background: #aa0;"></div></div>
         </div>
     </div>
 </div>
@@ -89,89 +98,98 @@
 
 <script>
 /**
- * ENGINE V8.0 - High Resolution Raycaster
+ * LOCALIZAÇÃO
+ */
+const I18N = {
+    pt: { start: "INICIAR RITUAL", config: "CONFIGURAÇÕES", back: "VOLTAR", resume: "CONTINUAR", exit: "SAIR", hp: "VITALIDADE", alma: "ALMA", room: "CÂMARA", sens: "SENSIBILIDADE", lang: "IDIOMA", collect: "COLETAR ESSÊNCIA", door: "SAIR DA CÂMARA" },
+    en: { start: "START RITUAL", config: "SETTINGS", back: "BACK", resume: "RESUME", exit: "EXIT", hp: "VITALITY", alma: "SOUL", room: "CHAMBER", sens: "SENSITIVITY", lang: "LANGUAGE", collect: "COLLECT ESSENCE", door: "LEAVE CHAMBER" },
+    es: { start: "INICIAR RITUAL", config: "AJUSTES", back: "VOLVER", resume: "CONTINUAR", exit: "SALIR", hp: "VITALIDAD", alma: "ALMA", room: "CÁMARA", sens: "SENSIBILIDAD", lang: "IDIOMA", collect: "RECOGER ESENCIA", door: "SALIR DE CÁMARA" },
+    fr: { start: "COMMENCER LE RITUEL", config: "RÉGLAGES", back: "RETOUR", resume: "REPRENDRE", exit: "QUITTER", hp: "VITALITÉ", alma: "ÂME", room: "CHAMBRE", sens: "SENSIBILITÉ", lang: "LANGUE", collect: "COLLECTER L'ESSENCE", door: "QUITTER LA CHAMBRE" },
+    de: { start: "RITUAL STARTEN", config: "EINSTELLUNGEN", back: "ZURÜCK", resume: "WEITER", exit: "BEENDEN", hp: "VITALITÄT", alma: "SEELE", room: "KAMMER", sens: "EMPFINDLICHKEIT", lang: "SPRACHE", collect: "ESSENZ SAMMELN", door: "KAMMER VERLASSEN" },
+    jp: { start: "儀式を開始", config: "設定", back: "戻る", resume: "再開", exit: "終了", hp: "生命力", alma: "魂", room: "部屋", sens: "感度", lang: "言語", collect: "エッセンスを回収", door: "部屋を出る" },
+    ru: { start: "НАЧАТЬ РИТУАЛ", config: "НАСТРОЙКИ", back: "НАЗАД", resume: "ПРОДОЛЖИТЬ", exit: "ВЫХОД", hp: "ЖИВУЧЕСТЬ", alma: "ДУША", room: "КАМЕРА", sens: "ЧУВСТВИТЕЛЬНОСТЬ", lang: "ЯЗЫК", collect: "СОБРАТЬ ЭССЕНЦИЮ", door: "ВЫЙТИ ИЗ КАМЕРЫ" }
+};
+
+let curLang = 'pt';
+let baseSens = 0.0025;
+
+function changeLang(lang) {
+    curLang = lang;
+    const t = I18N[lang];
+    document.getElementById('txt-start').innerText = t.start;
+    document.getElementById('txt-config').innerText = t.config;
+    document.getElementById('txt-config-pause').innerText = t.config;
+    document.getElementById('txt-config-title').innerText = t.config;
+    document.getElementById('txt-back').innerText = t.back;
+    document.getElementById('txt-resume').innerText = t.resume;
+    document.getElementById('txt-exit').innerText = t.exit;
+    document.getElementById('txt-hp-label').innerText = t.hp;
+    document.getElementById('txt-alma-label').innerText = t.alma;
+    document.getElementById('txt-room-label').innerText = t.room;
+    document.getElementById('txt-sens-label').innerText = t.sens;
+    document.getElementById('txt-lang-label').innerText = t.lang;
+}
+
+function updateSens(val) { baseSens = 0.0025 * val; }
+function showConfig(show) { document.getElementById('config-screen').style.display = show ? 'flex' : 'none'; }
+
+/**
+ * ENGINE V9.0
  */
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const mCanvas = document.getElementById('minimap');
-const mCtx = mCanvas.getContext('2d');
-
-const TILE_SIZE = 64;
-const MAP_SIZE = 24;
+const TILE_SIZE = 64, MAP_SIZE = 24;
 let map = [], enemies = [], heals = [], bullets = [];
 
-const G = {
-    play: false, paused: false, room: 0,
-    hp: 100, ammo: 40, maxAmmo: 40, lastShot: 0
-};
+const G = { play: false, paused: false, room: 0, hp: 100, ammo: 40, maxAmmo: 40, lastShot: 0 };
+const player = { x: 0, y: 0, angle: 0, pitch: 0, moveDir: { x: 0, y: 0 }, fov: Math.PI / 3, bob: 0 };
 
-const player = {
-    x: 0, y: 0, angle: 0, pitch: 0,
-    moveDir: { x: 0, y: 0 }, fov: Math.PI / 3,
-    bob: 0
-};
-
-// --- INITIALIZATION ---
 function startGame() {
     document.getElementById('start-screen').style.display = 'none';
-    document.querySelectorAll('#hud, #minimap, #crosshair, #weapon-view').forEach(el => el.style.display = 'block');
-    if('ontouchstart' in window) document.getElementById('pause-mobile').style.display = 'flex';
-    else canvas.requestPointerLock();
-    
+    document.querySelectorAll('#hud, #crosshair, #weapon-view, #pause-btn').forEach(el => el.style.display = 'block');
+    if(!('ontouchstart' in window)) canvas.requestPointerLock();
     setupRoom();
     G.play = true;
     requestAnimationFrame(gameLoop);
 }
 
 function setupRoom() {
-    // Gerar Mapa
     map = Array(MAP_SIZE * MAP_SIZE).fill(0);
     for(let i=0; i<MAP_SIZE; i++) {
         map[i] = 1; map[i + (MAP_SIZE*(MAP_SIZE-1))] = 1;
         map[i * MAP_SIZE] = 1; map[i * MAP_SIZE + (MAP_SIZE-1)] = 1;
     }
-    map[Math.floor(MAP_SIZE/2)] = 2; // Saída
-    map[MAP_SIZE*(MAP_SIZE-1) + Math.floor(MAP_SIZE/2)] = 3; // Entrada
-
-    // Spawn Player - SEMPRE OLHANDO PARA O CENTRO
+    map[Math.floor(MAP_SIZE/2)] = 2; // Door
     player.x = (MAP_SIZE/2) * TILE_SIZE;
-    player.y = (MAP_SIZE - 2.5) * TILE_SIZE;
-    const centerX = (MAP_SIZE/2) * TILE_SIZE;
-    const centerY = (MAP_SIZE/2) * TILE_SIZE;
-    player.angle = Math.atan2(centerY - player.y, centerX - player.x);
-    player.pitch = 0;
-
+    player.y = (MAP_SIZE - 3) * TILE_SIZE;
+    player.angle = -Math.PI/2;
     spawnEntities();
 }
 
 function spawnEntities() {
     enemies = []; heals = [];
-    let count = 4 + Math.floor(G.room * 0.7);
+    let count = 4 + Math.floor(G.room * 0.8);
     for(let i=0; i<count; i++) {
-        enemies.push({
-            x: (6 + Math.random() * (MAP_SIZE-12)) * TILE_SIZE,
-            y: (6 + Math.random() * (MAP_SIZE-12)) * TILE_SIZE,
-            hp: 80, alive: true, s: 40 // Sprite size
-        });
+        enemies.push({ x: (5 + Math.random()*(MAP_SIZE-10))*TILE_SIZE, y: (5 + Math.random()*(MAP_SIZE-10))*TILE_SIZE, hp: 80, alive: true });
     }
-    if(Math.random() > 0.3) heals.push({ x: (MAP_SIZE/2)*TILE_SIZE, y: (MAP_SIZE/2)*TILE_SIZE, active: true });
+    if(Math.random() > 0.4) heals.push({ x: (MAP_SIZE/2)*TILE_SIZE, y: (MAP_SIZE/2)*TILE_SIZE, active: true });
 }
 
 function togglePause() {
     G.paused = !G.paused;
     document.getElementById('pause-screen').style.display = G.paused ? 'flex' : 'none';
-    if(!G.paused && !('ontouchstart' in window)) canvas.requestPointerLock();
+    if(G.paused) showConfig(false);
 }
 
-// --- INPUTS (PC & MOBILE) ---
+// Input Handlers
 const keys = {};
 window.onkeydown = e => { if(e.key === 'Escape') togglePause(); keys[e.key.toLowerCase()] = true; };
 window.onkeyup = e => delete keys[e.key.toLowerCase()];
 
 document.addEventListener('mousemove', e => {
     if(document.pointerLockElement === canvas && !G.paused) {
-        player.angle += e.movementX * 0.0025;
-        player.pitch = Math.max(-350, Math.min(350, player.pitch - e.movementY * 1.8));
+        player.angle += e.movementX * baseSens;
+        player.pitch = Math.max(-300, Math.min(300, player.pitch - e.movementY * (baseSens * 500)));
     }
 });
 
@@ -185,74 +203,45 @@ window.addEventListener('touchstart', e => {
 window.addEventListener('touchmove', e => {
     if(!G.play || G.paused) return;
     for(let t of e.changedTouches) {
-        if(t.identifier === tId) {
-            player.moveDir = { x: (t.clientX - 100)/50, y: (t.clientY - (window.innerHeight-100))/50 };
-        }
+        if(t.identifier === tId) player.moveDir = { x: (t.clientX - 100)/50, y: (t.clientY - (window.innerHeight-100))/50 };
         if(t.identifier === cId) {
-            player.angle += (t.clientX - lx) * 0.01;
-            player.pitch = Math.max(-350, Math.min(350, player.pitch - (t.clientY - ly) * 1.8));
+            player.angle += (t.clientX - lx) * (baseSens * 4);
+            player.pitch = Math.max(-300, Math.min(300, player.pitch - (t.clientY - ly) * (baseSens * 800)));
             lx = t.clientX; ly = t.clientY;
         }
     }
 });
-window.addEventListener('touchend', e => {
-    for(let t of e.changedTouches) { if(t.identifier === tId) player.moveDir = {x:0,y:0}; if(t.identifier === cId) cId = null; }
-});
+window.addEventListener('touchend', e => { for(let t of e.changedTouches) { if(t.identifier === tId) player.moveDir = {x:0,y:0}; if(t.identifier === cId) cId = null; } });
+document.addEventListener('mousedown', e => { if(G.play && !G.paused && e.button === 0) shoot(); });
 
-document.addEventListener('mousedown', e => { if(G.play && !G.paused) e.button === 0 ? shoot() : interact(); });
-
-// --- GAME LOGIC ---
 function shoot() {
-    if(G.ammo < 1 || Date.now() - G.lastShot < 200) return;
+    if(G.ammo < 1 || Date.now() - G.lastShot < 250) return;
     G.ammo--; G.lastShot = Date.now();
-    bullets.push({ x: player.x, y: player.y, vx: Math.cos(player.angle)*22, vy: Math.sin(player.angle)*22, life: 60 });
-    
-    // Animação de tiro
-    const flash = document.getElementById('muzzle-flash');
-    flash.style.opacity = "1"; flash.style.transform = "translateX(-50%) scale(2.5)";
-    setTimeout(() => { flash.style.opacity = "0.4"; flash.style.transform = "translateX(-50%) scale(1)"; }, 50);
-}
-
-function interact() {
-    let tx = Math.floor((player.x + Math.cos(player.angle)*70)/TILE_SIZE);
-    let ty = Math.floor((player.y + Math.sin(player.angle)*70)/TILE_SIZE);
-    
-    if(map[ty*MAP_SIZE+tx] === 2 && enemies.filter(e=>e.alive).length === 0) {
-        G.room++; setupRoom();
-    } else if(map[ty*MAP_SIZE+tx] === 3 && G.room > 0) {
-        G.room--; setupRoom();
-    }
-
-    heals.forEach(h => {
-        if(h.active && G.hp < 100 && Math.hypot(player.x-h.x, player.y-h.y) < 70) {
-            G.hp = Math.min(100, G.hp + 40); h.active = false;
-        }
-    });
+    bullets.push({ x: player.x, y: player.y, vx: Math.cos(player.angle)*20, vy: Math.sin(player.angle)*20, life: 60 });
 }
 
 function update() {
     if(!G.play || G.paused) return;
-
     let mx = 0, my = 0;
     if(keys['w']) { mx += Math.cos(player.angle); my += Math.sin(player.angle); }
     if(keys['s']) { mx -= Math.cos(player.angle); my -= Math.sin(player.angle); }
     if(keys['a']) { mx += Math.cos(player.angle-Math.PI/2); my += Math.sin(player.angle-Math.PI/2); }
     if(keys['d']) { mx += Math.cos(player.angle+Math.PI/2); my += Math.sin(player.angle+Math.PI/2); }
     
-    // Movimento do Mobile
-    mx += (Math.cos(player.angle)*-player.moveDir.y*5 + Math.cos(player.angle+Math.PI/2)*player.moveDir.x*5);
-    my += (Math.sin(player.angle)*-player.moveDir.y*5 + Math.sin(player.angle+Math.PI/2)*player.moveDir.x*5);
+    mx += (Math.cos(player.angle)*-player.moveDir.y*4 + Math.cos(player.angle+Math.PI/2)*player.moveDir.x*4);
+    my += (Math.sin(player.angle)*-player.moveDir.y*4 + Math.sin(player.angle+Math.PI/2)*player.moveDir.x*4);
 
-    let nx = player.x + mx*4.5, ny = player.y + my*4.5;
-    if(map[Math.floor(ny/TILE_SIZE)*MAP_SIZE + Math.floor(nx/TILE_SIZE)] === 0) { 
-        player.x = nx; player.y = ny; 
-        if(mx !== 0 || my !== 0) player.bob += 0.15;
-    }
+    let nx = player.x + mx*4, ny = player.y + my*4;
+    if(map[Math.floor(ny/TILE_SIZE)*MAP_SIZE + Math.floor(nx/TILE_SIZE)] === 0) { player.x = nx; player.y = ny; player.bob += 0.1; }
 
-    // UI Interact
+    // Interação
     const prompt = document.getElementById('interact-prompt');
     let hNear = heals.find(h => h.active && G.hp < 100 && Math.hypot(player.x-h.x, player.y-h.y) < 70);
-    if(hNear) { prompt.innerText = "COLETAR ESSÊNCIA"; prompt.style.display='block'; }
+    let tx = Math.floor((player.x + Math.cos(player.angle)*70)/TILE_SIZE);
+    let ty = Math.floor((player.y + Math.sin(player.angle)*70)/TILE_SIZE);
+
+    if(hNear) { prompt.innerText = I18N[curLang].collect; prompt.style.display='block'; if(keys['e']) { G.hp = Math.min(100, G.hp+40); hNear.active=false; } }
+    else if(map[ty*MAP_SIZE+tx] === 2) { prompt.innerText = I18N[curLang].door; prompt.style.display='block'; if(keys['e']) { G.room++; setupRoom(); } }
     else prompt.style.display = 'none';
 
     bullets.forEach((b,i) => {
@@ -264,87 +253,58 @@ function update() {
     enemies.forEach(en => {
         if(!en.alive) return;
         let d = Math.hypot(player.x-en.x, player.y-en.y);
-        if(d < 45) G.hp -= 0.5;
-        else { en.x += (player.x-en.x)/d*1.8; en.y += (player.y-en.y)/d*1.8; }
+        if(d < 45) G.hp -= 0.4;
+        else { en.x += (player.x-en.x)/d*1.7; en.y += (player.y-en.y)/d*1.7; }
     });
 
-    if(G.hp <= 0) { G.play = false; document.getElementById('death-screen').style.display='flex'; document.exitPointerLock(); }
-    G.ammo = Math.min(G.maxAmmo, G.ammo + 0.007);
-    
-    // Weapon Bobbing
-    document.getElementById('weapon-view').style.bottom = (-20 + Math.sin(player.bob)*10) + "px";
+    if(G.hp <= 0) { G.play = false; document.getElementById('death-screen').style.display='flex'; }
+    G.ammo = Math.min(G.maxAmmo, G.ammo + 0.008);
 }
 
-// --- RENDERING (HIGH RES) ---
 function draw() {
-    // Ceil/Floor
     ctx.fillStyle = "#0a0000"; ctx.fillRect(0,0,canvas.width, canvas.height/2 + player.pitch);
-    ctx.fillStyle = "#1a0505"; ctx.fillRect(0,canvas.height/2 + player.pitch, canvas.width, canvas.height);
+    ctx.fillStyle = "#150505"; ctx.fillRect(0,canvas.height/2 + player.pitch, canvas.width, canvas.height);
 
-    const res = 1; // 1 ray per pixel horizontal
-    const numRays = canvas.width / res;
-
+    const numRays = canvas.width / 2;
     for(let i=0; i<numRays; i++) {
         let ang = (player.angle - player.fov/2) + (i * (player.fov/numRays));
         let d=0, hit=false, cos=Math.cos(ang), sin=Math.sin(ang);
-        
-        while(!hit && d < 1200) {
-            d += 7;
+        while(!hit && d < 1000) {
+            d += 8;
             let tx=Math.floor((player.x+cos*d)/TILE_SIZE), ty=Math.floor((player.y+sin*d)/TILE_SIZE);
-            let tile = map[ty*MAP_SIZE+tx];
-            if(tile > 0) {
+            if(map[ty*MAP_SIZE+tx] > 0) {
                 hit = true;
                 let h = (TILE_SIZE * canvas.height) / (d * Math.cos(player.angle-ang));
-                let lum = Math.max(30, (tile === 2 ? 255 : 150) - d/6);
-                ctx.fillStyle = `rgb(${lum}, 0, 0)`;
-                ctx.fillRect(i*res, (canvas.height-h)/2 + player.pitch, res, h);
+                let lum = Math.max(20, (map[ty*MAP_SIZE+tx] === 2 ? 200 : 120) - d/7);
+                ctx.fillStyle = `rgb(${lum},0,0)`;
+                ctx.fillRect(i*2, (canvas.height-h)/2 + player.pitch, 2, h);
             }
         }
     }
 
-    const drawSprite = (x,y,c,s,glow=false) => {
+    const drawSprite = (x,y,c,s) => {
         let ang = Math.atan2(y-player.y, x-player.x)-player.angle;
         while(ang < -Math.PI) ang+=Math.PI*2; while(ang > Math.PI) ang-=Math.PI*2;
         if(Math.abs(ang) < player.fov) {
             let d = Math.hypot(player.x-x, player.y-y);
             let sx = (0.5 * (ang/(player.fov/2)) + 0.5) * canvas.width;
             let sh = (s * canvas.height)/d;
-            if(glow) { ctx.shadowBlur = 20; ctx.shadowColor = c; }
-            ctx.fillStyle = c;
-            ctx.fillRect(sx-sh/2, (canvas.height-sh)/2+player.pitch, sh, sh);
-            ctx.shadowBlur = 0;
+            ctx.fillStyle = c; ctx.fillRect(sx-sh/2, (canvas.height-sh)/2+player.pitch, sh, sh);
         }
     };
-
-    enemies.forEach(en => en.alive && drawSprite(en.x, en.y, "#000", 45, true));
-    heals.forEach(h => h.active && drawSprite(h.x, h.y, "#0f0", 25, true));
+    enemies.forEach(en => en.alive && drawSprite(en.x, en.y, "#000", 50));
+    heals.forEach(h => h.active && drawSprite(h.x, h.y, "#0f0", 25));
     bullets.forEach(b => drawSprite(b.x, b.y, "#ff0", 8));
 
-    renderMinimap();
     document.getElementById('hp-fill').style.width = G.hp+"%";
     document.getElementById('ammo-fill').style.width = (G.ammo/G.maxAmmo*100)+"%";
     document.getElementById('room-txt').innerText = G.room;
 }
 
-function renderMinimap() {
-    mCtx.clearRect(0,0,150,150);
-    const s = 150/MAP_SIZE;
-    for(let y=0; y<MAP_SIZE; y++) {
-        for(let x=0; x<MAP_SIZE; x++) {
-            if(map[y*MAP_SIZE+x] === 1) { mCtx.fillStyle = "#300"; mCtx.fillRect(x*s, y*s, s, s); }
-            if(map[y*MAP_SIZE+x] === 2) { mCtx.fillStyle = "#f00"; mCtx.fillRect(x*s, y*s, s, s); }
-        }
-    }
-    mCtx.fillStyle = "#fff"; mCtx.fillRect((player.x/TILE_SIZE)*s-1, (player.y/TILE_SIZE)*s-1, 3, 3);
-}
-
 function gameLoop() { if(G.play) { update(); draw(); } requestAnimationFrame(gameLoop); }
-
-window.onresize = () => { 
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    mCanvas.width = 150; mCanvas.height = 150;
-};
+window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
 window.onresize();
+changeLang('pt');
 </script>
 </body>
 </html>
