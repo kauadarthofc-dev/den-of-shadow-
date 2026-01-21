@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 V14.0</title>
+    <title>Den of Shadow 💀 V14.1</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&display=swap');
-        * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
+        * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; }
         canvas { display: block; width: 100vw; height: 100vh; }
 
@@ -17,19 +17,23 @@
         .btn-main { padding: 12px; background: rgba(255,0,0,0.1); border: 1px solid #800; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 8px 0; width: 100%; transition: 0.3s; text-transform: uppercase; font-size: 12px; }
         .btn-main:hover { background: #f00; color: #000; }
 
-        .links { margin-top: 20px; display: flex; flex-direction: column; gap: 5px; font-size: 10px; }
-        .links a { color: #f00; text-decoration: none; }
-
-        /* HUD */
-        #minimap { position: absolute; top: 20px; right: 20px; width: 120px; height: 120px; border: 2px solid #f00; background: rgba(0,0,0,0.8); z-index: 1000; display: none; }
+        /* HUD & Mobile Controls */
+        #minimap { position: absolute; top: 20px; right: 20px; width: 110px; height: 110px; border: 2px solid #f00; background: rgba(0,0,0,0.8); z-index: 1000; display: none; border-radius: 10px; }
         #hud { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; width: 95%; max-width: 700px; pointer-events: none; }
-        .hud-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; background: rgba(0,0,0,0.9); padding: 15px; border-radius: 10px; border: 1px solid #300; gap: 15px; }
+        .hud-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; background: rgba(0,0,0,0.9); padding: 12px; border-radius: 10px; border: 1px solid #300; gap: 10px; }
         .bar { width: 100%; height: 6px; background: #222; margin-top: 5px; border-radius: 3px; overflow: hidden; }
         .bar-fill { height: 100%; width: 100%; background: #f00; transition: width 0.3s; }
         
-        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 14px; height: 14px; border: 1px solid #f00; border-radius: 50%; z-index: 1500; display: none; pointer-events: none; }
+        #mobile-controls { position: absolute; inset: 0; pointer-events: none; z-index: 2000; display: none; }
+        .joy-stick { position: absolute; bottom: 40px; left: 40px; width: 120px; height: 120px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,0,0,0.3); border-radius: 50%; pointer-events: auto; }
+        .btn-shoot { position: absolute; bottom: 40px; right: 40px; width: 80px; height: 80px; background: rgba(255,0,0,0.2); border: 2px solid #f00; border-radius: 50%; pointer-events: auto; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+
+        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 14px; height: 14px; border: 1px solid #f00; border-radius: 50%; z-index: 1500; display: none; }
         #pause-btn { position: absolute; top: 20px; left: 20px; width: 45px; height: 45px; background: rgba(0,0,0,0.7); border: 1px solid #f00; border-radius: 50%; z-index: 3500; display: none; align-items: center; justify-content: center; cursor: pointer; }
-        #msg-shop { position: absolute; top: 20%; width: 100%; text-align: center; color: #ff0; font-family: 'Nosifer'; font-size: 1.5rem; display: none; z-index: 2000; text-shadow: 0 0 15px #f00; }
+        #msg-shop { position: absolute; top: 20%; width: 100%; text-align: center; color: #ff0; font-family: 'Nosifer'; font-size: 1.2rem; display: none; z-index: 2000; }
+        
+        .links { margin-top: 15px; font-size: 10px; display: flex; flex-direction: column; gap: 4px; }
+        .links a { color: #f00; text-decoration: none; }
     </style>
 </head>
 <body>
@@ -38,7 +42,8 @@
 
 <div id="start-screen" class="ui-screen">
     <div class="glass-panel">
-        <h1 style="font-family:'Nosifer'; color:#f00; font-size: 2rem;">DEN OF SHADOW</h1>
+        <h1 style="font-family:'Nosifer'; color:#f00; font-size: 1.8rem; margin:0;">DEN OF SHADOW</h1>
+        <p style="font-size: 9px; color: #555;">V14.1 MOBILE & CONSOLE SUPPORT</p>
         <button class="btn-main" onclick="startGame()">INICIAR RITUAL</button>
         <button class="btn-main" onclick="showConfig(true)">AJUSTES</button>
         <div class="links">
@@ -52,11 +57,16 @@
 <div id="config-screen" class="ui-screen" style="display:none;">
     <div class="glass-panel">
         <h2>AJUSTES</h2>
-        <select id="res-select" onchange="G.res = parseFloat(this.value)">
-            <option value="4">Baixa</option>
-            <option value="2">Média</option>
-            <option value="1" selected>Alta</option>
-        </select>
+        <div style="text-align:left; font-size:10px;">
+            <label>RESOLUÇÃO</label>
+            <select id="res-select" onchange="G.res = parseFloat(this.value)" style="width:100%; padding:10px; background:#111; color:white; border:1px solid #500; margin-bottom:10px;">
+                <option value="4">Baixa</option>
+                <option value="2">Média</option>
+                <option value="1" selected>Alta</option>
+            </select>
+            <label>SENSIBILIDADE</label>
+            <input type="range" min="0.5" max="4" step="0.1" value="1" oninput="G.sens = 0.0025 * this.value" style="width:100%;">
+        </div>
         <button class="btn-main" onclick="showConfig(false)">VOLTAR</button>
     </div>
 </div>
@@ -73,23 +83,28 @@
 <div id="crosshair"></div>
 <canvas id="minimap"></canvas>
 
+<div id="mobile-controls">
+    <div class="joy-stick" id="stick"></div>
+    <div class="btn-shoot" id="shoot-btn">🔥</div>
+</div>
+
 <div id="hud">
     <div class="hud-grid">
         <div>
-            <div style="font-size:9px; color:#888;">VIDA</div>
+            <div style="font-size:8px; color:#888;">VIDA</div>
             <div class="bar"><div id="hp-fill" class="bar-fill"></div></div>
         </div>
         <div>
-            <div style="font-size:9px; color:#888;">MUNIÇÃO</div>
-            <div id="ammo-txt" style="font-size:16px; font-weight:bold; color:#0f0;">40</div>
+            <div style="font-size:8px; color:#888;">AMMO</div>
+            <div id="ammo-txt" style="font-size:14px; font-weight:bold; color:#0f0;">40</div>
         </div>
         <div style="text-align:center;">
-            <div style="font-size:9px; color:#888;">CÂMARA</div>
-            <div id="room-txt" style="font-size:18px; font-weight:bold;">1</div>
+            <div style="font-size:8px; color:#888;">ROOM</div>
+            <div id="room-txt" style="font-size:14px; font-weight:bold;">1</div>
         </div>
         <div style="text-align:right;">
-            <div style="font-size:9px; color:#888;">ALMAS</div>
-            <div id="soul-hud" style="color:#ff0; font-size:18px; font-weight:bold;">0</div>
+            <div style="font-size:8px; color:#888;">ALMAS</div>
+            <div id="soul-hud" style="color:#ff0; font-size:14px; font-weight:bold;">0</div>
         </div>
     </div>
 </div>
@@ -101,13 +116,13 @@ const G = {
     play: false, paused: false, room: 1, 
     hp: 100, maxHp: 100, souls: 0, ammo: 40, maxAmmo: 40,
     res: 1, sens: 0.0025, dmgMult: 1, 
-    weapon: 'pistol', isShop: false, devMode: false
+    weapon: 'pistol', isShop: false, isMobile: false
 };
 
 const WEAPONS = {
-    pistol: { name: 'Pistola', dmg: 40, speed: 25, size: 5, color: '#f00', rate: 400 },
-    smg: { name: 'Metralhadora', dmg: 20, speed: 35, size: 3, color: '#ff0', rate: 100 },
-    cannon: { name: 'Canhão', dmg: 150, speed: 12, size: 15, color: '#f0f', rate: 1000 }
+    pistol: { dmg: 40, speed: 25, size: 5, color: '#f00', rate: 400 },
+    smg: { dmg: 20, speed: 35, size: 3, color: '#ff0', rate: 100 },
+    cannon: { dmg: 150, speed: 12, size: 15, color: '#f0f', rate: 1000 }
 };
 
 const canvas = document.getElementById('gameCanvas');
@@ -121,43 +136,35 @@ function setupRoom(roomNum) {
     G.room = roomNum;
     G.isShop = (roomNum % 5 === 0);
     document.getElementById('msg-shop').style.display = G.isShop ? 'block' : 'none';
-    
     map = Array(MAP_SIZE * MAP_SIZE).fill(0);
-    // Paredes externas
     for(let i=0; i<MAP_SIZE; i++) {
         map[i] = 1; map[i + (MAP_SIZE*(MAP_SIZE-1))] = 1;
         map[i * MAP_SIZE] = 1; map[i * MAP_SIZE + (MAP_SIZE-1)] = 1;
     }
-
-    enemies = [];
-    shopItems = [];
-    
+    enemies = []; shopItems = [];
     if (G.isShop) {
-        // Sala de Compras: 3 pedestais fixos
         spawnShopItem(10, 10, 'dmg', 15);
         spawnShopItem(12, 10, 'smg', 30);
         spawnShopItem(14, 10, 'hp', 20);
     } else {
-        // Sala normal com obstáculos
         for(let i=0; i<10; i++) map[Math.floor(Math.random()*MAP_SIZE*MAP_SIZE)] = 1;
         let count = 3 + Math.floor(G.room * 0.5);
         for(let i=0; i<count; i++) enemies.push({ x: (7+Math.random()*10)*TILE_SIZE, y: (7+Math.random()*10)*TILE_SIZE, hp: 100, alive: true });
     }
-
-    map[Math.floor(MAP_SIZE/2)] = 2; // Saída
+    map[Math.floor(MAP_SIZE/2)] = 2;
     player.x = (MAP_SIZE/2)*TILE_SIZE; player.y = (MAP_SIZE-4)*TILE_SIZE; player.angle = -Math.PI/2;
 }
 
-function spawnShopItem(tx, ty, type, price) {
-    shopItems.push({ x: tx*TILE_SIZE, y: ty*TILE_SIZE, type, price, active: true });
-}
+function spawnShopItem(tx, ty, type, price) { shopItems.push({ x: tx*TILE_SIZE, y: ty*TILE_SIZE, type, price, active: true }); }
 
 const player = { x: 0, y: 0, angle: 0, pitch: 0, fov: Math.PI / 3 };
 
 function startGame() {
+    G.isMobile = ('ontouchstart' in window);
     document.getElementById('start-screen').style.display = 'none';
     document.querySelectorAll('#hud, #crosshair, #pause-btn, #minimap').forEach(el => el.style.display = 'block');
-    if(!('ontouchstart' in window)) canvas.requestPointerLock();
+    if(G.isMobile) document.getElementById('mobile-controls').style.display = 'block';
+    else canvas.requestPointerLock();
     setupRoom(1); G.play = true; requestAnimationFrame(gameLoop);
 }
 
@@ -165,28 +172,23 @@ function shoot() {
     const now = Date.now();
     const wp = WEAPONS[G.weapon];
     if (now - lastShot < wp.rate || G.ammo <= 0) return;
-    
-    bullets.push({
-        x: player.x, y: player.y,
-        vx: Math.cos(player.angle) * wp.speed,
-        vy: Math.sin(player.angle) * wp.speed,
-        life: 100, dmg: wp.dmg * G.dmgMult, color: wp.color, size: wp.size
-    });
-    G.ammo--;
-    lastShot = now;
+    bullets.push({ x: player.x, y: player.y, vx: Math.cos(player.angle)*wp.speed, vy: Math.sin(player.angle)*wp.speed, life: 100, dmg: wp.dmg*G.dmgMult, color: wp.color, size: wp.size });
+    G.ammo--; lastShot = now;
 }
 
-function buyItem(item) {
-    if (G.souls >= item.price) {
-        G.souls -= item.price;
-        item.active = false;
-        if (item.type === 'dmg') G.dmgMult += 0.5;
-        if (item.type === 'hp') { G.maxHp += 50; G.hp = G.maxHp; }
-        if (item.type === 'smg') G.weapon = 'smg';
-        if (item.type === 'cannon') G.weapon = 'cannon';
-    }
-}
+// Mobile Stick Logic
+let touchX = 0, touchY = 0, isTouching = false;
+const stick = document.getElementById('stick');
+stick.addEventListener('touchstart', e => { isTouching = true; });
+stick.addEventListener('touchmove', e => {
+    let rect = stick.getBoundingClientRect();
+    touchX = (e.touches[0].clientX - (rect.left + rect.width/2)) / (rect.width/2);
+    touchY = (e.touches[0].clientY - (rect.top + rect.height/2)) / (rect.height/2);
+});
+stick.addEventListener('touchend', () => { isTouching = false; touchX = 0; touchY = 0; });
+document.getElementById('shoot-btn').addEventListener('touchstart', (e) => { e.preventDefault(); shoot(); });
 
+// Controls
 const keys = {};
 window.onkeydown = e => keys[e.key.toLowerCase()] = true;
 window.onkeyup = e => delete keys[e.key.toLowerCase()];
@@ -196,7 +198,7 @@ document.addEventListener('mousemove', e => {
         player.pitch = Math.max(-300, Math.min(300, player.pitch - e.movementY * 1.5));
     }
 });
-document.addEventListener('mousedown', e => { if(G.play && !G.paused) shoot(); });
+document.addEventListener('mousedown', e => { if(G.play && !G.paused && !G.isMobile) shoot(); });
 
 function togglePause() { G.paused = !G.paused; document.getElementById('pause-screen').style.display = G.paused ? 'flex' : 'none'; }
 function showConfig(s) { document.getElementById('config-screen').style.display = s ? 'flex' : 'none'; }
@@ -204,10 +206,10 @@ function showConfig(s) { document.getElementById('config-screen').style.display 
 function update() {
     if(!G.play || G.paused) return;
     let mx = 0, my = 0;
-    if(keys['w']) { mx += Math.cos(player.angle); my += Math.sin(player.angle); }
-    if(keys['s']) { mx -= Math.cos(player.angle); my -= Math.sin(player.angle); }
-    if(keys['a']) { mx += Math.cos(player.angle-Math.PI/2); my += Math.sin(player.angle-Math.PI/2); }
-    if(keys['d']) { mx += Math.cos(player.angle+Math.PI/2); my += Math.sin(player.angle+Math.PI/2); }
+    if(keys['w'] || (isTouching && touchY < -0.2)) { mx += Math.cos(player.angle); my += Math.sin(player.angle); }
+    if(keys['s'] || (isTouching && touchY > 0.2)) { mx -= Math.cos(player.angle); my -= Math.sin(player.angle); }
+    if(keys['a'] || (isTouching && touchX < -0.2)) { mx += Math.cos(player.angle-Math.PI/2); my += Math.sin(player.angle-Math.PI/2); }
+    if(keys['d'] || (isTouching && touchX > 0.2)) { mx += Math.cos(player.angle+Math.PI/2); my += Math.sin(player.angle+Math.PI/2); }
     
     let nx = player.x + mx*4, ny = player.y + my*4;
     if(map[Math.floor(ny/TILE_SIZE)*MAP_SIZE + Math.floor(nx/TILE_SIZE)] === 0) { player.x = nx; player.y = ny; }
@@ -216,25 +218,19 @@ function update() {
         b.x += b.vx; b.y += b.vy; b.life--;
         if(map[Math.floor(b.y/TILE_SIZE)*MAP_SIZE + Math.floor(b.x/TILE_SIZE)] > 0 || b.life < 0) bullets.splice(i,1);
         enemies.forEach(en => {
-            if(en.alive && Math.hypot(b.x-en.x, b.y-en.y) < 40) {
-                en.hp -= b.dmg; bullets.splice(i,1);
-                if(en.hp <= 0) { en.alive = false; G.souls += 5; G.ammo = Math.min(G.maxAmmo, G.ammo+5); }
-            }
+            if(en.alive && Math.hypot(b.x-en.x, b.y-en.y) < 40) { en.hp -= b.dmg; bullets.splice(i,1); if(en.hp <= 0){ en.alive = false; G.souls += 5; G.ammo = Math.min(G.maxAmmo, G.ammo+5); }}
         });
     });
 
     enemies.forEach(en => {
         if(!en.alive) return;
         let d = Math.hypot(player.x-en.x, player.y-en.y);
-        if(d < 45) { G.hp -= 0.5; } else { en.x += (player.x-en.x)/d*1.5; en.y += (player.y-en.y)/d*1.5; }
+        if(d < 45) G.hp -= 0.5; else { en.x += (player.x-en.x)/d*1.5; en.y += (player.y-en.y)/d*1.5; }
     });
 
-    shopItems.forEach(item => {
-        if(item.active && Math.hypot(player.x-item.x, player.y-item.y) < 40) buyItem(item);
-    });
-
-    let tx = Math.floor(player.x/TILE_SIZE), ty = Math.floor(player.y/TILE_SIZE);
-    if(map[ty*MAP_SIZE+tx] === 2 && enemies.filter(e=>e.alive).length === 0) setupRoom(G.room + 1);
+    shopItems.forEach(item => { if(item.active && Math.hypot(player.x-item.x, player.y-item.y) < 40) buyItem(item); });
+    if(map[Math.floor(player.y/TILE_SIZE)*MAP_SIZE + Math.floor(player.x/TILE_SIZE)] === 2 && enemies.filter(e=>e.alive).length === 0) setupRoom(G.room + 1);
+    if(G.hp <= 0) location.reload();
 
     document.getElementById('hp-fill').style.width = (G.hp/G.maxHp*100) + "%";
     document.getElementById('soul-hud').innerText = G.souls;
@@ -242,10 +238,18 @@ function update() {
     document.getElementById('room-txt').innerText = G.room;
 }
 
+function buyItem(item) {
+    if (G.souls >= item.price) {
+        G.souls -= item.price; item.active = false;
+        if (item.type === 'dmg') G.dmgMult += 0.5;
+        if (item.type === 'hp') { G.maxHp += 50; G.hp = G.maxHp; }
+        if (item.type === 'smg') G.weapon = 'smg';
+    }
+}
+
 function draw() {
     ctx.fillStyle = "#050000"; ctx.fillRect(0,0,canvas.width, canvas.height/2 + player.pitch);
     ctx.fillStyle = "#100505"; ctx.fillRect(0,canvas.height/2 + player.pitch, canvas.width, canvas.height);
-    
     const step = G.res, numRays = canvas.width / step;
     for(let i=0; i<numRays; i++) {
         let ang = (player.angle - player.fov/2) + (i * (player.fov/numRays));
@@ -261,60 +265,38 @@ function draw() {
             }
         }
     }
-
-    // Draw Sprites (Enemies & Shop Items)
     const sprites = [...enemies.filter(e=>e.alive).map(e=>({...e, type:'en'})), ...shopItems.filter(s=>s.active).map(s=>({...s, type:'shop'}))];
     sprites.sort((a,b) => Math.hypot(player.x-b.x, player.y-b.y) - Math.hypot(player.x-a.x, player.y-a.y));
-    
     sprites.forEach(s => {
         let ang = Math.atan2(s.y-player.y, s.x-player.x) - player.angle;
         while(ang < -Math.PI) ang += Math.PI*2; while(ang > Math.PI) ang -= Math.PI*2;
         if(Math.abs(ang) < player.fov) {
-            let d = Math.hypot(player.x-s.x, player.y-s.y);
-            let sx = (0.5 * (ang/(player.fov/2)) + 0.5) * canvas.width;
-            let sh = (50 * canvas.height) / d;
+            let d = Math.hypot(player.x-s.x, player.y-s.y), sx = (0.5 * (ang/(player.fov/2)) + 0.5) * canvas.width, sh = (50 * canvas.height) / d;
             ctx.fillStyle = s.type === 'en' ? "#000" : "#ff0";
-            ctx.shadowBlur = 15; ctx.shadowColor = s.type === 'en' ? "#f00" : "#fff";
-            // Efeito flutuante para itens do shopping
             let bob = s.type === 'shop' ? Math.sin(Date.now()*0.005)*10 : 0;
             ctx.fillRect(sx-sh/2, (canvas.height-sh)/2 + player.pitch + bob, sh, sh);
-            ctx.shadowBlur = 0;
-            if(s.type === 'shop') {
-                ctx.fillStyle = "#fff"; ctx.font = "10px Orbitron"; ctx.fillText(`$${s.price}`, sx-10, (canvas.height-sh)/2 + player.pitch - 10);
-            }
         }
     });
-
-    // Draw Bullets (Sprites)
     bullets.forEach(b => {
         let ang = Math.atan2(b.y-player.y, b.x-player.x) - player.angle;
         while(ang < -Math.PI) ang += Math.PI*2; while(ang > Math.PI) ang -= Math.PI*2;
         if(Math.abs(ang) < player.fov) {
-            let d = Math.hypot(player.x-b.x, player.y-b.y);
-            let sx = (0.5 * (ang/(player.fov/2)) + 0.5) * canvas.width;
-            let size = (b.size * canvas.height) / d;
-            ctx.fillStyle = b.color;
-            ctx.beginPath(); ctx.arc(sx, (canvas.height/2) + player.pitch, size, 0, Math.PI*2); ctx.fill();
+            let d = Math.hypot(player.x-b.x, player.y-b.y), sx = (0.5 * (ang/(player.fov/2)) + 0.5) * canvas.width, size = (b.size * canvas.height) / d;
+            ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(sx, (canvas.height/2) + player.pitch, size, 0, Math.PI*2); ctx.fill();
         }
     });
-
     drawMinimap();
 }
 
 function drawMinimap() {
-    mCtx.fillStyle = "#000"; mCtx.fillRect(0,0,120,120);
-    const s = 120/MAP_SIZE;
-    for(let y=0; y<MAP_SIZE; y++) {
-        for(let x=0; x<MAP_SIZE; x++) {
-            if(map[y*MAP_SIZE+x] === 1) { mCtx.fillStyle = "#400"; mCtx.fillRect(x*s, y*s, s, s); }
-            if(map[y*MAP_SIZE+x] === 2) { mCtx.fillStyle = "#f00"; mCtx.fillRect(x*s, y*s, s, s); }
-        }
-    }
-    mCtx.fillStyle = "#fff"; mCtx.fillRect((player.x/TILE_SIZE)*s-1, (player.y/TILE_SIZE)*s-1, 2, 2);
+    mCtx.fillStyle = "#000"; mCtx.fillRect(0,0,110,110);
+    const s = 110/MAP_SIZE;
+    for(let y=0; y<MAP_SIZE; y++) for(let x=0; x<MAP_SIZE; x++) if(map[y*MAP_SIZE+x] === 1){ mCtx.fillStyle = "#400"; mCtx.fillRect(x*s, y*s, s, s); }
+    mCtx.fillStyle = "#fff"; mCtx.fillRect((player.x/TILE_SIZE)*s, (player.y/TILE_SIZE)*s, 2, 2);
 }
 
 function gameLoop() { if(G.play) { update(); draw(); } requestAnimationFrame(gameLoop); }
-window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; mCanvas.width=120; mCanvas.height=120; };
+window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; mCanvas.width=110; mCanvas.height=110; };
 window.onresize();
 </script>
 </body>
