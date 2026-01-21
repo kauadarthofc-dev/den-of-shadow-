@@ -3,80 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 Darkest Soul</title>
+    <title>Den of Shadow 3D 💀 Immersive</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&family=Special+Elite&display=swap');
-        * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
-        body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; }
-        canvas { display: block; width: 100vw; height: 100vh; }
+        
+        * { touch-action: none; user-select: none; box-sizing: border-box; }
+        body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; width: 100vw; height: 100vh; }
+        canvas { display: block; width: 100vw; height: 100vh; image-rendering: pixelated; }
 
-        @keyframes titleGlow {
-            0% { text-shadow: 0 0 10px #440000; transform: scale(1); }
-            50% { text-shadow: 0 0 40px #ff0000, 0 0 60px #880000; transform: scale(1.05); }
-            100% { text-shadow: 0 0 10px #440000; transform: scale(1); }
-        }
-
+        /* Telas de UI */
         .ui-screen { position: absolute; inset: 0; background: radial-gradient(circle at center, #1a0000 0%, #000000 100%); z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
-        #start-screen h1 { font-family: 'Nosifer', cursive; font-size: clamp(30px, 8vw, 70px); color: #880000; animation: titleGlow 3s infinite ease-in-out; margin-bottom: 5px; }
+        #death-screen { display: none; background: rgba(30, 0, 0, 0.9); z-index: 4000; }
+        #death-screen h2 { font-family: 'Nosifer'; color: #f00; font-size: 50px; }
         
-        .social-links { margin-bottom: 25px; display: flex; gap: 15px; z-index: 3001; }
-        .social-links a { color: #ff0000; text-decoration: none; font-size: 11px; border: 1px solid #500; padding: 6px 12px; background: rgba(0,0,0,0.5); transition: 0.3s; pointer-events: auto; }
-        .social-links a:hover { background: #600; color: #fff; box-shadow: 0 0 15px #f00; }
+        .btn-main { padding: 15px 40px; font-size: 18px; background: transparent; border: 2px solid #a00; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin-top: 20px; }
 
-        .btn-main { padding: 15px 50px; font-size: 18px; background: transparent; border: 2px solid #550000; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 10px; transition: 0.3s; pointer-events: auto; }
-        .btn-main:hover { background: #550000; box-shadow: 0 0 40px #ff0000; }
-        
-        #cutscene-screen { background: black; cursor: pointer; z-index: 5000; display:none; }
-        #cutscene-text { font-family: 'Special Elite', serif; font-size: clamp(18px, 4vw, 24px); color: #bb0000; max-width: 800px; line-height: 1.6; pointer-events: none; }
+        /* HUD */
+        #hud { position: absolute; top: 10px; left: 10px; z-index: 1000; display: none; }
+        .hud-bar { width: 150px; height: 12px; background: #222; border: 1px solid #444; margin-bottom: 5px; }
+        #hp-fill { height: 100%; background: #f00; width: 100%; transition: 0.2s; }
+        #blood-overlay { position: absolute; inset: 0; background: radial-gradient(circle, transparent 50%, rgba(150,0,0,0.5) 100%); pointer-events: none; display: none; z-index: 2500; }
 
-        #hud { position: absolute; top: 15px; left: 15px; z-index: 1000; display: none; pointer-events: none; }
-        .hud-group { background: rgba(0,0,0,0.8); padding: 8px; border-left: 3px solid #f00; margin-bottom: 5px; min-width: 180px; }
-        .bar-bg { width: 100%; height: 8px; background: #222; margin-top: 5px; }
-        .bar-fill { height: 100%; transition: width 0.2s; }
+        /* Controles Mobile */
+        .mobile-ui { position: absolute; inset: 0; display: none; z-index: 2000; pointer-events: none; }
+        #joy-container { position: absolute; bottom: 50px; left: 50px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; pointer-events: auto; }
+        #joy-stick { position: absolute; top: 35px; left: 35px; width: 50px; height: 50px; background: #f00; border-radius: 50%; opacity: 0.6; }
+        #shoot-area { position: absolute; bottom: 50px; right: 50px; width: 100px; height: 100px; background: rgba(255,0,0,0.2); border: 2px solid #f00; border-radius: 50%; display: flex; align-items: center; justify-content: center; pointer-events: auto; font-weight: bold; }
 
-        .upgrade-card { background: rgba(30, 0, 0, 0.9); border: 1px solid #500; padding: 20px; width: 220px; transition: 0.3s; cursor: pointer; pointer-events: auto; }
-        .upgrade-card:hover { border-color: #f00; box-shadow: 0 0 20px #800; transform: translateY(-5px); }
-        .upgrade-card h3 { color: #f00; margin: 0 0 10px 0; font-size: 16px; }
-        .upgrade-card p { font-size: 12px; color: #aaa; line-height: 1.4; }
-
-        .mobile-ui { position: absolute; bottom: 40px; width: 100%; display: none; justify-content: space-between; align-items: flex-end; padding: 0 30px; z-index: 2500; pointer-events: none; }
-        .joy-container { width: 130px; height: 130px; background: rgba(255,0,0,0.05); border: 2px solid rgba(255,0,0,0.2); border-radius: 50%; position: relative; pointer-events: auto; }
-        .joy-stick { width: 50px; height: 50px; background: rgba(255,0,0,0.4); border: 2px solid red; border-radius: 50%; position: absolute; top: 38px; left: 38px; pointer-events: none; }
-        .btn-dash { width: 85px; height: 85px; background: rgba(255,0,0,0.2); border: 2px solid red; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; pointer-events: auto; color: white; }
+        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #f00; font-size: 20px; pointer-events: none; z-index: 1500; opacity: 0.5; }
     </style>
 </head>
 <body>
 
 <div id="start-screen" class="ui-screen">
-    <h1>DEN OF SHADOW</h1>
-    <div class="social-links">
-        <a href="mailto:kauadarth@gmail.com">kauadarth@gmail.com</a>
-        <a href="https://youtube.com/@kaua_darth" target="_blank">YouTube @kaua_darth</a>
-    </div>
-    <button class="btn-main" onclick="initGameFlow()">ACEITAR O FARDO</button>
+    <h1 style="font-family:'Nosifer'; color:#800;">DEN OF SHADOW</h1>
+    <button class="btn-main" onclick="initGame()">RECLAMAR ALMA</button>
 </div>
 
-<div id="cutscene-screen" class="ui-screen" onclick="advanceCutscene()">
-    <div id="cutscene-text"></div>
+<div id="death-screen" class="ui-screen">
+    <h2>VOCÊ CAIU</h2>
+    <p>As sombras consumiram o que restava.</p>
+    <button class="btn-main" onclick="location.reload()">TENTAR NOVAMENTE</button>
 </div>
 
-<div id="upgrade-screen" class="ui-screen" style="display:none">
-    <h2 style="color:#660">RESTOS DE PODER</h2>
-    <div id="upgrade-list" style="display:flex; gap:15px; flex-wrap: wrap; justify-content: center;"></div>
-</div>
+<div id="blood-overlay"></div>
 
 <div id="hud">
-    <div class="hud-group"><div>VITALIDADE</div><div class="bar-bg"><div id="hp-fill" class="bar-fill" style="background:#800; width: 100%;"></div></div></div>
-    <div class="hud-group" style="border-color:#660;"><div>ALMA</div><div class="bar-bg"><div id="ammo-fill" class="bar-fill" style="background:#660; width: 100%;"></div></div></div>
-    <div style="font-size:14px; background: rgba(0,0,0,0.7); padding: 5px;">PROFUNDIDADE: <span id="room-txt">0</span>/100</div>
+    <div>VITALIDADE</div>
+    <div class="hud-bar"><div id="hp-fill"></div></div>
+    <div style="font-size: 12px; color: #880;">ALMA: <span id="ammo-txt">40</span></div>
+    <div style="font-size: 18px; color: #fff;">SALA: <span id="room-txt">0</span></div>
 </div>
 
+<div id="crosshair">✛</div>
+
 <div id="mobile-controls" class="mobile-ui">
-    <div class="joy-container" id="move-joy"><div class="joy-stick" id="move-stick"></div></div>
-    <div class="right-controls" style="display:flex; gap:30px; align-items:center; pointer-events:none;">
-        <div class="joy-container" id="aim-joy"><div class="joy-stick" id="aim-stick"></div></div>
-        <div class="btn-dash" ontouchstart="btnK('shift',1)" ontouchend="btnK('shift',0)">DASH</div>
-    </div>
+    <div id="joy-container"><div id="joy-stick"></div></div>
+    <div id="shoot-area">FOGO</div>
 </div>
 
 <canvas id="gameCanvas"></canvas>
@@ -85,294 +68,289 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-let audioCtx;
-let bufferInimigo, bufferFilha;
+// --- CONFIGURAÇÕES ---
+const TILE_SIZE = 64;
+const MAP_SIZE = 16;
+let map = [];
+let bullets = [];
+let enemies = [];
 
-async function initAudio() {
-    if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        try {
-            const [r1, r2] = await Promise.all([
-                fetch('cry-of-pain-357978.mp3'),
-                fetch('creepy-woman-cry-407580.mp3')
-            ]);
-            bufferInimigo = await audioCtx.decodeAudioData(await r1.arrayBuffer());
-            bufferFilha = await audioCtx.decodeAudioData(await r2.arrayBuffer());
-        } catch(e) { console.warn("Áudio não carregado."); }
-    }
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-}
-
-function playScream(isBoss, isDaughter) {
-    if (!audioCtx || !bufferInimigo) return;
-    const source = audioCtx.createBufferSource();
-    const gain = audioCtx.createGain();
-    source.buffer = (isDaughter && bufferFilha) ? bufferFilha : bufferInimigo;
-    source.playbackRate.value = isBoss ? 0.6 : 0.9 + Math.random() * 0.4;
-    gain.gain.setValueAtTime(isBoss ? 0.4 : 0.2, audioCtx.currentTime);
-    source.connect(gain); gain.connect(audioCtx.destination);
-    source.start(0);
-}
-
-const ROOM = { w: 1600, h: 1000, wall: 80 };
 const G = {
-    play: false, room: 0, hp: 100, maxHp: 100, ammo: 25, maxAmmo: 25,
-    enemiesDefeated: false, lastShot: 0, dashCooldown: 0,
-    inCutscene: false, iframe: 0, dmgMult: 1, spdMult: 1, floorMsg: null
+    play: false, room: 0, hp: 100, maxHp: 100, 
+    ammo: 40, lastShot: 0, kadtr: false
 };
 
-const STORY = {
-    init: ["Você não é um herói.", "Nunca foi... as sombras o traiu.", "A torre é o seu caminho para a vingança.", "O topo é a única saída."],
-    boss10: ["O Guardião foi silenciado.", "Ele também já teve uma família.", "Você sente o peso de cada vida?"],
-    boss20: ["A Filha do Rei implora por misericórdia...", "Mas aqui, apenas a morte é real."],
-    boss30: ["Eles imploram em línguas esquecidas.", "O Den of Shadow se alimenta da sua raiva."],
-    boss40: ["O Arquiteto das Sombras caiu.", "Ele construiu esta torre para manter algo lá fora...", "Ou para manter você aqui dentro?"],
-    boss50: ["Metade da subida.", "Não há nada lá atrás para você."],
-    boss60: ["O Carrasco das Almas não tortura mais.", "Ele gritou exatamente como suas vítimas."],
-    boss70: ["A Sombra do Passado foi dissipada.", "Você está matando suas próprias memórias para subir."],
-    boss80: ["Você está quase lá.", "Mas o que restará de você no topo?"],
-    boss90: ["O Purgatório Final.", "A escuridão aqui é tão densa que você quase pode tocá-la.", "O último teste antes do Rei."],
-    final: ["O REI DAS SOMBRAS CAIU.", "Você recuperou seu trono.", "Mas agora, você é a coisa mais sombria neste lugar."]
+const player = {
+    x: 100, y: 100, angle: 0,
+    moveX: 0, moveY: 0, // Joystick
+    fov: Math.PI / 3,
+    rotDir: 0
 };
 
-const FLOOR_TEXTS = {
-    55: "Você consegue ouvir os sussurros sob seus pés?",
-    65: "Suas mãos estão manchadas. A água não limpa este sangue.",
-    75: "O Rei está observando... ele sempre esteve.",
-    85: "Ninguém que subiu até aqui voltou sendo humano.",
-    95: "O fim está próximo. O abraço da sombra é quente."
-};
+// --- MULTI-TOUCH MANAGER ---
+let moveTouchId = null;
+let camTouchId = null;
+let lastCamX = 0;
 
-let currentStory = [], storyIdx = 0;
-const keys = {};
-let player = { x: 800, y: 800, r: 25, spd: 7.5, dash: 0 };
-let enemies = [], projectiles = [], enemyProjectiles = [], drops = [];
-let joyInput = { moveX: 0, moveY: 0, aimX: 0, aimY: 0 };
-
-function setupJoystick(containerId, stickId, type) {
-    const container = document.getElementById(containerId);
-    const stick = document.getElementById(stickId);
-    let touchId = null;
-    const handleInput = (e) => {
-        let touch = null;
-        if (touchId === null) { touch = e.changedTouches[0]; touchId = touch.identifier; }
-        else { for(let i=0; i<e.touches.length; i++) if(e.touches[i].identifier === touchId) touch = e.touches[i]; }
-        if (!touch) return;
-        const rect = container.getBoundingClientRect();
-        const dx = touch.clientX - (rect.left + rect.width / 2);
-        const dy = touch.clientY - (rect.top + rect.height / 2);
-        const dist = Math.min(50, Math.hypot(dx, dy));
-        const ang = Math.atan2(dy, dx);
-        const mx = Math.cos(ang) * dist; const my = Math.sin(ang) * dist;
-        stick.style.transform = `translate(${mx}px, ${my}px)`;
-        if (type === 'move') { joyInput.moveX = mx / 50; joyInput.moveY = my / 50; }
-        if (type === 'aim') { joyInput.aimX = mx / 50; joyInput.aimY = my / 50; }
-    };
-    container.addEventListener('touchstart', handleInput);
-    container.addEventListener('touchmove', e => e.preventDefault());
-    container.addEventListener('touchmove', handleInput);
-    container.addEventListener('touchend', e => { 
-        for(let i=0; i<e.changedTouches.length; i++) if(e.changedTouches[i].identifier === touchId){
-            touchId = null; stick.style.transform = `translate(0,0)`;
-            if (type === 'move') { joyInput.moveX = 0; joyInput.moveY = 0; }
-            if (type === 'aim') { joyInput.aimX = 0; joyInput.aimY = 0; }
-        }
-    });
-}
-
-function btnK(k, v) { if(v) keys[k] = true; else delete keys[k]; }
-
-// Início do Jogo chamando a cutscene 1
-function initGameFlow() {
-    initAudio();
+function initGame() {
     document.getElementById('start-screen').style.display = 'none';
-    startCutscene('init');
-}
-
-function startGame() {
-    G.play = true; G.inCutscene = false;
     document.getElementById('hud').style.display = 'block';
-    if('ontouchstart' in window) {
-        document.getElementById('mobile-controls').style.display = 'flex';
-        setupJoystick('move-joy', 'move-stick', 'move');
-        setupJoystick('aim-joy', 'aim-stick', 'aim');
+    if('ontouchstart' in window) document.getElementById('mobile-controls').style.display = 'block';
+    G.play = true;
+    generateMap();
+    spawnEnemies();
+    loop();
+}
+
+function generateMap() {
+    map = Array(MAP_SIZE * MAP_SIZE).fill(0);
+    for(let i=0; i<MAP_SIZE; i++) {
+        map[i] = 1; map[i + (MAP_SIZE*(MAP_SIZE-1))] = 1;
+        map[i * MAP_SIZE] = 1; map[i * MAP_SIZE + (MAP_SIZE-1)] = 1;
     }
-    initRoom();
+    map[Math.floor(MAP_SIZE/2)] = 2; // Porta de saída
 }
 
-function startCutscene(key) {
-    G.play = false; G.inCutscene = true;
-    storyIdx = 0;
-    currentStory = STORY[key] || ["..."];
-    document.getElementById('cutscene-screen').style.display = 'flex';
-    document.getElementById('mobile-controls').style.display = 'none';
-    advanceCutscene();
-}
-
-function advanceCutscene() {
-    if (storyIdx < currentStory.length) {
-        document.getElementById('cutscene-text').innerText = currentStory[storyIdx++];
-    } else {
-        document.getElementById('cutscene-screen').style.display = 'none';
-        if (G.room > 0 && G.room % 10 === 0 && enemies.length === 0) openUpgradeMenu();
-        else startGame();
+function spawnEnemies() {
+    enemies = [];
+    let n = 3 + Math.floor(G.room * 0.7);
+    for(let i=0; i<n; i++) {
+        enemies.push({
+            x: (3 + Math.random() * 10) * TILE_SIZE,
+            y: (3 + Math.random() * 10) * TILE_SIZE,
+            hp: 50 + (G.room * 15),
+            alive: true,
+            size: 30
+        });
     }
 }
 
-function openUpgradeMenu() {
-    G.play = false;
-    const list = document.getElementById('upgrade-list');
-    list.innerHTML = '';
-    document.getElementById('upgrade-screen').style.display = 'flex';
-    const opts = [
-        {n:"CARNE MORTA", d:"Vida máxima +50. A dor torna-se seu escudo.", f:()=>G.maxHp+=50},
-        {n:"ÓDIO PURO", d:"Dano +40%. Sua raiva é uma lâmina afiada.", f:()=>G.dmgMult+=0.4},
-        {n:"DESESPERO", d:"Velocidade +20%. O medo dá asas aos seus pés.", f:()=>G.spdMult+=0.2}
-    ];
-    opts.forEach(o => {
-        const card = document.createElement('div');
-        card.className = 'upgrade-card';
-        card.innerHTML = `<h3>${o.n}</h3><p>${o.d}</p>`;
-        card.onclick = () => { o.f(); G.hp=G.maxHp; G.ammo=G.maxAmmo; document.getElementById('upgrade-screen').style.display='none'; startGame(); };
-        list.appendChild(card);
+// --- SISTEMA DE TIRO ---
+function shoot() {
+    if(!G.play || G.ammo <= 0 || Date.now() - G.lastShot < 250) return;
+    G.ammo--;
+    G.lastShot = Date.now();
+    bullets.push({
+        x: player.x, y: player.y,
+        vx: Math.cos(player.angle) * 12,
+        vy: Math.sin(player.angle) * 12,
+        life: 60
     });
 }
 
-function initRoom() {
-    enemies = []; projectiles = []; enemyProjectiles = []; drops = [];
-    G.enemiesDefeated = false; G.floorMsg = null;
-    player.x = ROOM.w/2; player.y = ROOM.h - 150;
+// --- INPUTS (CORRIGIDO PARA MULTI-TOUCH) ---
+const joyContainer = document.getElementById('joy-container');
+const joyStick = document.getElementById('joy-stick');
 
-    if (G.room > 50 && G.room % 5 === 0 && G.room % 10 !== 0) {
-        G.floorMsg = { text: FLOOR_TEXTS[G.room] || "As vozes...", x: ROOM.w/2, y: ROOM.h/2, active: false };
-    }
-
-    if (G.room > 0 && G.room % 10 === 0) {
-        enemies.push({ x: ROOM.w/2, y: 300, hp: 800+(G.room*75), r: 100, spd: 3, isBoss: true, lastShot: 0 });
-    } else if (G.room > 0) {
-        let n = 4 + Math.floor(G.room * 0.4);
-        for(let i=0; i<n; i++) {
-            enemies.push({ 
-                x: Math.random()*(ROOM.w-200)+100, y: Math.random()*400+100, 
-                hp: 60+G.room*15, r: 30, spd: 1.5 + Math.random(), isShooter: Math.random()>0.7, lastShot: 0
-            });
-        }
-    } else G.enemiesDefeated = true; // Sala 0 inicial
-}
-
-function update() {
-    if (!G.play || G.inCutscene) return;
-    if (G.iframe > 0) G.iframe--;
-
-    let mx = joyInput.moveX; let my = joyInput.moveY;
-    if (keys['w']) my = -1; if (keys['s']) my = 1; if (keys['a']) mx = -1; if (keys['d']) mx = 1;
-    if (keys['shift'] && G.dashCooldown <= 0) { player.dash = 14; G.dashCooldown = 60; }
-    if (G.dashCooldown > 0) G.dashCooldown--;
-    let s = (player.dash > 0 ? player.spd * 3 : player.spd) * G.spdMult;
-    if (player.dash > 0) player.dash--;
-
-    player.x = Math.max(ROOM.wall+player.r, Math.min(ROOM.w-ROOM.wall-player.r, player.x + mx*s));
-    player.y = Math.max(ROOM.wall+player.r, Math.min(ROOM.h-ROOM.wall-player.r, player.y + my*s));
-
-    if (G.floorMsg && !G.floorMsg.active) {
-        if (Math.hypot(player.x - G.floorMsg.x, player.y - G.floorMsg.y) < 150) {
-            G.floorMsg.active = true; playScream(false, true);
+window.addEventListener('touchstart', e => {
+    for(let t of e.changedTouches) {
+        // Lado Esquerdo: Movimento
+        if(t.clientX < window.innerWidth / 2 && moveTouchId === null) {
+            moveTouchId = t.identifier;
+            updateJoystick(t);
+        } 
+        // Lado Direito: Câmera (se não for no botão de tiro)
+        else if(t.clientX >= window.innerWidth / 2 && camTouchId === null) {
+            if(t.target.id !== 'shoot-area') {
+                camTouchId = t.identifier;
+                lastCamX = t.clientX;
+            }
         }
     }
+}, {passive: false});
 
-    let ax = joyInput.aimX; let ay = joyInput.aimY;
-    if (keys['arrowup']||keys['up']) ay = -1; if (keys['arrowdown']||keys['down']) ay = 1; 
-    if (keys['arrowleft']||keys['left']) ax = -1; if (keys['arrowright']||keys['right']) ax = 1;
+window.addEventListener('touchmove', e => {
+    e.preventDefault();
+    for(let t of e.changedTouches) {
+        if(t.identifier === moveTouchId) updateJoystick(t);
+        if(t.identifier === camTouchId) {
+            let dx = t.clientX - lastCamX;
+            player.angle += dx * 0.007;
+            lastCamX = t.clientX;
+        }
+    }
+}, {passive: false});
+
+window.addEventListener('touchend', e => {
+    for(let t of e.changedTouches) {
+        if(t.identifier === moveTouchId) {
+            moveTouchId = null;
+            player.moveX = 0; player.moveY = 0;
+            joyStick.style.transform = `translate(0,0)`;
+        }
+        if(t.identifier === camTouchId) camTouchId = null;
+    }
+});
+
+function updateJoystick(t) {
+    const rect = joyContainer.getBoundingClientRect();
+    const centerX = rect.left + rect.width/2;
+    const centerY = rect.top + rect.height/2;
+    const dx = t.clientX - centerX;
+    const dy = t.clientY - centerY;
+    const dist = Math.min(40, Math.hypot(dx, dy));
+    const ang = Math.atan2(dy, dx);
     
-    if ((Math.abs(ax) > 0.4 || Math.abs(ay) > 0.4) && G.ammo > 0 && Date.now() - G.lastShot > 180) {
-        projectiles.push({ x: player.x, y: player.y, vx: ax*18, vy: ay*18, dmg: 50*G.dmgMult });
-        G.ammo--; G.lastShot = Date.now();
-    } else if (mx === 0 && my === 0 && Date.now() - G.lastShot > 1500) {
-        if (G.ammo < G.maxAmmo) G.ammo++;
+    joyStick.style.transform = `translate(${Math.cos(ang)*dist}px, ${Math.sin(ang)*dist}px)`;
+    player.moveX = Math.cos(ang) * (dist/40);
+    player.moveY = Math.sin(ang) * (dist/40);
+}
+
+document.getElementById('shoot-area').addEventListener('touchstart', (e) => { e.preventDefault(); shoot(); });
+
+// Teclado (Suporte Mobile/Console/PC)
+const keys = {};
+window.onkeydown = e => { 
+    keys[e.key.toLowerCase()] = true; 
+    if(e.key === ' ') shoot(); 
+};
+window.onkeyup = e => delete keys[e.key.toLowerCase()];
+
+// --- LÓGICA DO JOGO ---
+function update() {
+    if(!G.play) return;
+
+    // Movimento Relativo à Câmera
+    let speed = 4;
+    let mvX = 0, mvY = 0;
+
+    // Teclado
+    if(keys['w']) { mvX += Math.cos(player.angle); mvY += Math.sin(player.angle); }
+    if(keys['s']) { mvX -= Math.cos(player.angle); mvY -= Math.sin(player.angle); }
+    if(keys['a']) player.angle -= 0.04;
+    if(keys['d']) player.angle += 0.04;
+
+    // Joystick (Frente/Trás e Strafe)
+    if(moveTouchId !== null) {
+        // moveY do joystick controla frente/atrás, moveX controla strafe (opcional, aqui controla direção)
+        mvX += Math.cos(player.angle) * -player.moveY + Math.cos(player.angle + Math.PI/2) * player.moveX;
+        mvY += Math.sin(player.angle) * -player.moveY + Math.sin(player.angle + Math.PI/2) * player.moveX;
     }
 
-    enemies.forEach((en) => {
-        let ang = Math.atan2(player.y - en.y, player.x - en.x);
-        en.x += Math.cos(ang) * en.spd; en.y += Math.sin(ang) * en.spd;
-        if (Math.hypot(player.x-en.x, player.y-en.y) < player.r+en.r && G.iframe <= 0 && player.dash <= 0) {
-            G.hp -= 20; G.iframe = 60;
-        }
-        if ((en.isShooter || en.isBoss) && Date.now() - en.lastShot > (en.isBoss ? 1200 : 2500)) {
-            enemyProjectiles.push({ x: en.x, y: en.y, vx: Math.cos(ang)*8, vy: Math.sin(ang)*8 });
-            en.lastShot = Date.now();
-        }
-    });
+    let nX = player.x + mvX * speed;
+    let nY = player.y + mvY * speed;
 
-    projectiles.forEach((p, pi) => {
-        p.x += p.vx; p.y += p.vy;
-        enemies.forEach((en, ei) => {
-            if (Math.hypot(p.x-en.x, p.y-en.y) < en.r) {
-                en.hp -= p.dmg; projectiles.splice(pi, 1);
-                if (en.hp <= 0) {
-                    playScream(en.isBoss, false);
-                    if (Math.random()<0.3 || en.isBoss) drops.push({x: en.x, y: en.y});
-                    enemies.splice(ei, 1);
-                    if (enemies.length === 0) G.enemiesDefeated = true;
-                }
+    // Colisão
+    const getTile = (x, y) => map[Math.floor(y/TILE_SIZE)*MAP_SIZE + Math.floor(x/TILE_SIZE)];
+    if(getTile(nX, nY) === 0) {
+        player.x = nX; player.y = nY;
+    } else if(getTile(nX, nY) === 2) {
+        if(enemies.filter(e=>e.alive).length === 0) {
+            G.room++; player.x = 100; player.y = 100; spawnEnemies();
+        }
+    }
+
+    // Balas
+    bullets.forEach((b, i) => {
+        b.x += b.vx; b.y += b.vy; b.life--;
+        if(getTile(b.x, b.y) > 0 || b.life <= 0) bullets.splice(i, 1);
+        
+        enemies.forEach(en => {
+            if(en.alive && Math.hypot(b.x - en.x, b.y - en.y) < 25) {
+                en.hp -= 50;
+                bullets.splice(i, 1);
+                if(en.hp <= 0) en.alive = false;
             }
         });
     });
 
-    enemyProjectiles.forEach((ep, epi) => {
-        ep.x += ep.vx; ep.y += ep.vy;
-        if (Math.hypot(player.x-ep.x, player.y-ep.y) < player.r && G.iframe <= 0) {
-            G.hp -= 15; G.iframe = 60; enemyProjectiles.splice(epi, 1);
+    // Inimigos e Dano
+    enemies.forEach(en => {
+        if(!en.alive) return;
+        let d = Math.hypot(player.x - en.x, player.y - en.y);
+        if(d > 40) {
+            en.x += (player.x - en.x)/d * 1.8;
+            en.y += (player.y - en.y)/d * 1.8;
+        } else {
+            takeDamage(0.5);
         }
     });
 
-    drops.forEach((d, di) => { if (Math.hypot(player.x-d.x, player.y-d.y) < 50) { G.hp = Math.min(G.maxHp, G.hp+20); drops.splice(di, 1); } });
-
-    if (G.enemiesDefeated && player.y < 120 && Math.abs(player.x - ROOM.w/2) < 120) {
-        if (G.room > 0 && G.room % 10 === 0) {
-            startCutscene('boss' + G.room);
-        }
-        G.room++;
-        if (G.room === 101) startCutscene('final');
-        else initRoom();
-    }
-    if (G.hp <= 0) location.reload();
+    if(G.ammo < 40) G.ammo += 0.02;
 }
 
+function takeDamage(amt) {
+    if(G.kadtr) return;
+    G.hp -= amt;
+    const overlay = document.getElementById('blood-overlay');
+    overlay.style.display = 'block';
+    setTimeout(() => overlay.style.display = 'none', 100);
+    if(G.hp <= 0) { G.play = false; document.getElementById('death-screen').style.display = 'flex'; }
+}
+
+// --- RENDERIZAÇÃO ---
 function draw() {
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    if (G.play) update();
-    ctx.fillStyle = "#000"; ctx.fillRect(0,0,canvas.width, canvas.height);
-    if (!G.play && !G.inCutscene) { requestAnimationFrame(draw); return; }
-    
-    ctx.save();
-    let sc = Math.min(canvas.width/ROOM.w, canvas.height/ROOM.h) * 0.95;
-    ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(sc, sc); ctx.translate(-ROOM.w/2, -ROOM.h/2);
-    ctx.fillStyle = "#050000"; ctx.fillRect(0,0,ROOM.w, ROOM.h);
+    // Fundo (Brilho aumentado)
+    ctx.fillStyle = "#100"; ctx.fillRect(0,0,canvas.width, canvas.height/2);
+    ctx.fillStyle = "#2a0a0a"; ctx.fillRect(0,canvas.height/2, canvas.width, canvas.height/2);
 
-    if (G.floorMsg) {
-        ctx.fillStyle = G.floorMsg.active ? "#f00" : "rgba(100,0,0,0.3)";
-        ctx.font = "italic 32px 'Special Elite', serif";
-        ctx.textAlign = "center";
-        ctx.fillText(G.floorMsg.text, G.floorMsg.x, G.floorMsg.y);
+    const rays = canvas.width / 2;
+    const step = player.fov / rays;
+
+    for(let i=0; i<rays; i++) {
+        let ang = (player.angle - player.fov/2) + (i * step);
+        let dist = 0, hit = false;
+        let cos = Math.cos(ang), sin = Math.sin(ang);
+
+        while(!hit && dist < 900) {
+            dist += 4;
+            let tx = Math.floor((player.x + cos*dist)/TILE_SIZE);
+            let ty = Math.floor((player.y + sin*dist)/TILE_SIZE);
+            let tile = map[ty * MAP_SIZE + tx];
+            if(tile > 0) {
+                hit = true;
+                let wallH = (TILE_SIZE * canvas.height) / (dist * Math.cos(player.angle - ang));
+                let color = (tile === 2) ? 255 : 120; // Brilho aumentado nas paredes
+                let lum = Math.max(20, color - (dist/5));
+                ctx.fillStyle = `rgb(${lum}, ${lum/4}, ${lum/4})`;
+                ctx.fillRect(i*2, (canvas.height-wallH)/2, 2, wallH);
+            }
+        }
     }
 
-    ctx.fillStyle = "#100"; ctx.fillRect(0,0,ROOM.w, ROOM.wall); ctx.fillRect(0, ROOM.h-80, ROOM.w, 80);
-    if(G.enemiesDefeated) { ctx.fillStyle = "#600"; ctx.fillRect(ROOM.w/2-120, 0, 240, ROOM.wall); }
-    if (G.iframe % 4 < 2) { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill(); }
-    enemies.forEach(en => { ctx.fillStyle = en.isBoss ? "#600" : "#300"; ctx.beginPath(); ctx.arc(en.x, en.y, en.r, 0, Math.PI*2); ctx.fill(); });
-    projectiles.forEach(p => { ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI*2); ctx.fill(); });
-    enemyProjectiles.forEach(ep => { ctx.fillStyle = "red"; ctx.beginPath(); ctx.arc(ep.x, ep.y, 7, 0, Math.PI*2); ctx.fill(); });
-    drops.forEach(d => { ctx.fillStyle = "red"; ctx.beginPath(); ctx.arc(d.x, d.y, 12, 0, Math.PI*2); ctx.fill(); });
-    ctx.restore();
+    // Inimigos
+    enemies.forEach(en => {
+        if(!en.alive) return;
+        let ang = Math.atan2(en.y - player.y, en.x - player.x) - player.angle;
+        while(ang < -Math.PI) ang += Math.PI*2;
+        while(ang > Math.PI) ang -= Math.PI*2;
+        if(Math.abs(ang) < player.fov) {
+            let d = Math.hypot(player.x - en.x, player.y - en.y);
+            let sx = (0.5 * (ang / (player.fov/2)) + 0.5) * canvas.width;
+            let sh = (TILE_SIZE * canvas.height) / d;
+            ctx.fillStyle = "#000";
+            ctx.shadowBlur = 20; ctx.shadowColor = "#f00";
+            ctx.fillRect(sx - sh/4, (canvas.height-sh)/2, sh/2, sh);
+            ctx.shadowBlur = 0;
+        }
+    });
 
-    document.getElementById('hp-fill').style.width = (G.hp/G.maxHp*100) + "%";
-    document.getElementById('ammo-fill').style.width = (G.ammo/G.maxAmmo*100) + "%";
+    // Balas
+    bullets.forEach(b => {
+        let ang = Math.atan2(b.y - player.y, b.x - player.x) - player.angle;
+        while(ang < -Math.PI) ang += Math.PI*2;
+        while(ang > Math.PI) ang -= Math.PI*2;
+        if(Math.abs(ang) < player.fov) {
+            let d = Math.hypot(player.x - b.x, player.y - b.y);
+            let sx = (0.5 * (ang / (player.fov/2)) + 0.5) * canvas.width;
+            let sz = 1500 / d;
+            ctx.fillStyle = "#ff0";
+            ctx.beginPath(); ctx.arc(sx, canvas.height/2, sz, 0, Math.PI*2); ctx.fill();
+        }
+    });
+
+    document.getElementById('hp-fill').style.width = G.hp + "%";
+    document.getElementById('ammo-txt').innerText = Math.floor(G.ammo);
     document.getElementById('room-txt').innerText = G.room;
-    requestAnimationFrame(draw);
 }
-draw();
-window.addEventListener('keydown', e => btnK(e.key.toLowerCase(), 1));
-window.addEventListener('keyup', e => delete keys[e.key.toLowerCase()]);
+
+function loop() {
+    if(G.play) { update(); draw(); }
+    requestAnimationFrame(loop);
+}
+
+window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+window.onresize();
 </script>
 </body>
 </html>
