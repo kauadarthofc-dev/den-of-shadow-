@@ -3,101 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 V15.9</title>
+    <title>Den of Shadow 💀 V15.11 FINAL</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&display=swap');
-        * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; width: 100vw; height: 100vh; }
+        * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
+        body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; }
         canvas { display: block; width: 100vw; height: 100vh; image-rendering: pixelated; }
 
-        /* UI SCREENS */
-        .ui-screen { position: absolute; inset: 0; background: radial-gradient(circle, #200 0%, #000 100%); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .glass-panel { background: rgba(0,0,0,0.95); border: 2px solid #f00; padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; box-shadow: 0 0 30px #f005; }
+        /* UI Screens (Estilo V11) */
+        .ui-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(15px); }
+        .glass-panel { background: rgba(20,0,0,0.6); border: 1px solid #f00; padding: 30px; border-radius: 15px; width: 90%; max-width: 450px; text-align: center; box-shadow: 0 0 20px rgba(255,0,0,0.2); }
         
-        .btn-main { padding: 12px; background: #111; border: 1px solid #f00; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 8px 0; width: 100%; text-transform: uppercase; font-size: 13px; transition: 0.2s; }
-        .btn-main:hover { background: #f00; color: #000; }
+        .btn-main { padding: 12px; font-size: 13px; background: rgba(255,0,0,0.1); border: 1px solid #800; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 5px 0; width: 100%; transition: 0.3s; text-transform: uppercase; }
+        .btn-main:hover { background: #f00; color: #000; box-shadow: 0 0 20px #f00; }
 
-        /* HUD & MINIMAP */
-        #hud { position: absolute; top: 15px; left: 15px; z-index: 1000; display: none; background: rgba(0,0,0,0.8); padding: 12px; border: 1px solid #f00; border-radius: 10px; pointer-events: auto; min-width: 140px; }
-        #minimap-container { position: absolute; top: 15px; right: 15px; width: 110px; height: 110px; border: 2px solid #fff; background: rgba(0,0,0,0.8); z-index: 1000; display: none; border-radius: 5px; overflow: hidden; }
+        /* HUD Restaurado V11 */
+        #hud { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; width: 95%; max-width: 600px; pointer-events: none; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.8); padding: 15px; border: 1px solid #500; border-radius: 10px; }
+        .bar-bg { width: 100%; height: 8px; background: #222; margin-top: 4px; border-radius: 4px; overflow: hidden; }
+        .bar-fill { height: 100%; width: 100%; background: #f00; transition: width 0.3s; }
+
+        /* Minimap circular V11 */
+        #minimap-container { position: absolute; top: 20px; right: 20px; width: 130px; height: 130px; border: 2px solid #f00; border-radius: 50%; background: rgba(0,0,0,0.7); overflow: hidden; z-index: 1000; display: none; }
         #minimap { width: 100%; height: 100%; }
 
-        /* MOBILE UI */
-        #mobile-ui { position: absolute; inset: 0; z-index: 2000; display: none; pointer-events: none; }
-        #camera-zone { position: absolute; top: 0; right: 0; width: 60%; height: 100%; pointer-events: auto; }
-        #joy-base { position: absolute; bottom: 40px; left: 40px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border: 2px solid #fff; border-radius: 50%; pointer-events: auto; }
-        #joy-stick { position: absolute; top: 25px; left: 25px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.5; }
-        .mob-btn { position: absolute; pointer-events: auto; width: 75px; height: 75px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; background: rgba(0,0,0,0.6); border: 2px solid #f00; }
-        #btn-shoot { bottom: 45px; right: 45px; }
-        #btn-use { bottom: 135px; right: 45px; border-color: #ff0; color: #ff0; }
+        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; border: 1px solid rgba(255,255,255,0.3); border-radius: 50%; z-index: 1500; display: none; pointer-events: none; }
+        #crosshair::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 4px; height: 4px; background: #f00; border-radius: 50%; }
 
-        .footer-links { margin-top: 15px; font-size: 10px; color: #888; }
-        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 16px; height: 16px; border: 2px solid #f00; border-radius: 50%; z-index: 1500; display: none; pointer-events: none; }
+        /* Mobile Controls */
+        #mobile-controls { position: absolute; inset: 0; z-index: 2000; display: none; pointer-events: none; }
+        .joy-zone { position: absolute; bottom: 40px; left: 40px; width: 120px; height: 120px; background: rgba(255,255,255,0.05); border: 1px solid #fff; border-radius: 50%; pointer-events: auto; }
+        #stick { position: absolute; top: 35px; left: 35px; width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.4; }
+        .btn-act { position: absolute; bottom: 50px; right: 40px; width: 80px; height: 80px; background: rgba(255,0,0,0.2); border: 2px solid #f00; border-radius: 50%; pointer-events: auto; display: flex; align-items: center; justify-content: center; font-size: 30px; }
     </style>
 </head>
-<body oncontextmenu="return false;">
+<body>
 
 <div id="start-screen" class="ui-screen">
     <div class="glass-panel">
-        <h1 style="font-family:'Nosifer'; color:#f00;">DEN OF SHADOW</h1>
-        <p style="font-size:9px; letter-spacing:3px;">V15.9 ARCHITECT</p>
+        <h1 style="font-family:'Nosifer'; color:#f00; font-size: 2.2rem;">DEN OF SHADOW</h1>
+        <p style="color:#888; font-size: 10px; margin-bottom: 20px;">V15.11 OVERHAUL</p>
         <button class="btn-main" onclick="startGame()">INICIAR RITUAL</button>
-        <button class="btn-main" onclick="toggleScreen('config-screen', true)">CONFIGURAÇÕES</button>
-        <div class="footer-links">
-            DISCORD: killzone1561<br>
-            YOUTUBE: kaua_darth<br>
-            kauadarthofc@gmail.com
-        </div>
+        <button class="btn-main" onclick="alert('Discord: killzone1561')">SUPORTE</button>
     </div>
 </div>
 
-<div id="config-screen" class="ui-screen" style="display:none;">
+<div id="pause-screen" class="ui-screen" style="display:none;">
     <div class="glass-panel">
-        <h2 style="color:#f00;">AJUSTES</h2>
-        <div style="text-align:left; font-size:11px;">
-            <label>RESOLUÇÃO (G.res):</label>
-            <select id="res-sel" onchange="G.res = parseInt(this.value)" style="width:100%; background:#111; color:#fff; border:1px solid #f00; padding:8px; margin-bottom:15px;">
-                <option value="4">Performance</option>
-                <option value="2" selected>Equilibrado</option>
-                <option value="1">Qualidade Máxima</option>
-            </select>
-        </div>
-        <button class="btn-main" onclick="toggleScreen('config-screen', false)">VOLTAR</button>
-    </div>
-</div>
-
-<div id="pause-screen" class="ui-screen" style="display:none; background: rgba(0,0,0,0.9);">
-    <div class="glass-panel">
-        <h2 style="color:#f00;">PAUSADO</h2>
-        <button class="btn-main" onclick="resumeGame()">CONTINUAR</button>
+        <h2 style="font-family:'Nosifer'; color:#f00;">PAUSADO</h2>
+        <button class="btn-main" onclick="togglePause()">CONTINUAR</button>
         <button class="btn-main" onclick="location.reload()">REINICIAR JOGO</button>
     </div>
 </div>
 
 <div id="hud">
-    HP: <span id="hp-txt" style="color:#f00">100</span><br>
-    AMMO: <span id="ammo-txt" style="color:#0f0">40</span><br>
-    SOULS: <span id="soul-txt" style="color:#ff0">0</span><br>
-    SALA: <span id="room-txt" style="font-weight:bold;">1</span>
+    <div class="stats-grid">
+        <div>
+            <div style="font-size:9px; color:#888;">VITALIDADE</div>
+            <div class="bar-bg"><div id="hp-fill" class="bar-fill"></div></div>
+        </div>
+        <div style="text-align:center;">
+            <div id="biome-name" style="font-size:9px; color:#f00;">LABIRINTO</div>
+            <div id="room-txt" style="font-size:18px; font-weight:bold;">1</div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:9px; color:#888;" id="ammo-click">MUNIÇÃO</div>
+            <div id="soul-hud" style="color:#ff0; font-size:18px; font-weight:bold;">0</div>
+        </div>
+    </div>
 </div>
 
 <div id="minimap-container"><canvas id="minimap"></canvas></div>
 <div id="crosshair"></div>
 
-<div id="mobile-ui">
-    <div id="camera-zone"></div>
-    <div id="joy-base"><div id="joy-stick"></div></div>
-    <div class="mob-btn" id="btn-shoot">🔥</div>
-    <div class="mob-btn" id="btn-use">👁️</div>
+<div id="mobile-controls">
+    <div class="joy-zone" id="joy-base"><div id="stick"></div></div>
+    <div class="btn-act" id="btn-fire">🔥</div>
 </div>
 
 <canvas id="gameCanvas"></canvas>
 
 <script>
 const G = { 
-    play: false, room: 1, hp: 100, maxHp: 100, ammo: 40, souls: 0, 
-    res: 2, sens: 0.0025, isMobile: false, god: false,
-    wallColor: 'rgb(150,0,0)', isShop: false
+    play: false, paused: false, room: 1, hp: 100, maxHp: 100, souls: 0, 
+    res: 2, god: false, isMobile: false, wallColor: '#500', isShop: false 
 };
 
 const canvas = document.getElementById('gameCanvas');
@@ -109,32 +98,37 @@ const TILE = 64, MAP_SIZE = 24;
 let map = [], enemies = [], bullets = [], shopItems = [], keys = {};
 let player = { x: 0, y: 0, angle: 0, pitch: 0, fov: Math.PI / 3 };
 let inputBuffer = "";
+let cheatCount = 0;
 
 function setupRoom() {
     map = Array(MAP_SIZE * MAP_SIZE).fill(0);
     enemies = []; shopItems = [];
     G.isShop = (G.room % 5 === 0);
+    
+    document.getElementById('biome-name').innerText = G.isShop ? "MERCADO NEGRO" : "ABISMO";
+    document.getElementById('biome-name').style.color = G.isShop ? "#ff0" : "#f00";
+
+    for(let i=0; i<MAP_SIZE; i++){ 
+        map[i]=1; map[i+(MAP_SIZE*(MAP_SIZE-1))]=1; 
+        map[i*MAP_SIZE]=1; map[i*MAP_SIZE+(MAP_SIZE-1)]=1; 
+    }
 
     if (G.isShop) {
-        G.wallColor = 'rgb(255, 200, 0)'; // SHOP AMARELO OBRIGATÓRIO
-        // Paredes Limpas para o Shop
-        for(let i=0; i<MAP_SIZE; i++){ map[i]=1; map[i+(MAP_SIZE*(MAP_SIZE-1))]=1; map[i*MAP_SIZE]=1; map[i*MAP_SIZE+(MAP_SIZE-1)]=1; }
-        // Pedestais
-        spawnShop(10, 10, 'CURA TOTAL', 10);
-        spawnShop(14, 10, 'MAX AMMO', 8);
+        G.wallColor = '#FFD700';
+        spawnShop(10, 10, 'VIDA', 0);
+        spawnShop(14, 10, 'MUNIÇÃO', 0);
     } else {
-        const hue = (G.room * 137) % 360; 
-        G.wallColor = `hsl(${hue}, 70%, 25%)`;
-        for(let i=0; i<MAP_SIZE; i++){ map[i]=1; map[i+(MAP_SIZE*(MAP_SIZE-1))]=1; map[i*MAP_SIZE]=1; map[i*MAP_SIZE+(MAP_SIZE-1)]=1; }
+        G.wallColor = `hsl(${(G.room * 45) % 360}, 70%, 25%)`;
         for(let i=0; i<12; i++) {
             let rx = 5+Math.floor(Math.random()*14), ry = 5+Math.floor(Math.random()*14);
             map[ry*MAP_SIZE+rx] = 1;
         }
         for(let i=0; i<3 + Math.floor(G.room/2); i++) {
-            enemies.push({x: (8+Math.random()*8)*TILE, y: (8+Math.random()*8)*TILE, hp: 100, alive: true, speed: 1.5 + (G.room*0.1)});
+            enemies.push({x: (8+Math.random()*8)*TILE, y: (8+Math.random()*8)*TILE, hp: 60, alive: true, speed: 1.5});
         }
     }
-    map[Math.floor(MAP_SIZE/2)] = 2; // Porta de Saída
+    // Porta de Saída Centralizada no Topo
+    map[Math.floor(MAP_SIZE/2)] = 2; 
     player.x = 12*TILE; player.y = 21*TILE; player.angle = -Math.PI/2;
 }
 
@@ -143,182 +137,145 @@ function spawnShop(tx, ty, name, price) {
 }
 
 function setupInputs() {
-    window.addEventListener('keydown', e => {
-        keys[e.key.toLowerCase()] = true;
+    window.onkeydown = e => {
+        const k = e.key.toLowerCase(); keys[k] = true;
         if(e.key === "Escape") togglePause();
-        inputBuffer += e.key.toLowerCase();
-        if(inputBuffer.includes("kadtr")) { G.god = true; G.hp = 999999; G.ammo = 999; alert("KADTR ATIVADO!"); inputBuffer=""; }
-        if(inputBuffer.length > 10) inputBuffer = inputBuffer.substring(1);
-    });
-    window.addEventListener('keyup', e => delete keys[e.key.toLowerCase()]);
+        inputBuffer += k;
+        if(inputBuffer.includes("kadtr")) { G.god = true; G.hp = 999; inputBuffer=""; alert("GOD MODE!"); }
+    };
+    window.onkeyup = e => delete keys[e.key.toLowerCase()];
+
+    // Cheat Mobile na munição
+    document.getElementById('ammo-click').style.pointerEvents = "auto";
+    document.getElementById('ammo-click').onclick = () => {
+        cheatCount++;
+        if(cheatCount >= 5) { G.god = true; G.hp = 999; alert("MODO KADTR ATIVADO!"); }
+    };
 
     canvas.addEventListener('mousedown', e => {
-        if(G.play && !G.isMobile) {
-            if(!document.pointerLockElement) canvas.requestPointerLock();
-            else { if(e.button===0) shoot(); if(e.button===2) interact(); }
-        }
+        if(!G.play || G.paused) return;
+        if(!document.pointerLockElement && !G.isMobile) canvas.requestPointerLock();
+        else if(e.button === 0) shoot();
     });
 
     document.addEventListener('pointerlockchange', () => {
-        if (!document.pointerLockElement && G.play && !G.isMobile && document.getElementById('pause-screen').style.display === 'none') {
-            togglePause(true);
-        }
+        if (!document.pointerLockElement && G.play && !G.paused && !G.isMobile) togglePause();
     });
 
     window.addEventListener('mousemove', e => {
-        if(document.pointerLockElement) {
-            player.angle += e.movementX * G.sens;
-            player.pitch = Math.max(-500, Math.min(500, player.pitch - e.movementY * 2));
+        if(document.pointerLockElement && !G.paused) {
+            player.angle += e.movementX * 0.0025;
+            player.pitch = Math.max(-400, Math.min(400, player.pitch - e.movementY * 1.5));
         }
     });
 
-    // Mobile Joystick
-    const base = document.getElementById('joy-base');
-    const knob = document.getElementById('joy-stick');
-    window.mX = 0; window.mY = 0;
-    base.addEventListener('touchmove', e => {
-        const t = e.touches[0]; const r = base.getBoundingClientRect();
-        window.mX = (t.clientX - (r.left+50))/45; window.mY = (t.clientY - (r.top+50))/45;
-        knob.style.transform = `translate(${Math.max(-30, Math.min(30, window.mX*30))}px, ${Math.max(-30, Math.min(30, window.mY*30))}px)`;
-    });
-    base.addEventListener('touchend', () => { window.mX=0; window.mY=0; knob.style.transform='none'; });
-
-    let lookId=null, lastLX=0, lastLY=0;
-    document.getElementById('camera-zone').addEventListener('touchstart', e => {
-        lookId = e.changedTouches[0].identifier; lastLX = e.changedTouches[0].clientX; lastLY = e.changedTouches[0].clientY;
-    });
-    document.getElementById('camera-zone').addEventListener('touchmove', e => {
-        for(let t of e.touches) if(t.identifier === lookId) {
-            player.angle += (t.clientX - lastLX) * G.sens * 1.5;
-            player.pitch += (lastLY - t.clientY) * 2;
-            lastLX = t.clientX; lastLY = t.clientY;
-        }
-    });
-
-    document.getElementById('btn-shoot').addEventListener('touchstart', e => { e.preventDefault(); shoot(); });
-    document.getElementById('btn-use').addEventListener('touchstart', e => { e.preventDefault(); interact(); });
-    
-    // Cheat Mobile
-    document.getElementById('room-txt').onclick = () => {
-        window.cheatClicks = (window.cheatClicks || 0) + 1;
-        if(window.cheatClicks >= 5) { G.god = true; alert("KADTR MOBILE!"); }
-    };
+    // Joystick Mobile
+    if(G.isMobile) {
+        const base = document.getElementById('joy-base');
+        const stick = document.getElementById('stick');
+        base.addEventListener('touchmove', e => {
+            const t = e.touches[0]; const r = base.getBoundingClientRect();
+            window.mX = (t.clientX - (r.left+60))/50; window.mY = (t.clientY - (r.top+60))/50;
+            stick.style.transform = `translate(${Math.max(-30, Math.min(30, window.mX*30))}px, ${Math.max(-30, Math.min(30, window.mY*30))}px)`;
+        });
+        base.addEventListener('touchend', () => { window.mX=0; window.mY=0; stick.style.transform='none'; });
+        document.getElementById('btn-fire').addEventListener('touchstart', shoot);
+    }
 }
 
 function shoot() {
-    if(G.ammo > 0) {
-        bullets.push({x: player.x, y: player.y, vx: Math.cos(player.angle)*25, vy: Math.sin(player.angle)*25, life: 60});
-        if(!G.god) G.ammo--;
-    }
+    bullets.push({x: player.x, y: player.y, vx: Math.cos(player.angle)*22, vy: Math.sin(player.angle)*22, life: 60});
 }
 
-function interact() {
-    shopItems.forEach(s => {
-        if(s.active && Math.hypot(player.x-s.x, player.y-s.y) < 100) {
-            if(G.souls >= s.price || G.god) { 
-                G.souls -= s.price; s.active = false; 
-                if(s.name.includes('AMMO')) G.ammo = 99; else G.hp = G.maxHp; 
-            }
-        }
-    });
-}
-
-function togglePause(forcePause = false) {
-    if(!G.play) return;
-    const pScreen = document.getElementById('pause-screen');
-    if (forcePause || pScreen.style.display === 'none') {
-        pScreen.style.display = 'flex';
-        document.exitPointerLock();
-    }
-}
-
-function resumeGame() {
-    document.getElementById('pause-screen').style.display = 'none';
-    if(!G.isMobile) canvas.requestPointerLock();
+function togglePause() {
+    G.paused = !G.paused;
+    document.getElementById('pause-screen').style.display = G.paused ? 'flex' : 'none';
+    if(!G.paused && !G.isMobile) canvas.requestPointerLock();
 }
 
 function startGame() {
-    G.isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+    G.isMobile = /Android|iPhone/i.test(navigator.userAgent);
     document.getElementById('start-screen').style.display = 'none';
     document.querySelectorAll('#hud, #minimap-container, #crosshair').forEach(el => el.style.display = 'block');
-    if(G.isMobile) document.getElementById('mobile-ui').style.display = 'block';
-    else canvas.requestPointerLock();
+    if(G.isMobile) document.getElementById('mobile-controls').style.display = 'block';
     setupInputs(); setupRoom(); G.play = true; loop();
 }
 
-function toggleScreen(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
-
 function update() {
-    if(!G.play || document.getElementById('pause-screen').style.display === 'flex') return;
-    if(G.god) { G.hp = 999999; G.ammo = 999; }
+    if(!G.play || G.paused) return;
+    if(G.god) G.hp = 999;
 
-    // MOVIMENTO A/D/W/S CORRIGIDO
-    let dx = 0, dy = 0;
-    if(keys['w']) { dx += Math.cos(player.angle); dy += Math.sin(player.angle); }
-    if(keys['s']) { dx -= Math.cos(player.angle); dy -= Math.sin(player.angle); }
-    if(keys['a']) { dx += Math.cos(player.angle - Math.PI/2); dy += Math.sin(player.angle - Math.PI/2); }
-    if(keys['d']) { dx += Math.cos(player.angle + Math.PI/2); dy += Math.sin(player.angle + Math.PI/2); }
+    let mx = 0, my = 0;
+    if(keys['w']) { mx += Math.cos(player.angle); my += Math.sin(player.angle); }
+    if(keys['s']) { mx -= Math.cos(player.angle); my -= Math.sin(player.angle); }
+    if(keys['a']) { mx += Math.cos(player.angle - Math.PI/2); my += Math.sin(player.angle - Math.PI/2); }
+    if(keys['d']) { mx += Math.cos(player.angle + Math.PI/2); my += Math.sin(player.angle + Math.PI/2); }
     
-    // Joystick Mobile integration
-    let jX = window.mX || 0, jY = window.mY || 0;
-    let joyMoveX = (jY * Math.cos(player.angle) - jX * Math.sin(player.angle)) * -1;
-    let joyMoveY = (jY * Math.sin(player.angle) + jX * Math.cos(player.angle)) * -1;
+    if(G.isMobile) {
+        mx += (window.mY || 0) * -Math.cos(player.angle) + (window.mX || 0) * Math.cos(player.angle+Math.PI/2);
+        my += (window.mY || 0) * -Math.sin(player.angle) + (window.mX || 0) * Math.sin(player.angle+Math.PI/2);
+    }
 
-    let nx = player.x + (dx + joyMoveX) * 5;
-    let ny = player.y + (dy + joyMoveY) * 5;
-    if(map[Math.floor(ny/TILE)*MAP_SIZE + Math.floor(nx/TILE)] !== 1) { player.x = nx; player.y = ny; }
+    let nx = player.x + mx * 5, ny = player.y + my * 5;
+    let gridX = Math.floor(nx/TILE), gridY = Math.floor(ny/TILE);
+    
+    if(map[gridY*MAP_SIZE + gridX] !== 1) {
+        player.x = nx; player.y = ny;
+    }
 
-    // Inimigos
-    enemies.forEach(en => {
-        if(!en.alive) return;
-        let dist = Math.hypot(player.x-en.x, player.y-en.y);
-        if(dist < 500) { 
-            en.x += (player.x - en.x) / dist * en.speed;
-            en.y += (player.y - en.y) / dist * en.speed;
+    // Lógica da Porta (Avançar de sala)
+    if(map[gridY*MAP_SIZE + gridX] === 2) {
+        const enemiesAlive = enemies.some(en => en.alive);
+        if(!enemiesAlive) {
+            G.room++;
+            setupRoom();
         }
-        if(dist < 45) { G.hp -= 0.5; if(G.hp <= 0 && !G.god) location.reload(); }
-    });
+    }
 
-    // Balas
+    // Inimigos e Balas
     bullets.forEach((b, i) => {
         b.x += b.vx; b.y += b.vy; b.life--;
         enemies.forEach(en => {
-            if(en.alive && Math.hypot(b.x-en.x, b.y-en.y) < 40) { 
-                en.hp -= 50; bullets.splice(i,1); 
-                if(en.hp<=0){ en.alive=false; G.souls+=2; }
+            if(en.alive && Math.hypot(b.x-en.x, b.y-en.y) < 35) { 
+                en.hp -= 40; bullets.splice(i,1); 
+                if(en.hp<=0){ en.alive=false; G.souls += 1; }
             }
         });
         if(b.life < 0 || map[Math.floor(b.y/TILE)*MAP_SIZE + Math.floor(b.x/TILE)] === 1) bullets.splice(i,1);
     });
 
-    if(map[Math.floor(player.y/TILE)*MAP_SIZE + Math.floor(player.x/TILE)] === 2 && enemies.every(e => !e.alive)) {
-        G.room++; setupRoom(); 
-    }
+    enemies.forEach(en => {
+        if(!en.alive) return;
+        let d = Math.hypot(player.x-en.x, player.y-en.y);
+        if(d < 500) { en.x += (player.x-en.x)/d * en.speed; en.y += (player.y-en.y)/d * en.speed; }
+        if(d < 45) { G.hp -= 0.5; if(G.hp <= 0 && !G.god) location.reload(); }
+    });
 
-    shopItems.forEach(s => s.offset = Math.sin(Date.now()*0.005)*15);
-    document.getElementById('hp-txt').innerText = Math.floor(G.hp);
-    document.getElementById('ammo-txt').innerText = G.ammo;
-    document.getElementById('soul-txt').innerText = G.souls;
+    shopItems.forEach(s => {
+        s.offset = Math.sin(Date.now()*0.005)*10;
+        if(s.active && Math.hypot(player.x-s.x, player.y-s.y) < 60) { s.active = false; G.hp = G.maxHp; }
+    });
+
+    document.getElementById('hp-fill').style.width = (G.hp/G.maxHp*100) + "%";
+    document.getElementById('soul-hud').innerText = G.souls;
     document.getElementById('room-txt').innerText = G.room;
 }
 
 function draw() {
     ctx.fillStyle = "#050000"; ctx.fillRect(0,0,canvas.width, canvas.height/2 + player.pitch);
-    ctx.fillStyle = "#0a0a0a"; ctx.fillRect(0,canvas.height/2 + player.pitch, canvas.width, canvas.height);
+    ctx.fillStyle = "#100505"; ctx.fillRect(0,canvas.height/2 + player.pitch, canvas.width, canvas.height);
 
-    const res = G.res;
-    for(let i=0; i<canvas.width; i+=res) {
+    for(let i=0; i<canvas.width; i+=G.res) {
         let ang = (player.angle - player.fov/2) + (i/canvas.width)*player.fov;
         let d=0, hit=0, cos=Math.cos(ang), sin=Math.sin(ang);
-        while(hit === 0 && d < 1000) {
-            d += 8;
+        while(hit === 0 && d < 900) {
+            d += 7;
             let tx = Math.floor((player.x + cos*d)/TILE), ty = Math.floor((player.y + sin*d)/TILE);
             if(map[ty*MAP_SIZE+tx] > 0) {
                 hit = map[ty*MAP_SIZE+tx];
-                let distNorm = d * Math.cos(player.angle - ang);
-                let h = (TILE * canvas.height) / distNorm;
-                ctx.fillStyle = (hit === 2) ? '#0f0' : G.wallColor;
-                ctx.fillRect(i, (canvas.height-h)/2 + player.pitch, res, h);
+                let h = (TILE * canvas.height) / (d * Math.cos(player.angle-ang));
+                ctx.fillStyle = hit === 2 ? '#0f0' : G.wallColor;
+                ctx.fillRect(i, (canvas.height-h)/2 + player.pitch, G.res, h);
             }
         }
     }
@@ -331,23 +288,16 @@ function draw() {
             let d = Math.hypot(player.x-s.x, player.y-s.y);
             let sx = (0.5 * (ang/(player.fov/2)) + 0.5) * canvas.width;
             let sh = (TILE * canvas.height) / d;
-            if(s.price) { // ITEM SHOP
-                ctx.fillStyle = "#333"; ctx.fillRect(sx-sh/4, (canvas.height/2)+player.pitch, sh/2, sh); // Pedestal
-                ctx.fillStyle = "#ff0"; ctx.fillRect(sx-sh/6, (canvas.height/2-sh/2.5)+player.pitch+s.offset, sh/3, sh/3); // Item
-                ctx.fillStyle = "#fff"; ctx.font = `bold ${sh/5}px Orbitron`; ctx.textAlign="center";
-                ctx.fillText(`${s.name}`, sx, (canvas.height/2-sh)+player.pitch);
-                ctx.fillStyle = "#ff0"; ctx.fillText(`$${s.price}`, sx, (canvas.height/2-sh/1.3)+player.pitch);
-            } else { // INIMIGO
-                ctx.fillStyle = "#f00"; ctx.fillRect(sx-sh/2, (canvas.height-sh)/2 + player.pitch, sh, sh);
-            }
+            ctx.fillStyle = s.price !== undefined ? "#ff0" : "#000";
+            ctx.fillRect(sx-sh/4, (canvas.height-sh/2)/2+player.pitch + (s.offset || 0), sh/2, sh/2);
         }
     });
     drawMinimap();
 }
 
 function drawMinimap() {
-    mCtx.fillStyle = "#000"; mCtx.fillRect(0,0,110,110);
-    const s = 110/MAP_SIZE;
+    mCtx.fillStyle = "#000"; mCtx.fillRect(0,0,130,130);
+    const s = 130/MAP_SIZE;
     for(let y=0; y<MAP_SIZE; y++) for(let x=0; x<MAP_SIZE; x++) {
         if(map[y*MAP_SIZE+x] === 1) { mCtx.fillStyle = G.wallColor; mCtx.fillRect(x*s, y*s, s, s); }
         if(map[y*MAP_SIZE+x] === 2) { mCtx.fillStyle = "#0f0"; mCtx.fillRect(x*s, y*s, s, s); }
@@ -356,7 +306,7 @@ function drawMinimap() {
 }
 
 function loop() { update(); draw(); requestAnimationFrame(loop); }
-window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; mCanvas.width=110; mCanvas.height=110; };
+window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; mCanvas.width=130; mCanvas.height=130; };
 window.onresize();
 </script>
 </body>
