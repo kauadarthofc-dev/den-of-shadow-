@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 V15.7 ULTIMATE</title>
+    <title>Den of Shadow 💀 V15.8 FIXED</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&display=swap');
         * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; width: 100vw; height: 100vh; }
-        canvas { display: block; width: 100vw; height: 100vh; }
+        canvas { display: block; width: 100vw; height: 100vh; image-rendering: pixelated; }
 
         /* UI SCREENS */
         .ui-screen { position: absolute; inset: 0; background: radial-gradient(circle, #200 0%, #000 100%); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .glass-panel { background: rgba(0,0,0,0.9); border: 2px solid #f00; padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; box-shadow: 0 0 20px #f005; }
+        .glass-panel { background: rgba(0,0,0,0.95); border: 2px solid #f00; padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; box-shadow: 0 0 30px #f005; }
         
-        .btn-main { padding: 12px; background: #200; border: 1px solid #f00; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 8px 0; width: 100%; text-transform: uppercase; font-size: 13px; transition: 0.2s; }
+        .btn-main { padding: 12px; background: #111; border: 1px solid #f00; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 8px 0; width: 100%; text-transform: uppercase; font-size: 13px; }
         .btn-main:hover { background: #f00; color: #000; }
 
-        /* HUD & MINIMAP */
-        #hud { position: absolute; top: 15px; left: 15px; z-index: 1000; display: none; background: rgba(0,0,0,0.8); padding: 12px; border: 1px solid #f00; border-radius: 10px; pointer-events: auto; }
+        /* HUD */
+        #hud { position: absolute; top: 15px; left: 15px; z-index: 1000; display: none; background: rgba(0,0,0,0.8); padding: 12px; border: 1px solid #f00; border-radius: 10px; pointer-events: auto; min-width: 120px; }
         #minimap { position: absolute; top: 15px; right: 15px; width: 110px; height: 110px; border: 2px solid #fff; background: rgba(0,0,0,0.8); z-index: 1000; display: none; border-radius: 5px; }
 
-        /* MOBILE CONTROLS */
+        /* MOBILE UI */
         #mobile-ui { position: absolute; inset: 0; z-index: 2000; display: none; pointer-events: none; }
         #camera-zone { position: absolute; top: 0; right: 0; width: 60%; height: 100%; pointer-events: auto; }
         #joy-base { position: absolute; bottom: 40px; left: 40px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border: 2px solid #fff; border-radius: 50%; pointer-events: auto; }
@@ -29,27 +29,23 @@
         .mob-btn { position: absolute; pointer-events: auto; width: 75px; height: 75px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; background: rgba(0,0,0,0.6); border: 2px solid #f00; }
         #btn-shoot { bottom: 45px; right: 45px; }
         #btn-use { bottom: 135px; right: 45px; border-color: #ff0; color: #ff0; }
-        #btn-pause { top: 15px; left: 140px; width: 45px; height: 45px; font-size: 18px; }
 
-        /* LINKS */
-        .footer-links { margin-top: 15px; font-size: 10px; color: #666; line-height: 1.6; }
-        .footer-links a { color: #f00; text-decoration: none; font-weight: bold; }
-
-        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 12px; height: 12px; border: 1px solid #f00; border-radius: 50%; z-index: 1500; display: none; }
+        .footer-links { margin-top: 15px; font-size: 10px; color: #888; }
+        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 14px; height: 14px; border: 2px solid #f00; border-radius: 50%; z-index: 1500; display: none; pointer-events: none; }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
 <div id="start-screen" class="ui-screen">
     <div class="glass-panel">
-        <h1 style="font-family:'Nosifer'; color:#f00; margin-bottom:5px;">DEN OF SHADOW</h1>
-        <p style="font-size:9px; letter-spacing:3px;">V15.7 ULTIMATE</p>
-        <button class="btn-main" onclick="startGame()">INICIAR RITUAL</button>
-        <button class="btn-main" onclick="toggleScreen('config-screen', true)">AJUSTES</button>
+        <h1 style="font-family:'Nosifer'; color:#f00; font-size: 1.8rem;">DEN OF SHADOW</h1>
+        <p style="font-size:9px; letter-spacing:3px;">V15.8 FINAL RE-FIX</p>
+        <button class="btn-main" onclick="startGame()">INICIAR</button>
+        <button class="btn-main" onclick="toggleScreen('config-screen', true)">CONFIGURAÇÕES</button>
         <div class="footer-links">
-            <a href="#">DISCORD: killzone1561</a><br>
-            <a href="#">YOUTUBE: kaua_darth</a><br>
-            <span>kauadarthofc@gmail.com</span>
+            DISCORD: killzone1561<br>
+            YOUTUBE: kaua_darth<br>
+            kauadarthofc@gmail.com
         </div>
     </div>
 </div>
@@ -58,21 +54,26 @@
     <div class="glass-panel">
         <h2 style="color:#f00;">AJUSTES</h2>
         <div style="text-align:left; font-size:11px;">
-            <label>RESOLUÇÃO (G.res):</label>
-            <select id="res-sel" onchange="G.res = parseInt(this.value)" style="width:100%; background:#111; color:#fff; border:1px solid #f00; padding:5px; margin-bottom:15px;">
-                <option value="4">Desempenho (Fluido)</option>
-                <option value="2" selected>Equilibrado</option>
-                <option value="1">Qualidade (Pesado)</option>
+            <label>QUALIDADE (RESOLUÇÃO):</label>
+            <select id="res-sel" onchange="G.res = parseInt(this.value)" style="width:100%; background:#111; color:#fff; border:1px solid #f00; padding:8px; margin-bottom:15px;">
+                <option value="4">ALTA (Mais Rápido)</option>
+                <option value="2" selected>MÉDIA (Recomendado)</option>
+                <option value="1">BAIXA (Muito Pesado)</option>
             </select>
-            <label>SENSIBILIDADE:</label>
-            <input type="range" min="1" max="10" value="3" oninput="G.sens = this.value * 0.001" style="width:100%; accent-color:#f00;">
         </div>
         <button class="btn-main" onclick="toggleScreen('config-screen', false)">VOLTAR</button>
     </div>
 </div>
 
+<div id="pause-screen" class="ui-screen" style="display:none; background: rgba(0,0,0,0.85);">
+    <div class="glass-panel">
+        <h2 style="color:#f00;">PAUSADO</h2>
+        <button class="btn-main" onclick="resumeGame()">CONTINUAR</button>
+        <button class="btn-main" onclick="location.reload()">REINICIAR</button>
+    </div>
+</div>
+
 <div id="hud">
-    <div style="font-size:10px; margin-bottom:5px; border-bottom:1px solid #300;">STATUS</div>
     HP: <span id="hp-txt" style="color:#f00">100</span><br>
     AMMO: <span id="ammo-txt" style="color:#0f0">40</span><br>
     SOULS: <span id="soul-txt" style="color:#ff0">0</span><br>
@@ -87,7 +88,6 @@
     <div id="joy-base"><div id="joy-stick"></div></div>
     <div class="mob-btn" id="btn-shoot">🔥</div>
     <div class="mob-btn" id="btn-use">👁️</div>
-    <div class="mob-btn" id="btn-pause" onclick="location.reload()">🔄</div>
 </div>
 
 <canvas id="gameCanvas"></canvas>
@@ -114,31 +114,24 @@ function initRoom(n) {
     map = Array(MAP_SIZE * MAP_SIZE).fill(0);
     enemies = []; shopItems = [];
     
-    // Configura Sala
-    const isShop = (n % 5 === 0);
-    if (isShop) {
-        G.wallColor = 'rgb(200, 200, 0)'; // SHOP AMARELO
-        spawnShop(10, 10, 'HP/DANO', 15);
-        spawnShop(14, 10, 'AMMO+', 10);
+    if (n % 5 === 0) {
+        G.wallColor = 'rgb(255, 215, 0)'; // SHOP AMARELO PURO
+        spawnShop(10, 10, 'CURA/VIDA', 15);
+        spawnShop(14, 10, 'SMG AMMO', 10);
+        for(let i=0; i<MAP_SIZE; i++){ map[i]=1; map[i+(MAP_SIZE*(MAP_SIZE-1))]=1; map[i*MAP_SIZE]=1; map[i*MAP_SIZE+(MAP_SIZE-1)]=1; }
     } else {
         const hue = (n * 137) % 360; 
         G.wallColor = `hsl(${hue}, 80%, 30%)`;
-        // Paredes externas
-        for(let i=0; i<MAP_SIZE; i++) {
-            map[i]=1; map[i+(MAP_SIZE*(MAP_SIZE-1))]=1;
-            map[i*MAP_SIZE]=1; map[i*MAP_SIZE+(MAP_SIZE-1)]=1;
-        }
-        // Obstáculos Internos (V11)
-        for(let i=0; i<12; i++) {
+        for(let i=0; i<MAP_SIZE; i++){ map[i]=1; map[i+(MAP_SIZE*(MAP_SIZE-1))]=1; map[i*MAP_SIZE]=1; map[i*MAP_SIZE+(MAP_SIZE-1)]=1; }
+        for(let i=0; i<15; i++) {
             let rx = 5+Math.floor(Math.random()*14), ry = 5+Math.floor(Math.random()*14);
             map[ry*MAP_SIZE+rx] = 1;
         }
-        // Inimigos
-        for(let i=0; i<3 + Math.floor(n/2); i++) {
-            enemies.push({x: (8+Math.random()*8)*TILE, y: (8+Math.random()*8)*TILE, hp: 100, alive: true});
+        for(let i=0; i<2 + Math.floor(n/2); i++) {
+            enemies.push({x: (8+Math.random()*8)*TILE, y: (8+Math.random()*8)*TILE, hp: 100, alive: true, speed: 1.5 + (n*0.1)});
         }
     }
-    map[Math.floor(MAP_SIZE/2)] = 2; // Porta Verde de Saída
+    map[Math.floor(MAP_SIZE/2)] = 2; // Saída
     player.x = 12*TILE; player.y = 21*TILE; player.angle = -Math.PI/2;
 }
 
@@ -146,33 +139,55 @@ function spawnShop(tx, ty, name, price) {
     shopItems.push({ x: tx*TILE, y: ty*TILE, name, price, active: true, offset: 0 });
 }
 
-// CONTROLES
-let moveX=0, moveY=0, lookId=null, lastLX=0, lastLY=0;
-
+// --- INPUTS ---
 function setupControls() {
     window.addEventListener('keydown', e => {
         keys[e.key.toLowerCase()] = true;
+        if(e.key === "Escape") togglePause();
         inputBuffer += e.key.toLowerCase();
         if(inputBuffer.includes("kadtr")) { G.god = true; G.hp = 999999; G.ammo = 999; alert("KADTR ATIVADO!"); inputBuffer=""; }
         if(inputBuffer.length > 10) inputBuffer = inputBuffer.substring(1);
     });
     window.addEventListener('keyup', e => delete keys[e.key.toLowerCase()]);
 
+    // Lógica do Mouse
+    canvas.addEventListener('mousedown', e => {
+        if(G.play && !G.isMobile) {
+            if(!document.pointerLockElement) canvas.requestPointerLock();
+            else { if(e.button===0) shoot(); if(e.button===2) interact(); }
+        }
+    });
+
+    document.addEventListener('pointerlockchange', () => {
+        if (!document.pointerLockElement && G.play && !G.isMobile) togglePause(true);
+    });
+
+    window.addEventListener('mousemove', e => {
+        if(document.pointerLockElement) {
+            player.angle += e.movementX * G.sens;
+            player.pitch = Math.max(-500, Math.min(500, player.pitch - e.movementY * 2));
+        }
+    });
+
+    // Mobile
     const base = document.getElementById('joy-base');
     const knob = document.getElementById('joy-stick');
+    let moveX=0, moveY=0;
     base.addEventListener('touchmove', e => {
         const t = e.touches[0]; const r = base.getBoundingClientRect();
-        moveX = (t.clientX - (r.left+50))/40; moveY = (t.clientY - (r.top+50))/40;
-        knob.style.transform = `translate(${Math.max(-30, Math.min(30, moveX*30))}px, ${Math.max(-30, Math.min(30, moveY*30))}px)`;
+        moveX = (t.clientX - (r.left+50))/45; moveY = (t.clientY - (r.top+50))/45;
+        window.mX = Math.max(-1, Math.min(1, moveX)); window.mY = Math.max(-1, Math.min(1, moveY));
+        knob.style.transform = `translate(${window.mX*30}px, ${window.mY*30}px)`;
     });
-    base.addEventListener('touchend', () => { moveX=0; moveY=0; knob.style.transform='none'; });
+    base.addEventListener('touchend', () => { window.mX=0; window.mY=0; knob.style.transform='none'; });
 
+    let lookId=null, lastLX=0, lastLY=0;
     document.getElementById('camera-zone').addEventListener('touchstart', e => {
         lookId = e.changedTouches[0].identifier; lastLX = e.changedTouches[0].clientX; lastLY = e.changedTouches[0].clientY;
     });
     document.getElementById('camera-zone').addEventListener('touchmove', e => {
         for(let t of e.touches) if(t.identifier === lookId) {
-            player.angle += (t.clientX - lastLX) * G.sens;
+            player.angle += (t.clientX - lastLX) * G.sens * 1.5;
             player.pitch += (lastLY - t.clientY) * 2;
             lastLX = t.clientX; lastLY = t.clientY;
         }
@@ -180,21 +195,11 @@ function setupControls() {
 
     document.getElementById('btn-shoot').addEventListener('touchstart', e => { e.preventDefault(); shoot(); });
     document.getElementById('btn-use').addEventListener('touchstart', e => { e.preventDefault(); interact(); });
-    
-    canvas.addEventListener('mousedown', e => {
-        if(document.pointerLockElement) { if(e.button===0) shoot(); if(e.button===2) interact(); }
-    });
-    window.addEventListener('mousemove', e => {
-        if(document.pointerLockElement) {
-            player.angle += e.movementX * G.sens;
-            player.pitch = Math.max(-400, Math.min(400, player.pitch - e.movementY * 2));
-        }
-    });
 }
 
 function shoot() {
     if(G.ammo > 0) {
-        bullets.push({x: player.x, y: player.y, vx: Math.cos(player.angle)*22, vy: Math.sin(player.angle)*22, life: 60});
+        bullets.push({x: player.x, y: player.y, vx: Math.cos(player.angle)*25, vy: Math.sin(player.angle)*25, life: 60});
         if(!G.god) G.ammo--;
     }
 }
@@ -205,6 +210,20 @@ function interact() {
             if(G.souls >= s.price || G.god) { G.souls -= s.price; s.active = false; if(s.name.includes('AMMO')) G.ammo += 60; else G.hp = 100; }
         }
     });
+}
+
+function togglePause(forcePause = false) {
+    if(!G.play) return;
+    const pScreen = document.getElementById('pause-screen');
+    if (forcePause || pScreen.style.display === 'none') {
+        pScreen.style.display = 'flex';
+        document.exitPointerLock();
+    } else resumeGame();
+}
+
+function resumeGame() {
+    document.getElementById('pause-screen').style.display = 'none';
+    if(!G.isMobile) canvas.requestPointerLock();
 }
 
 function startGame() {
@@ -219,31 +238,47 @@ function startGame() {
 function toggleScreen(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
 
 function update() {
-    if(!G.play) return;
+    if(!G.play || document.getElementById('pause-screen').style.display === 'flex') return;
     if(G.god) { G.hp = 999999; G.ammo = 999; }
 
-    let kx = 0, ky = 0;
-    if(keys['w']) { kx += Math.cos(player.angle); ky += Math.sin(player.angle); }
-    if(keys['s']) { kx -= Math.cos(player.angle); ky -= Math.sin(player.angle); }
+    // MOVIMENTO FIXO (W, S, A, D)
+    let moveDirX = 0, moveDirY = 0;
+    if(keys['w']) { moveDirX += Math.cos(player.angle); moveDirY += Math.sin(player.angle); }
+    if(keys['s']) { moveDirX -= Math.cos(player.angle); moveDirY -= Math.sin(player.angle); }
+    if(keys['a']) { moveDirX += Math.cos(player.angle - Math.PI/2); moveDirY += Math.sin(player.angle - Math.PI/2); }
+    if(keys['d']) { moveDirX += Math.cos(player.angle + Math.PI/2); moveDirY += Math.sin(player.angle + Math.PI/2); }
     
-    let mx = kx*5 + (moveY * Math.cos(player.angle) - moveX * Math.sin(player.angle)) * -5;
-    let my = ky*5 + (moveY * Math.sin(player.angle) + moveX * Math.cos(player.angle)) * -5;
+    // Joystick Mobile
+    let mX = window.mX || 0, mY = window.mY || 0;
+    let joyX = (mY * Math.cos(player.angle) - mX * Math.sin(player.angle)) * -1;
+    let joyY = (mY * Math.sin(player.angle) + mX * Math.cos(player.angle)) * -1;
 
-    let nx = player.x + mx, ny = player.y + my;
-    if(map[Math.floor(ny/TILE)*MAP_SIZE + Math.floor(nx/TILE)] === 0 || map[Math.floor(ny/TILE)*MAP_SIZE + Math.floor(nx/TILE)] === 2) { 
-        player.x = nx; player.y = ny; 
-    }
+    let finalX = (moveDirX + joyX) * 5;
+    let finalY = (moveDirY + joyY) * 5;
 
+    let nx = player.x + finalX, ny = player.y + finalY;
+    if(map[Math.floor(ny/TILE)*MAP_SIZE + Math.floor(nx/TILE)] !== 1) { player.x = nx; player.y = ny; }
+
+    // BALAS E INIMIGOS ATIVOS
     bullets.forEach((b,i) => {
         b.x += b.vx; b.y += b.vy; b.life--;
         enemies.forEach(en => {
-            if(en.alive && Math.hypot(b.x-en.x, b.y-en.y) < 40) { en.hp -= 50; bullets.splice(i,1); if(en.hp<=0){en.alive=false; G.souls+=5; G.ammo+=2;}}
+            if(en.alive && Math.hypot(b.x-en.x, b.y-en.y) < 40) { 
+                en.hp -= 50; bullets.splice(i,1); 
+                if(en.hp<=0){ en.alive=false; G.souls+=5; G.ammo+=2; }
+            }
         });
         if(b.life < 0 || map[Math.floor(b.y/TILE)*MAP_SIZE + Math.floor(b.x/TILE)] === 1) bullets.splice(i,1);
     });
 
     enemies.forEach(en => {
-        if(en.alive && Math.hypot(player.x-en.x, player.y-en.y) < 45) { G.hp -= 0.5; if(G.hp <= 0 && !G.god) location.reload(); }
+        if(!en.alive) return;
+        let dist = Math.hypot(player.x-en.x, player.y-en.y);
+        if(dist < 500) { // IA Ativa
+            en.x += (player.x - en.x) / dist * en.speed;
+            en.y += (player.y - en.y) / dist * en.speed;
+        }
+        if(dist < 45) { G.hp -= 0.5; if(G.hp <= 0 && !G.god) location.reload(); }
     });
 
     if(map[Math.floor(player.y/TILE)*MAP_SIZE + Math.floor(player.x/TILE)] === 2 && enemies.every(e => !e.alive)) initRoom(G.room+1);
@@ -256,25 +291,29 @@ function update() {
 }
 
 function draw() {
+    // Chão e Teto
     ctx.fillStyle = "#050000"; ctx.fillRect(0,0,canvas.width, canvas.height/2 + player.pitch);
-    ctx.fillStyle = "#111"; ctx.fillRect(0,canvas.height/2 + player.pitch, canvas.width, canvas.height);
+    ctx.fillStyle = "#0a0a0a"; ctx.fillRect(0,canvas.height/2 + player.pitch, canvas.width, canvas.height);
 
-    for(let i=0; i<canvas.width; i+=G.res) {
+    // Raycasting
+    const res = G.res;
+    for(let i=0; i<canvas.width; i+=res) {
         let ang = (player.angle - player.fov/2) + (i/canvas.width)*player.fov;
         let d=0, hit=0, cos=Math.cos(ang), sin=Math.sin(ang);
-        while(hit === 0 && d < 900) {
-            d += 7;
+        while(hit === 0 && d < 1000) {
+            d += 8;
             let tx = Math.floor((player.x + cos*d)/TILE), ty = Math.floor((player.y + sin*d)/TILE);
             if(map[ty*MAP_SIZE+tx] > 0) {
                 hit = map[ty*MAP_SIZE+tx];
                 let distNorm = d * Math.cos(player.angle - ang);
                 let h = (TILE * canvas.height) / distNorm;
                 ctx.fillStyle = hit === 2 ? '#0f0' : G.wallColor;
-                ctx.fillRect(i, (canvas.height-h)/2 + player.pitch, G.res, h);
+                ctx.fillRect(i, (canvas.height-h)/2 + player.pitch, res, h);
             }
         }
     }
 
+    // Sprites
     [...enemies, ...shopItems].forEach(s => {
         if(s.alive === false || s.active === false) return;
         let ang = Math.atan2(s.y-player.y, s.x-player.x) - player.angle;
@@ -284,11 +323,11 @@ function draw() {
             let sx = (0.5 * (ang/(player.fov/2)) + 0.5) * canvas.width;
             let sh = (TILE * canvas.height) / d;
             if(s.price) {
-                ctx.fillStyle = "#333"; ctx.fillRect(sx-sh/4, (canvas.height/2) + player.pitch, sh/2, sh); // Pedestal
-                ctx.fillStyle = "#ff0"; ctx.fillRect(sx-sh/6, (canvas.height/2-sh/2) + player.pitch + s.offset, sh/3, sh/3); // Item
-                ctx.fillStyle = "#fff"; ctx.font = `bold ${sh/5}px Orbitron`; ctx.fillText(`${s.name}: ${s.price}`, sx-sh/2, (canvas.height/2-sh/1.5)+player.pitch);
+                ctx.fillStyle = "#444"; ctx.fillRect(sx-sh/4, (canvas.height/2)+player.pitch, sh/2, sh);
+                ctx.fillStyle = "#ff0"; ctx.fillRect(sx-sh/6, (canvas.height/2-sh/2)+player.pitch+s.offset, sh/3, sh/3);
+                ctx.fillStyle = "#fff"; ctx.font = `bold ${sh/5}px Orbitron`; ctx.textAlign="center"; ctx.fillText(`${s.name}`, sx, (canvas.height/2-sh/1.5)+player.pitch);
             } else {
-                ctx.fillStyle = "#f00"; ctx.fillRect(sx-sh/2, (canvas.height-sh)/2 + player.pitch, sh, sh); // Inimigo
+                ctx.fillStyle = "#f00"; ctx.fillRect(sx-sh/2, (canvas.height-sh)/2 + player.pitch, sh, sh);
             }
         }
     });
@@ -305,7 +344,7 @@ function drawMinimap() {
     mCtx.fillStyle = "#fff"; mCtx.fillRect((player.x/TILE)*s-1, (player.y/TILE)*s-1, 3, 3);
 }
 
-function loop() { if(G.play) { update(); draw(); } requestAnimationFrame(loop); }
+function loop() { update(); draw(); requestAnimationFrame(loop); }
 window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; mCanvas.width=110; mCanvas.height=110; };
 window.onresize();
 </script>
