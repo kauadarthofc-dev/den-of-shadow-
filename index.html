@@ -3,52 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 V15.13 ULTRA</title>
+    <title>Den of Shadow 💀 V15.14 FIX</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&display=swap');
         * { touch-action: none; user-select: none; box-sizing: border-box; }
         body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; }
-        canvas { display: block; width: 100vw; height: 100vh; image-rendering: auto; }
+        canvas { display: block; width: 100vw; height: 100vh; image-rendering: pixelated; }
 
-        /* Menus Estilo V11 */
         .ui-screen { position: absolute; inset: 0; background: radial-gradient(circle, #200 0%, #000 100%); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .glass-panel { background: rgba(0,0,0,0.8); border: 2px solid #f00; padding: 30px; border-radius: 5px; width: 90%; max-width: 500px; text-align: center; box-shadow: 0 0 30px #500; }
+        .glass-panel { background: rgba(0,0,0,0.9); border: 2px solid #f00; padding: 30px; border-radius: 5px; width: 90%; max-width: 500px; text-align: center; box-shadow: 0 0 30px #500; }
         
         .btn-main { padding: 12px; font-size: 13px; background: #111; border: 1px solid #f00; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 5px 0; width: 100%; transition: 0.2s; }
         .btn-main:hover { background: #f00; color: #000; font-weight: bold; }
         
         .social-link { color: #888; text-decoration: none; font-size: 11px; margin: 10px; display: inline-block; pointer-events: auto; }
-        .social-link:hover { color: #f00; }
 
-        /* Configurações */
-        .config-row { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; font-size: 12px; }
-        select, input[type=range] { background: #222; color: #fff; border: 1px solid #500; }
-
-        /* HUD */
         #hud { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; width: 95%; max-width: 700px; pointer-events: none; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; background: rgba(0,0,0,0.9); padding: 20px; border: 1px solid #f00; border-radius: 5px; }
-        .bar-bg { width: 100%; height: 10px; background: #300; border: 1px solid #500; margin-top: 5px; }
-        #hp-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #f00, #800); }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; background: rgba(0,0,0,0.9); padding: 15px; border: 1px solid #f00; }
+        .bar-bg { width: 100%; height: 10px; background: #300; border: 1px solid #500; }
+        #hp-fill { height: 100%; width: 100%; background: #f00; transition: width 0.2s; }
 
         #mobile-controls { position: absolute; inset: 0; z-index: 2000; display: none; pointer-events: none; }
-        .joy-zone { position: absolute; bottom: 40px; left: 40px; width: 130px; height: 130px; background: rgba(255,0,0,0.1); border: 2px solid #500; border-radius: 50%; pointer-events: auto; }
+        .joy-zone { position: absolute; bottom: 40px; left: 40px; width: 130px; height: 130px; background: rgba(255,0,0,0.1); border: 2px solid #555; border-radius: 50%; pointer-events: auto; }
         #stick { position: absolute; top: 40px; left: 40px; width: 50px; height: 50px; background: #f00; border-radius: 50%; opacity: 0.5; }
-        .btn-circ { width: 70px; height: 70px; background: rgba(200,0,0,0.2); border: 2px solid #f00; border-radius: 50%; pointer-events: auto; display: flex; align-items: center; justify-content: center; position: absolute; }
+        .btn-circ { width: 80px; height: 80px; background: rgba(200,0,0,0.2); border: 2px solid #f00; border-radius: 50%; pointer-events: auto; display: flex; align-items: center; justify-content: center; position: absolute; }
     </style>
 </head>
 <body>
 
 <div id="start-screen" class="ui-screen">
     <div class="glass-panel">
-        <h1 style="font-family:'Nosifer'; color:#f00; text-shadow: 0 0 15px #f00;">DEN OF SHADOW</h1>
-        <p style="font-size:10px; letter-spacing: 2px;">V15.13 ULTRA RESOLUTION</p>
-        
+        <h1 style="font-family:'Nosifer'; color:#f00;">DEN OF SHADOW</h1>
+        <p style="font-size:10px;">V15.14 • ENGINE REVISADA</p>
         <button class="btn-main" onclick="startGame()">INICIAR RITUAL</button>
-        <button class="btn-main" onclick="openSettings()">CONFIGURAÇÕES</button>
-        
-        <div style="margin-top:20px;">
-            <a href="https://discord.gg/exemplo" target="_blank" class="social-link">DISCORD</a>
-            <a href="https://youtube.com/exemplo" target="_blank" class="social-link">YOUTUBE</a>
+        <button class="btn-main" onclick="openSettings()">AJUSTES</button>
+        <div>
+            <a href="#" class="social-link">DISCORD</a>
+            <a href="#" class="social-link">YOUTUBE</a>
         </div>
     </div>
 </div>
@@ -56,47 +47,23 @@
 <div id="settings-screen" class="ui-screen" style="display:none;">
     <div class="glass-panel">
         <h2>AJUSTES</h2>
-        <div class="config-row">
-            <span>RESOLUÇÃO (RENDER)</span>
-            <select id="cfg-res" onchange="G.res = parseInt(this.value)">
-                <option value="4">BAIXA (PERFORMANCE)</option>
-                <option value="2" selected>MÉDIA (PADRÃO)</option>
-                <option value="1">ALTA (NATAL)</option>
-            </select>
-        </div>
-        <div class="config-row">
-            <span>SENSIVILIDADE</span>
-            <input type="range" id="cfg-sens" min="1" max="10" value="5">
-        </div>
-        <div class="config-row">
-            <span>IDIOMA</span>
-            <select><option>PORTUGUÊS</option><option>ENGLISH</option></select>
-        </div>
-        <button class="btn-main" onclick="closeSettings()">SALVAR E VOLTAR</button>
+        <div style="margin:10px 0;">SENSIBILIDADE: <input type="range" id="cfg-sens" min="1" max="20" value="10"></div>
+        <button class="btn-main" onclick="closeSettings()">SALVAR</button>
     </div>
 </div>
 
 <div id="hud">
     <div class="stats-grid">
-        <div>
-            <div style="font-size:10px; color:#f00;">HP</div>
-            <div class="bar-bg"><div id="hp-fill"></div></div>
-        </div>
-        <div style="text-align:center;">
-            <div id="biome-name" style="font-size:10px; color:#888;">BIOMA</div>
-            <div id="room-txt" style="font-size:20px; font-weight:bold; color:#fff;">1</div>
-        </div>
-        <div style="text-align:right;">
-            <div id="cheat-trigger" style="font-size:10px; color:#ff0; cursor:pointer;">MUNIÇÃO / ALMAS</div>
-            <div style="font-size:16px;"><span id="ammo-hud" style="color:#fff">40</span> / <span id="soul-hud" style="color:#ff0">0</span></div>
-        </div>
+        <div>HP<div class="bar-bg"><div id="hp-fill"></div></div></div>
+        <div style="text-align:center;"><div id="biome-name" style="font-size:10px;">BIOMA</div><div id="room-txt" style="font-size:20px;">1</div></div>
+        <div style="text-align:right;"><div id="cheat-trigger" style="color:#ff0; cursor:pointer;">MUNIÇÃO</div><div><span id="ammo-hud">40</span> / <span id="soul-hud">0</span></div></div>
     </div>
 </div>
 
 <div id="mobile-controls">
     <div class="joy-zone" id="joy-base"><div id="stick"></div></div>
     <div class="btn-circ" id="btn-fire" style="bottom:50px; right:30px;">🔥</div>
-    <div class="btn-circ" id="btn-use" style="bottom:130px; right:50px; width:50px; height:50px; font-size:12px;">USAR</div>
+    <div class="btn-circ" id="btn-use" style="bottom:150px; right:40px; width:60px; height:60px; font-size:12px;">USAR</div>
 </div>
 
 <canvas id="gameCanvas"></canvas>
@@ -105,7 +72,7 @@
 const G = { 
     play: false, paused: false, room: 1, hp: 100, ammo: 40, souls: 0, 
     res: 2, god: false, isMobile: false, wallColor: '#500', 
-    sens: 0.002, weaponType: 1
+    sens: 0.0025, weaponType: 1, clicks: 0 
 };
 
 const canvas = document.getElementById('gameCanvas');
@@ -118,8 +85,7 @@ function setupRoom() {
     map = Array(MAP_SIZE * MAP_SIZE).fill(0);
     enemies = []; shopItems = [];
     const isShop = (G.room % 5 === 0);
-    
-    document.getElementById('biome-name').innerText = isShop ? "SHOPPING" : "LABIRINTO";
+    document.getElementById('biome-name').innerText = isShop ? "SHOPPING" : "ABISMO";
 
     for(let i=0; i<MAP_SIZE; i++){ 
         map[i]=1; map[i+(MAP_SIZE*(MAP_SIZE-1))]=1; 
@@ -128,20 +94,20 @@ function setupRoom() {
 
     if(isShop) {
         G.wallColor = '#D4AF37';
-        spawnItem(10, 10, 'CURA', 5, 'HP');
-        spawnItem(14, 10, 'SUPER ARMA', 15, 'GUN');
+        spawnItem(10, 12, 'CURA', 0, 'HP');
+        spawnItem(14, 12, 'SUPER ARMA', 15, 'GUN');
     } else {
-        G.wallColor = `hsl(${(G.room * 40) % 360}, 60%, 20%)`;
+        G.wallColor = `hsl(${(G.room * 45) % 360}, 60%, 20%)`;
         for(let i=0; i<15; i++){
-            let rx = 5+Math.floor(Math.random()*14), ry = 5+Math.floor(Math.random()*14);
+            let rx = 4+Math.floor(Math.random()*16), ry = 4+Math.floor(Math.random()*16);
             map[ry*MAP_SIZE+rx] = 1;
         }
-        for(let i=0; i<2 + Math.floor(G.room/1.5); i++) {
-            enemies.push({x:(8+Math.random()*8)*TILE, y:(8+Math.random()*8)*TILE, hp: 50+(G.room*5), alive:true});
+        for(let i=0; i<3 + Math.floor(G.room/2); i++) {
+            enemies.push({x:(8+Math.random()*8)*TILE, y:(8+Math.random()*8)*TILE, hp: 50+(G.room*10), alive:true});
         }
     }
-    map[Math.floor(MAP_SIZE/2)] = 2; // Saída
-    player.x = 12*TILE; player.y = 21*TILE; player.angle = -Math.PI/2;
+    map[Math.floor(MAP_SIZE/2)] = 2; // Porta Verde
+    player.x = 12*TILE; player.y = 20*TILE; player.angle = -Math.PI/2;
 }
 
 function spawnItem(tx, ty, name, price, type) {
@@ -150,31 +116,26 @@ function spawnItem(tx, ty, name, price, type) {
 
 function openSettings() { document.getElementById('settings-screen').style.display = 'flex'; }
 function closeSettings() { 
-    G.sens = document.getElementById('cfg-sens').value * 0.0005;
+    G.sens = document.getElementById('cfg-sens').value * 0.0003;
     document.getElementById('settings-screen').style.display = 'none'; 
 }
 
 function setupInputs() {
-    window.onkeydown = e => { 
-        keys[e.key.toLowerCase()] = true; 
-        if(e.key === "Escape") togglePause();
-    };
+    window.onkeydown = e => { keys[e.key.toLowerCase()] = true; if(e.key === "Escape") togglePause(); };
     window.onkeyup = e => delete keys[e.key.toLowerCase()];
-
-    // Cheat mobile e Mouse
-    document.getElementById('cheat-trigger').onclick = () => { if(++G.clicks > 5) G.god = true; };
+    document.getElementById('cheat-trigger').onclick = () => { if(++G.clicks >= 5) { G.god = true; G.hp = 999; G.ammo = 999; alert("KADTR!"); } };
 
     canvas.addEventListener('mousedown', e => {
-        if(!G.play) return;
-        if(e.button === 0) shoot();
-        if(e.button === 2) interact();
+        if(G.play && !G.paused) {
+            if(!document.pointerLockElement && !G.isMobile) canvas.requestPointerLock();
+            else { if(e.button === 0) shoot(); if(e.button === 2) interact(); }
+        }
     });
-    canvas.addEventListener('contextmenu', e => e.preventDefault());
 
     window.addEventListener('mousemove', e => {
         if(document.pointerLockElement && !G.paused) {
             player.angle += e.movementX * G.sens;
-            player.pitch = Math.max(-300, Math.min(300, player.pitch - e.movementY * 1.5));
+            player.pitch = Math.max(-400, Math.min(400, player.pitch - e.movementY * 1.5));
         }
     });
 
@@ -193,14 +154,14 @@ function setupInputs() {
 function shoot() {
     if(G.ammo <= 0 && !G.god) return;
     if(!G.god) G.ammo--;
-    const b = (a) => bullets.push({x: player.x, y: player.y, vx: Math.cos(a)*25, vy: Math.sin(a)*25, life: 50});
-    b(player.angle);
-    if(G.weaponType === 2) { b(player.angle-0.1); b(player.angle+0.1); }
+    const createB = (ang) => bullets.push({x: player.x, y: player.y, vx: Math.cos(ang)*20, vy: Math.sin(ang)*20, active: true, dist: 0});
+    createB(player.angle);
+    if(G.weaponType === 2) { createB(player.angle-0.15); createB(player.angle+0.15); }
 }
 
 function interact() {
     shopItems.forEach(s => {
-        if(s.active && Math.hypot(player.x-s.x, player.y-s.y) < 80) {
+        if(s.active && Math.hypot(player.x-s.x, player.y-s.y) < 100) {
             if(G.souls >= s.price || G.god) {
                 G.souls -= s.price; s.active = false;
                 if(s.type === 'HP') G.hp = 100;
@@ -215,7 +176,6 @@ function startGame() {
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('hud').style.display = 'block';
     if(G.isMobile) document.getElementById('mobile-controls').style.display = 'block';
-    else canvas.requestPointerLock();
     setupInputs(); setupRoom(); G.play = true; loop();
 }
 
@@ -236,16 +196,27 @@ function update() {
     let nx = player.x + mx * 5, ny = player.y + my * 5;
     if(map[Math.floor(ny/TILE)*MAP_SIZE + Math.floor(nx/TILE)] !== 1) { player.x = nx; player.y = ny; }
 
-    // Projéteis com colisão REAL com paredes
-    bullets.forEach((b, i) => {
-        b.x += b.vx; b.y += b.vy; b.life--;
-        if(map[Math.floor(b.y/TILE)*MAP_SIZE + Math.floor(b.x/TILE)] === 1) bullets.splice(i,1);
+    // Atualizar Balas com limpeza automática
+    bullets = bullets.filter(b => {
+        b.x += b.vx; b.y += b.vy; b.dist++;
+        const tx = Math.floor(b.x/TILE), ty = Math.floor(b.y/TILE);
+        if(map[ty*MAP_SIZE + tx] === 1 || b.dist > 100) return false;
+        
+        let hit = false;
         enemies.forEach(en => {
-            if(en.alive && Math.hypot(b.x-en.x, b.y-en.y) < 30) {
-                en.hp -= 20; bullets.splice(i,1);
-                if(en.hp <= 0) { en.alive = false; G.souls += 2; G.ammo += 5; }
+            if(en.alive && Math.hypot(b.x-en.x, b.y-en.y) < 35) {
+                en.hp -= 25; hit = true;
+                if(en.hp <= 0) { en.alive = false; G.souls += 5; G.ammo += 2; }
             }
         });
+        return !hit;
+    });
+
+    enemies.forEach(en => {
+        if(!en.alive) return;
+        let d = Math.hypot(player.x-en.x, player.y-en.y);
+        if(d < 500) { en.x += (player.x-en.x)/d * 2; en.y += (player.y-en.y)/d * 2; }
+        if(d < 45) { G.hp -= 0.5; if(G.hp <= 0 && !G.god) location.reload(); }
     });
 
     if(map[Math.floor(player.y/TILE)*MAP_SIZE + Math.floor(player.x/TILE)] === 2 && enemies.every(e => !e.alive)) {
@@ -259,53 +230,67 @@ function update() {
 }
 
 function draw() {
-    // RESOLUÇÃO ULTRA: Chão com Gradiente e Teto
-    ctx.fillStyle = "#020000"; ctx.fillRect(0,0,canvas.width, canvas.height);
+    // RESOLUÇÃO MÁXIMA E AMBIENTE
+    ctx.fillStyle = "#050000"; ctx.fillRect(0,0,canvas.width, canvas.height);
     
-    const grad = ctx.createLinearGradient(0, canvas.height/2, 0, canvas.height);
-    grad.addColorStop(0, "#100"); grad.addColorStop(1, "#300");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, canvas.height/2 + player.pitch, canvas.width, canvas.height);
+    // Teto e Chão com profundidade
+    ctx.fillStyle = "#1a0505"; ctx.fillRect(0, canvas.height/2 + player.pitch, canvas.width, canvas.height);
+
+    const zBuffer = new Array(canvas.width).fill(Infinity);
 
     for(let i=0; i<canvas.width; i+=G.res) {
         let ang = (player.angle - player.fov/2) + (i/canvas.width)*player.fov;
         let d=0, hit=0, cos=Math.cos(ang), sin=Math.sin(ang);
         
-        while(hit === 0 && d < 1000) {
-            d += 5;
+        while(hit === 0 && d < 1200) {
+            d += 4;
             let tx = Math.floor((player.x + cos*d)/TILE), ty = Math.floor((player.y + sin*d)/TILE);
             if(map[ty*MAP_SIZE+tx] > 0) {
                 hit = map[ty*MAP_SIZE+tx];
-                let h = (TILE * canvas.height) / (d * Math.cos(player.angle-ang));
+                let distNorm = d * Math.cos(player.angle-ang);
+                zBuffer[i] = distNorm;
+                let h = (TILE * canvas.height) / distNorm;
                 
-                // SHADING DINÂMICO (70% do tempo aqui)
-                let shade = Math.min(100, d / 8);
-                ctx.fillStyle = hit === 2 ? `rgb(0,${255-shade*2},0)` : G.wallColor;
-                ctx.filter = `brightness(${100-shade}%)`;
+                let shade = Math.min(255, distNorm / 4);
+                ctx.fillStyle = hit === 2 ? `rgb(0,${255-shade},0)` : G.wallColor;
+                ctx.filter = `brightness(${Math.max(10, 100 - (distNorm/10))}%)`;
                 ctx.fillRect(i, (canvas.height-h)/2 + player.pitch, G.res, h);
                 ctx.filter = 'none';
-                
-                // TEXTURA SIMULADA (Linhas de profundidade)
-                ctx.fillStyle = "rgba(0,0,0,0.1)";
-                if(Math.floor(d)%64 < 2) ctx.fillRect(i, (canvas.height-h)/2+player.pitch, G.res, h);
             }
         }
     }
 
-    // Sprites
-    [...enemies, ...shopItems].forEach(s => {
+    // RENDERIZAR SPRITES (Inimigos, Itens e BALAS AGORA VISÍVEIS)
+    const sprites = [...enemies, ...shopItems, ...bullets].sort((a,b) => 
+        Math.hypot(player.x-b.x, player.y-b.y) - Math.hypot(player.x-a.x, player.y-a.y)
+    );
+
+    sprites.forEach(s => {
         if(s.alive === false || s.active === false) return;
-        let ang = Math.atan2(s.y-player.y, s.x-player.x) - player.angle;
+        let dx = s.x - player.x, dy = s.y - player.y;
+        let dist = Math.hypot(dx, dy);
+        let ang = Math.atan2(dy, dx) - player.angle;
         while(ang < -Math.PI) ang += Math.PI*2; while(ang > Math.PI) ang -= Math.PI*2;
+
         if(Math.abs(ang) < player.fov) {
-            let d = Math.hypot(player.x-s.x, player.y-s.y);
             let sx = (0.5 * (ang/(player.fov/2)) + 0.5) * canvas.width;
-            let sh = (TILE * canvas.height) / d;
-            ctx.fillStyle = s.price ? "#ff0" : "#f00";
-            ctx.fillRect(sx-sh/4, (canvas.height-sh/2)/2+player.pitch, sh/2, sh/2);
-            if(s.name) {
-                ctx.fillStyle = "#fff"; ctx.font = "10px Orbitron";
-                ctx.fillText(s.name, sx-20, (canvas.height/2)+player.pitch-sh/2);
+            let sh = (TILE * canvas.height) / (dist * Math.cos(ang));
+            
+            // Checar Z-Buffer para não desenhar através da parede
+            if(dist < zBuffer[Math.floor(sx)] + 20) {
+                if(s.vx) { // É uma bala
+                    ctx.fillStyle = "#0ff";
+                    ctx.beginPath();
+                    ctx.arc(sx, canvas.height/2 + player.pitch, sh/8, 0, Math.PI*2);
+                    ctx.fill();
+                } else { // Inimigo ou Item
+                    ctx.fillStyle = s.price !== undefined ? "#ff0" : "#f00";
+                    ctx.fillRect(sx-sh/4, (canvas.height-sh/2)/2+player.pitch, sh/2, sh/2);
+                    if(s.name) {
+                        ctx.fillStyle = "#fff"; ctx.font = "12px Orbitron";
+                        ctx.fillText(s.name, sx-20, (canvas.height/2)+player.pitch-sh/2);
+                    }
+                }
             }
         }
     });
