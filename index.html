@@ -3,30 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 V15.14 FIX</title>
+    <title>Den of Shadow 💀 V15.16 LITE-PRO</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&display=swap');
         * { touch-action: none; user-select: none; box-sizing: border-box; }
         body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; }
         canvas { display: block; width: 100vw; height: 100vh; image-rendering: pixelated; }
 
-        .ui-screen { position: absolute; inset: 0; background: radial-gradient(circle, #200 0%, #000 100%); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .glass-panel { background: rgba(0,0,0,0.9); border: 2px solid #f00; padding: 30px; border-radius: 5px; width: 90%; max-width: 500px; text-align: center; box-shadow: 0 0 30px #500; }
+        .ui-screen { position: absolute; inset: 0; background: #000; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .glass-panel { background: #0a0a0a; border: 2px solid #f00; padding: 25px; width: 95%; max-width: 500px; text-align: center; }
         
-        .btn-main { padding: 12px; font-size: 13px; background: #111; border: 1px solid #f00; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 5px 0; width: 100%; transition: 0.2s; }
-        .btn-main:hover { background: #f00; color: #000; font-weight: bold; }
-        
-        .social-link { color: #888; text-decoration: none; font-size: 11px; margin: 10px; display: inline-block; pointer-events: auto; }
+        .btn-main { padding: 12px; font-size: 13px; background: #111; border: 1px solid #f00; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 5px 0; width: 100%; text-transform: uppercase; }
+        .btn-main:hover { background: #f00; color: #000; }
 
-        #hud { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; width: 95%; max-width: 700px; pointer-events: none; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; background: rgba(0,0,0,0.9); padding: 15px; border: 1px solid #f00; }
-        .bar-bg { width: 100%; height: 10px; background: #300; border: 1px solid #500; }
-        #hp-fill { height: 100%; width: 100%; background: #f00; transition: width 0.2s; }
+        .save-slot { background: #151515; border: 1px solid #333; margin: 8px 0; padding: 12px; cursor: pointer; text-align: left; display: grid; grid-template-columns: 1fr 1fr; }
+        .save-slot:hover { border-color: #f00; }
+        .save-info { font-size: 10px; color: #888; }
+        .save-val { color: #f00; }
+
+        #hud { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; width: 95%; max-width: 650px; pointer-events: none; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.8); padding: 12px; border: 1px solid #f00; }
+        .bar-bg { width: 100%; height: 8px; background: #200; }
+        #hp-fill { height: 100%; width: 100%; background: #f00; }
 
         #mobile-controls { position: absolute; inset: 0; z-index: 2000; display: none; pointer-events: none; }
-        .joy-zone { position: absolute; bottom: 40px; left: 40px; width: 130px; height: 130px; background: rgba(255,0,0,0.1); border: 2px solid #555; border-radius: 50%; pointer-events: auto; }
-        #stick { position: absolute; top: 40px; left: 40px; width: 50px; height: 50px; background: #f00; border-radius: 50%; opacity: 0.5; }
-        .btn-circ { width: 80px; height: 80px; background: rgba(200,0,0,0.2); border: 2px solid #f00; border-radius: 50%; pointer-events: auto; display: flex; align-items: center; justify-content: center; position: absolute; }
+        .joy-zone { position: absolute; bottom: 30px; left: 30px; width: 110px; height: 110px; background: rgba(255,0,0,0.05); border: 1px solid #444; border-radius: 50%; pointer-events: auto; }
+        #stick { position: absolute; top: 35px; left: 35px; width: 40px; height: 40px; background: #f00; border-radius: 50%; opacity: 0.3; }
+        .btn-circ { width: 70px; height: 70px; background: rgba(255,0,0,0.1); border: 2px solid #f00; border-radius: 50%; pointer-events: auto; display: flex; align-items: center; justify-content: center; position: absolute; }
     </style>
 </head>
 <body>
@@ -34,129 +37,133 @@
 <div id="start-screen" class="ui-screen">
     <div class="glass-panel">
         <h1 style="font-family:'Nosifer'; color:#f00;">DEN OF SHADOW</h1>
-        <p style="font-size:10px;">V15.14 • ENGINE REVISADA</p>
-        <button class="btn-main" onclick="startGame()">INICIAR RITUAL</button>
-        <button class="btn-main" onclick="openSettings()">AJUSTES</button>
-        <div>
-            <a href="#" class="social-link">DISCORD</a>
-            <a href="#" class="social-link">YOUTUBE</a>
-        </div>
+        <p style="font-size:9px;">V15.16 • PERFORMANCE MODE</p>
+        <button class="btn-main" onclick="showSaveSelection()">INICIAR RITUAL</button>
     </div>
 </div>
 
-<div id="settings-screen" class="ui-screen" style="display:none;">
+<div id="save-screen" class="ui-screen" style="display:none;">
     <div class="glass-panel">
-        <h2>AJUSTES</h2>
-        <div style="margin:10px 0;">SENSIBILIDADE: <input type="range" id="cfg-sens" min="1" max="20" value="10"></div>
-        <button class="btn-main" onclick="closeSettings()">SALVAR</button>
+        <h2 style="color:#f00; font-size: 18px;">SAVES</h2>
+        <div id="save-list"></div>
+        <button class="btn-main" onclick="document.getElementById('save-screen').style.display='none'">VOLTAR</button>
     </div>
 </div>
 
 <div id="hud">
     <div class="stats-grid">
         <div>HP<div class="bar-bg"><div id="hp-fill"></div></div></div>
-        <div style="text-align:center;"><div id="biome-name" style="font-size:10px;">BIOMA</div><div id="room-txt" style="font-size:20px;">1</div></div>
-        <div style="text-align:right;"><div id="cheat-trigger" style="color:#ff0; cursor:pointer;">MUNIÇÃO</div><div><span id="ammo-hud">40</span> / <span id="soul-hud">0</span></div></div>
+        <div style="text-align:center;"><div id="biome-name" style="font-size:9px;">BIOMA</div><div id="room-txt" style="font-size:18px;">1</div></div>
+        <div style="text-align:right;"><div id="cheat-trigger" style="color:#ff0; font-size:9px;">AMMO / SOULS</div><div><span id="ammo-hud">40</span> / <span id="soul-hud">0</span></div></div>
     </div>
 </div>
 
 <div id="mobile-controls">
     <div class="joy-zone" id="joy-base"><div id="stick"></div></div>
-    <div class="btn-circ" id="btn-fire" style="bottom:50px; right:30px;">🔥</div>
-    <div class="btn-circ" id="btn-use" style="bottom:150px; right:40px; width:60px; height:60px; font-size:12px;">USAR</div>
+    <div class="btn-circ" id="btn-fire" style="bottom:40px; right:20px;">🔥</div>
+    <div class="btn-circ" id="btn-use" style="bottom:130px; right:35px; width:50px; height:50px; font-size:10px;">USAR</div>
 </div>
 
 <canvas id="gameCanvas"></canvas>
 
 <script>
 const G = { 
-    play: false, paused: false, room: 1, hp: 100, ammo: 40, souls: 0, 
-    res: 2, god: false, isMobile: false, wallColor: '#500', 
-    sens: 0.0025, weaponType: 1, clicks: 0 
+    play: false, room: 1, hp: 100, ammo: 40, souls: 0, 
+    res: 4, god: false, isMobile: false, 
+    weaponType: 1, clicks: 0, currentSlot: 0, startTime: 0, totalPlayedTime: 0
 };
 
 const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext('2d', { alpha: false }); // Otimização de contexto
 const TILE = 64, MAP_SIZE = 24;
 let map = [], enemies = [], bullets = [], shopItems = [], keys = {};
 let player = { x: 0, y: 0, angle: 0, pitch: 0, fov: Math.PI / 3 };
+
+function showSaveSelection() {
+    document.getElementById('save-screen').style.display = 'flex';
+    const list = document.getElementById('save-list');
+    list.innerHTML = '';
+    for (let i = 1; i <= 3; i++) {
+        const data = JSON.parse(localStorage.getItem(`dos_v16_save_${i}`)) || { room: 1, souls: 0, time: 0 };
+        list.innerHTML += `
+            <div class="save-slot" onclick="loadAndStart(${i})">
+                <div>SLOT ${i}<br><span class="save-info">SALA: <span class="save-val">${data.room}</span></span></div>
+                <div style="text-align:right;"><span class="save-info">ALMAS: <span class="save-val">${data.souls}</span></span></div>
+            </div>`;
+    }
+}
+
+function saveGame() {
+    if(!G.currentSlot) return;
+    const data = { room: G.room, souls: G.souls, ammo: G.ammo, time: G.totalPlayedTime, weapon: G.weaponType };
+    localStorage.setItem(`dos_v16_save_${G.currentSlot}`, JSON.stringify(data));
+}
+
+function loadAndStart(slot) {
+    G.currentSlot = slot;
+    const data = JSON.parse(localStorage.getItem(`dos_v16_save_${slot}`));
+    if (data) { Object.assign(G, data); }
+    startGame();
+}
 
 function setupRoom() {
     map = Array(MAP_SIZE * MAP_SIZE).fill(0);
     enemies = []; shopItems = [];
     const isShop = (G.room % 5 === 0);
-    document.getElementById('biome-name').innerText = isShop ? "SHOPPING" : "ABISMO";
+    document.getElementById('biome-name').innerText = isShop ? "SHOP" : "ABYSS";
 
-    for(let i=0; i<MAP_SIZE; i++){ 
-        map[i]=1; map[i+(MAP_SIZE*(MAP_SIZE-1))]=1; 
-        map[i*MAP_SIZE]=1; map[i*MAP_SIZE+(MAP_SIZE-1)]=1; 
-    }
+    for(let i=0; i<MAP_SIZE; i++){ map[i]=1; map[i+(MAP_SIZE*(MAP_SIZE-1))]=1; map[i*MAP_SIZE]=1; map[i*MAP_SIZE+(MAP_SIZE-1)]=1; }
 
     if(isShop) {
-        G.wallColor = '#D4AF37';
-        spawnItem(10, 12, 'CURA', 0, 'HP');
-        spawnItem(14, 12, 'SUPER ARMA', 15, 'GUN');
+        spawnItem(10, 12, 'HP', 0, 'HP');
+        spawnItem(14, 12, 'GUN', 15, 'GUN');
     } else {
-        G.wallColor = `hsl(${(G.room * 45) % 360}, 60%, 20%)`;
-        for(let i=0; i<15; i++){
-            let rx = 4+Math.floor(Math.random()*16), ry = 4+Math.floor(Math.random()*16);
-            map[ry*MAP_SIZE+rx] = 1;
-        }
-        for(let i=0; i<3 + Math.floor(G.room/2); i++) {
-            enemies.push({x:(8+Math.random()*8)*TILE, y:(8+Math.random()*8)*TILE, hp: 50+(G.room*10), alive:true});
+        for(let i=0; i<10; i++){ map[Math.floor(Math.random()*(MAP_SIZE*MAP_SIZE))] = 1; }
+        for(let i=0; i<2 + Math.floor(G.room/3); i++) {
+            enemies.push({x:(8+Math.random()*8)*TILE, y:(8+Math.random()*8)*TILE, hp: 50, alive:true});
         }
     }
-    map[Math.floor(MAP_SIZE/2)] = 2; // Porta Verde
-    player.x = 12*TILE; player.y = 20*TILE; player.angle = -Math.PI/2;
+    map[Math.floor(MAP_SIZE/2)] = 2;
+    player.x = 12*TILE; player.y = 21*TILE; player.angle = -Math.PI/2;
+    saveGame();
 }
 
-function spawnItem(tx, ty, name, price, type) {
-    shopItems.push({ x: tx*TILE, y: ty*TILE, name, price, type, active: true });
-}
+function spawnItem(tx, ty, name, price, type) { shopItems.push({ x: tx*TILE, y: ty*TILE, name, price, type, active: true }); }
 
-function openSettings() { document.getElementById('settings-screen').style.display = 'flex'; }
-function closeSettings() { 
-    G.sens = document.getElementById('cfg-sens').value * 0.0003;
-    document.getElementById('settings-screen').style.display = 'none'; 
-}
-
-function setupInputs() {
-    window.onkeydown = e => { keys[e.key.toLowerCase()] = true; if(e.key === "Escape") togglePause(); };
+function startGame() {
+    G.isMobile = /Android|iPhone/i.test(navigator.userAgent);
+    G.res = G.isMobile ? 6 : 4; // Resolução dinâmica para evitar lag
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('save-screen').style.display = 'none';
+    document.getElementById('hud').style.display = 'block';
+    if(G.isMobile) document.getElementById('mobile-controls').style.display = 'block';
+    else canvas.requestPointerLock();
+    
+    // Inputs
+    window.onkeydown = e => keys[e.key.toLowerCase()] = true;
     window.onkeyup = e => delete keys[e.key.toLowerCase()];
-    document.getElementById('cheat-trigger').onclick = () => { if(++G.clicks >= 5) { G.god = true; G.hp = 999; G.ammo = 999; alert("KADTR!"); } };
-
-    canvas.addEventListener('mousedown', e => {
-        if(G.play && !G.paused) {
-            if(!document.pointerLockElement && !G.isMobile) canvas.requestPointerLock();
-            else { if(e.button === 0) shoot(); if(e.button === 2) interact(); }
-        }
-    });
-
-    window.addEventListener('mousemove', e => {
-        if(document.pointerLockElement && !G.paused) {
-            player.angle += e.movementX * G.sens;
-            player.pitch = Math.max(-400, Math.min(400, player.pitch - e.movementY * 1.5));
-        }
-    });
-
+    canvas.onmousedown = e => { if(e.button === 0) shoot(); if(e.button === 2) interact(); };
+    window.onmousemove = e => { if(document.pointerLockElement) { player.angle += e.movementX * 0.002; player.pitch = Math.max(-300, Math.min(300, player.pitch - e.movementY * 1.5)); } };
+    
     if(G.isMobile) {
         document.getElementById('btn-fire').ontouchstart = e => { e.preventDefault(); shoot(); };
         document.getElementById('btn-use').ontouchstart = e => { e.preventDefault(); interact(); };
         const base = document.getElementById('joy-base');
-        base.ontouchmove = e => {
-            const t = e.touches[0]; const r = base.getBoundingClientRect();
-            window.mX = (t.clientX - (r.left+65))/50; window.mY = (t.clientY - (r.top+65))/50;
-        };
+        base.ontouchmove = e => { const t = e.touches[0]; const r = base.getBoundingClientRect(); window.mX = (t.clientX - (r.left+55))/40; window.mY = (t.clientY - (r.top+55))/40; };
         base.ontouchend = () => { window.mX = 0; window.mY = 0; };
     }
+
+    document.getElementById('cheat-trigger').onclick = () => { if(++G.clicks >= 5) { G.god = true; G.hp = 999; alert("KADTR!"); } };
+
+    setupRoom(); G.play = true; loop();
 }
 
 function shoot() {
     if(G.ammo <= 0 && !G.god) return;
-    if(!G.god) G.ammo--;
-    const createB = (ang) => bullets.push({x: player.x, y: player.y, vx: Math.cos(ang)*20, vy: Math.sin(ang)*20, active: true, dist: 0});
-    createB(player.angle);
-    if(G.weaponType === 2) { createB(player.angle-0.15); createB(player.angle+0.15); }
+    G.ammo--;
+    const b = (a) => bullets.push({x: player.x, y: player.y, vx: Math.cos(a)*15, vy: Math.sin(a)*15, d: 0});
+    b(player.angle);
+    if(G.weaponType === 2) { b(player.angle-0.1); b(player.angle+0.1); }
 }
 
 function interact() {
@@ -166,62 +173,40 @@ function interact() {
                 G.souls -= s.price; s.active = false;
                 if(s.type === 'HP') G.hp = 100;
                 if(s.type === 'GUN') G.weaponType = 2;
+                saveGame();
             }
         }
     });
 }
 
-function startGame() {
-    G.isMobile = /Android|iPhone/i.test(navigator.userAgent);
-    document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('hud').style.display = 'block';
-    if(G.isMobile) document.getElementById('mobile-controls').style.display = 'block';
-    setupInputs(); setupRoom(); G.play = true; loop();
-}
-
 function update() {
-    if(!G.play || G.paused) return;
-
+    if(!G.play) return;
     let mx = 0, my = 0;
     if(keys['w']) { mx += Math.cos(player.angle); my += Math.sin(player.angle); }
     if(keys['s']) { mx -= Math.cos(player.angle); my -= Math.sin(player.angle); }
-    if(keys['a']) { mx += Math.cos(player.angle - Math.PI/2); my += Math.sin(player.angle - Math.PI/2); }
-    if(keys['d']) { mx += Math.cos(player.angle + Math.PI/2); my += Math.sin(player.angle + Math.PI/2); }
+    if(keys['a']) { mx += Math.cos(player.angle-1.57); my += Math.sin(player.angle-1.57); }
+    if(keys['d']) { mx += Math.cos(player.angle+1.57); my += Math.sin(player.angle+1.57); }
+    if(G.isMobile) { mx += (window.mY||0)*-Math.cos(player.angle) + (window.mX||0)*Math.cos(player.angle+1.57); my += (window.mY||0)*-Math.sin(player.angle) + (window.mX||0)*Math.sin(player.angle+1.57); }
     
-    if(G.isMobile) {
-        mx += (window.mY||0) * -Math.cos(player.angle) + (window.mX||0) * Math.cos(player.angle+Math.PI/2);
-        my += (window.mY||0) * -Math.sin(player.angle) + (window.mX||0) * Math.sin(player.angle+Math.PI/2);
-    }
-
-    let nx = player.x + mx * 5, ny = player.y + my * 5;
+    let nx = player.x + mx*4, ny = player.y + my*4;
     if(map[Math.floor(ny/TILE)*MAP_SIZE + Math.floor(nx/TILE)] !== 1) { player.x = nx; player.y = ny; }
 
-    // Atualizar Balas com limpeza automática
     bullets = bullets.filter(b => {
-        b.x += b.vx; b.y += b.vy; b.dist++;
-        const tx = Math.floor(b.x/TILE), ty = Math.floor(b.y/TILE);
-        if(map[ty*MAP_SIZE + tx] === 1 || b.dist > 100) return false;
-        
+        b.x += b.vx; b.y += b.vy; b.d++;
+        if(map[Math.floor(b.y/TILE)*MAP_SIZE + Math.floor(b.x/TILE)] === 1 || b.d > 60) return false;
         let hit = false;
-        enemies.forEach(en => {
-            if(en.alive && Math.hypot(b.x-en.x, b.y-en.y) < 35) {
-                en.hp -= 25; hit = true;
-                if(en.hp <= 0) { en.alive = false; G.souls += 5; G.ammo += 2; }
-            }
-        });
+        enemies.forEach(en => { if(en.alive && Math.hypot(b.x-en.x, b.y-en.y) < 30) { en.hp -= 25; hit = true; if(en.hp<=0) {en.alive=false; G.souls+=2;} } });
         return !hit;
     });
 
     enemies.forEach(en => {
         if(!en.alive) return;
         let d = Math.hypot(player.x-en.x, player.y-en.y);
-        if(d < 500) { en.x += (player.x-en.x)/d * 2; en.y += (player.y-en.y)/d * 2; }
-        if(d < 45) { G.hp -= 0.5; if(G.hp <= 0 && !G.god) location.reload(); }
+        if(d < 400) { en.x += (player.x-en.x)/d*1.5; en.y += (player.y-en.y)/d*1.5; }
+        if(d < 40) { G.hp -= 0.2; if(G.hp <= 0 && !G.god) location.reload(); }
     });
 
-    if(map[Math.floor(player.y/TILE)*MAP_SIZE + Math.floor(player.x/TILE)] === 2 && enemies.every(e => !e.alive)) {
-        G.room++; setupRoom();
-    }
+    if(map[Math.floor(player.y/TILE)*MAP_SIZE + Math.floor(player.x/TILE)] === 2 && enemies.every(e => !e.alive)) { G.room++; setupRoom(); }
 
     document.getElementById('hp-fill').style.width = G.hp + "%";
     document.getElementById('ammo-hud').innerText = G.ammo;
@@ -230,67 +215,42 @@ function update() {
 }
 
 function draw() {
-    // RESOLUÇÃO MÁXIMA E AMBIENTE
-    ctx.fillStyle = "#050000"; ctx.fillRect(0,0,canvas.width, canvas.height);
-    
-    // Teto e Chão com profundidade
-    ctx.fillStyle = "#1a0505"; ctx.fillRect(0, canvas.height/2 + player.pitch, canvas.width, canvas.height);
+    // Fundo sólido (Mais rápido que gradiente)
+    ctx.fillStyle = "#050000"; ctx.fillRect(0,0,canvas.width, canvas.height/2 + player.pitch);
+    ctx.fillStyle = "#100505"; ctx.fillRect(0,canvas.height/2 + player.pitch, canvas.width, canvas.height);
 
-    const zBuffer = new Array(canvas.width).fill(Infinity);
-
+    const zBuffer = [];
     for(let i=0; i<canvas.width; i+=G.res) {
         let ang = (player.angle - player.fov/2) + (i/canvas.width)*player.fov;
         let d=0, hit=0, cos=Math.cos(ang), sin=Math.sin(ang);
-        
-        while(hit === 0 && d < 1200) {
-            d += 4;
+        while(hit === 0 && d < 800) {
+            d += 8; // Passo maior = Mais FPS
             let tx = Math.floor((player.x + cos*d)/TILE), ty = Math.floor((player.y + sin*d)/TILE);
             if(map[ty*MAP_SIZE+tx] > 0) {
                 hit = map[ty*MAP_SIZE+tx];
                 let distNorm = d * Math.cos(player.angle-ang);
                 zBuffer[i] = distNorm;
                 let h = (TILE * canvas.height) / distNorm;
-                
-                let shade = Math.min(255, distNorm / 4);
-                ctx.fillStyle = hit === 2 ? `rgb(0,${255-shade},0)` : G.wallColor;
-                ctx.filter = `brightness(${Math.max(10, 100 - (distNorm/10))}%)`;
+                let lum = Math.max(20, 100 - (distNorm/6));
+                ctx.fillStyle = hit === 2 ? `rgb(0,${lum*2},0)` : `rgb(${lum},0,0)`;
                 ctx.fillRect(i, (canvas.height-h)/2 + player.pitch, G.res, h);
-                ctx.filter = 'none';
             }
         }
     }
 
-    // RENDERIZAR SPRITES (Inimigos, Itens e BALAS AGORA VISÍVEIS)
-    const sprites = [...enemies, ...shopItems, ...bullets].sort((a,b) => 
-        Math.hypot(player.x-b.x, player.y-b.y) - Math.hypot(player.x-a.x, player.y-a.y)
-    );
-
-    sprites.forEach(s => {
+    // Sprites leves
+    [...enemies, ...shopItems, ...bullets].forEach(s => {
         if(s.alive === false || s.active === false) return;
         let dx = s.x - player.x, dy = s.y - player.y;
         let dist = Math.hypot(dx, dy);
         let ang = Math.atan2(dy, dx) - player.angle;
         while(ang < -Math.PI) ang += Math.PI*2; while(ang > Math.PI) ang -= Math.PI*2;
-
         if(Math.abs(ang) < player.fov) {
             let sx = (0.5 * (ang/(player.fov/2)) + 0.5) * canvas.width;
-            let sh = (TILE * canvas.height) / (dist * Math.cos(ang));
-            
-            // Checar Z-Buffer para não desenhar através da parede
-            if(dist < zBuffer[Math.floor(sx)] + 20) {
-                if(s.vx) { // É uma bala
-                    ctx.fillStyle = "#0ff";
-                    ctx.beginPath();
-                    ctx.arc(sx, canvas.height/2 + player.pitch, sh/8, 0, Math.PI*2);
-                    ctx.fill();
-                } else { // Inimigo ou Item
-                    ctx.fillStyle = s.price !== undefined ? "#ff0" : "#f00";
-                    ctx.fillRect(sx-sh/4, (canvas.height-sh/2)/2+player.pitch, sh/2, sh/2);
-                    if(s.name) {
-                        ctx.fillStyle = "#fff"; ctx.font = "12px Orbitron";
-                        ctx.fillText(s.name, sx-20, (canvas.height/2)+player.pitch-sh/2);
-                    }
-                }
+            if(dist < (zBuffer[Math.floor(sx)] || 999)) {
+                let sh = (TILE * canvas.height) / dist;
+                ctx.fillStyle = s.vx ? "#0ff" : (s.price !== undefined ? "#ff0" : "#f00");
+                ctx.fillRect(sx-sh/8, (canvas.height-sh/8)/2 + player.pitch, sh/4, sh/4);
             }
         }
     });
