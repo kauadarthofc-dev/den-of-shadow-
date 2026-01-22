@@ -3,31 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 V15.16 LITE-PRO</title>
+    <title>Den of Shadow 💀 V15.18 SHOP UPDATE</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&display=swap');
         * { touch-action: none; user-select: none; box-sizing: border-box; }
         body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; }
         canvas { display: block; width: 100vw; height: 100vh; image-rendering: pixelated; }
 
-        .ui-screen { position: absolute; inset: 0; background: #000; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .glass-panel { background: #0a0a0a; border: 2px solid #f00; padding: 25px; width: 95%; max-width: 500px; text-align: center; }
-        
-        .btn-main { padding: 12px; font-size: 13px; background: #111; border: 1px solid #f00; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 5px 0; width: 100%; text-transform: uppercase; }
+        /* UI Base */
+        .ui-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .glass-panel { background: #0a0a0a; border: 2px solid #f00; padding: 25px; width: 90%; max-width: 450px; box-shadow: 0 0 20px #500; }
+        .btn-main { padding: 12px; font-size: 13px; background: #111; border: 1px solid #f00; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 5px 0; width: 100%; text-transform: uppercase; transition: 0.2s; }
         .btn-main:hover { background: #f00; color: #000; }
 
-        .save-slot { background: #151515; border: 1px solid #333; margin: 8px 0; padding: 12px; cursor: pointer; text-align: left; display: grid; grid-template-columns: 1fr 1fr; }
-        .save-slot:hover { border-color: #f00; }
-        .save-info { font-size: 10px; color: #888; }
-        .save-val { color: #f00; }
-
+        /* HUD */
         #hud { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; width: 95%; max-width: 650px; pointer-events: none; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.8); padding: 12px; border: 1px solid #f00; }
-        .bar-bg { width: 100%; height: 8px; background: #200; }
-        #hp-fill { height: 100%; width: 100%; background: #f00; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.85); padding: 12px; border: 1px solid #f00; }
+        .bar-bg { width: 100%; height: 8px; background: #200; margin-top: 4px; }
+        #hp-fill { height: 100%; width: 100%; background: #f00; transition: 0.2s; }
+
+        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; border: 1px solid rgba(255,0,0,0.5); border-radius: 50%; pointer-events: none; z-index: 1000; display: none; }
+        #crosshair::before { content: ''; position: absolute; top: 50%; left: 50%; width: 10px; height: 1px; background: #f00; transform: translate(-50%, -50%); }
+        #crosshair::after { content: ''; position: absolute; top: 50%; left: 50%; width: 1px; height: 10px; background: #f00; transform: translate(-50%, -50%); }
+
+        #minimap { position: absolute; top: 15px; right: 15px; width: 110px; height: 110px; border: 2px solid #f00; background: rgba(0,0,0,0.8); border-radius: 50%; z-index: 1000; display: none; }
 
         #mobile-controls { position: absolute; inset: 0; z-index: 2000; display: none; pointer-events: none; }
-        .joy-zone { position: absolute; bottom: 30px; left: 30px; width: 110px; height: 110px; background: rgba(255,0,0,0.05); border: 1px solid #444; border-radius: 50%; pointer-events: auto; }
+        .joy-zone { position: absolute; bottom: 30px; left: 30px; width: 110px; height: 110px; background: rgba(255,255,255,0.05); border: 1px solid #444; border-radius: 50%; pointer-events: auto; }
         #stick { position: absolute; top: 35px; left: 35px; width: 40px; height: 40px; background: #f00; border-radius: 50%; opacity: 0.3; }
         .btn-circ { width: 70px; height: 70px; background: rgba(255,0,0,0.1); border: 2px solid #f00; border-radius: 50%; pointer-events: auto; display: flex; align-items: center; justify-content: center; position: absolute; }
     </style>
@@ -36,143 +38,150 @@
 
 <div id="start-screen" class="ui-screen">
     <div class="glass-panel">
-        <h1 style="font-family:'Nosifer'; color:#f00;">DEN OF SHADOW</h1>
-        <p style="font-size:9px;">V15.16 • PERFORMANCE MODE</p>
-        <button class="btn-main" onclick="showSaveSelection()">INICIAR RITUAL</button>
+        <h1 style="font-family:'Nosifer'; color:#f00; text-shadow: 0 0 10px #f00;">DEN OF SHADOW</h1>
+        <button class="btn-main" onclick="showSaveSelection()">CARREGAR ALMA</button>
+        <button class="btn-main" onclick="alert('Configurações em breve!')">CONFIGURAÇÕES</button>
     </div>
 </div>
 
 <div id="save-screen" class="ui-screen" style="display:none;">
     <div class="glass-panel">
-        <h2 style="color:#f00; font-size: 18px;">SAVES</h2>
+        <h2 style="color:#f00;">ESCOLHA O SLOT</h2>
         <div id="save-list"></div>
         <button class="btn-main" onclick="document.getElementById('save-screen').style.display='none'">VOLTAR</button>
     </div>
 </div>
 
+<div id="death-screen" class="ui-screen" style="display:none;">
+    <div class="glass-panel">
+        <h1 style="font-family:'Nosifer'; color:#f00;">DESTINO SELADO</h1>
+        <button class="btn-main" onclick="location.reload()">TENTAR NOVAMENTE</button>
+    </div>
+</div>
+
+<div id="crosshair"></div>
+<canvas id="minimap"></canvas>
+
 <div id="hud">
     <div class="stats-grid">
         <div>HP<div class="bar-bg"><div id="hp-fill"></div></div></div>
-        <div style="text-align:center;"><div id="biome-name" style="font-size:9px;">BIOMA</div><div id="room-txt" style="font-size:18px;">1</div></div>
-        <div style="text-align:right;"><div id="cheat-trigger" style="color:#ff0; font-size:9px;">AMMO / SOULS</div><div><span id="ammo-hud">40</span> / <span id="soul-hud">0</span></div></div>
+        <div style="text-align:center;"><div id="biome-name" style="font-size:9px; color:#aaa;">ABISMO</div><div id="room-txt" style="font-size:18px;">1</div></div>
+        <div style="text-align:right;"><div id="cheat-trigger" style="color:#ff0; font-size:9px; cursor:pointer;">MUN / ALMAS</div><div><span id="ammo-hud">40</span> / <span id="soul-hud">0</span></div></div>
     </div>
 </div>
 
 <div id="mobile-controls">
     <div class="joy-zone" id="joy-base"><div id="stick"></div></div>
     <div class="btn-circ" id="btn-fire" style="bottom:40px; right:20px;">🔥</div>
-    <div class="btn-circ" id="btn-use" style="bottom:130px; right:35px; width:50px; height:50px; font-size:10px;">USAR</div>
+    <div class="btn-circ" id="btn-use" style="bottom:130px; right:35px; width:60px; height:60px; font-size:10px;">COMPRAR</div>
 </div>
 
 <canvas id="gameCanvas"></canvas>
 
 <script>
 const G = { 
-    play: false, room: 1, hp: 100, ammo: 40, souls: 0, 
-    res: 4, god: false, isMobile: false, 
-    weaponType: 1, clicks: 0, currentSlot: 0, startTime: 0, totalPlayedTime: 0
+    play: false, room: 1, hp: 100, maxHp: 100, ammo: 40, maxAmmo: 40, souls: 0, 
+    res: 4, god: false, isMobile: false, wallColor: '#500', 
+    weaponType: 1, currentSlot: 1, lastShotTime: 0, speed: 4.5, time: 0 
 };
 
 const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d', { alpha: false }); // Otimização de contexto
+const ctx = canvas.getContext('2d', { alpha: false });
+const mCanvas = document.getElementById('minimap');
+const mCtx = mCanvas.getContext('2d');
+
 const TILE = 64, MAP_SIZE = 24;
 let map = [], enemies = [], bullets = [], shopItems = [], keys = {};
 let player = { x: 0, y: 0, angle: 0, pitch: 0, fov: Math.PI / 3 };
 
+// --- SAVE SYSTEM ---
 function showSaveSelection() {
     document.getElementById('save-screen').style.display = 'flex';
     const list = document.getElementById('save-list');
     list.innerHTML = '';
     for (let i = 1; i <= 3; i++) {
-        const data = JSON.parse(localStorage.getItem(`dos_v16_save_${i}`)) || { room: 1, souls: 0, time: 0 };
-        list.innerHTML += `
-            <div class="save-slot" onclick="loadAndStart(${i})">
-                <div>SLOT ${i}<br><span class="save-info">SALA: <span class="save-val">${data.room}</span></span></div>
-                <div style="text-align:right;"><span class="save-info">ALMAS: <span class="save-val">${data.souls}</span></span></div>
-            </div>`;
+        const data = JSON.parse(localStorage.getItem(`dos_v18_save_${i}`)) || { room: 1, souls: 0 };
+        list.innerHTML += `<div class="btn-main" style="text-align:left; font-size:10px;" onclick="loadAndStart(${i})">SLOT ${i} - SALA ${data.room} - ALMAS: ${data.souls}</div>`;
     }
-}
-
-function saveGame() {
-    if(!G.currentSlot) return;
-    const data = { room: G.room, souls: G.souls, ammo: G.ammo, time: G.totalPlayedTime, weapon: G.weaponType };
-    localStorage.setItem(`dos_v16_save_${G.currentSlot}`, JSON.stringify(data));
 }
 
 function loadAndStart(slot) {
     G.currentSlot = slot;
-    const data = JSON.parse(localStorage.getItem(`dos_v16_save_${slot}`));
-    if (data) { Object.assign(G, data); }
+    const data = JSON.parse(localStorage.getItem(`dos_v18_save_${slot}`));
+    if(data) { G.room = data.room; G.souls = data.souls; G.weaponType = data.weaponType || 1; G.speed = data.speed || 4.5; }
     startGame();
 }
 
+function saveGame() {
+    const data = { room: G.room, souls: G.souls, weaponType: G.weaponType, speed: G.speed };
+    localStorage.setItem(`dos_v18_save_${G.currentSlot}`, JSON.stringify(data));
+}
+
+// --- ENGINE ---
 function setupRoom() {
     map = Array(MAP_SIZE * MAP_SIZE).fill(0);
     enemies = []; shopItems = [];
     const isShop = (G.room % 5 === 0);
-    document.getElementById('biome-name').innerText = isShop ? "SHOP" : "ABYSS";
+    G.wallColor = isShop ? '#222' : `hsl(${(G.room * 40) % 360}, 40%, 15%)`;
 
     for(let i=0; i<MAP_SIZE; i++){ map[i]=1; map[i+(MAP_SIZE*(MAP_SIZE-1))]=1; map[i*MAP_SIZE]=1; map[i*MAP_SIZE+(MAP_SIZE-1)]=1; }
 
     if(isShop) {
-        spawnItem(10, 12, 'HP', 0, 'HP');
-        spawnItem(14, 12, 'GUN', 15, 'GUN');
+        document.getElementById('biome-name').innerText = "MERCADO DAS SOMBRAS";
+        // Itens com pedestais (x, y, nome, preco, tipo)
+        spawnItem(8, 12, 'PÍLULA VIDA', 10, 'HP');
+        spawnItem(12, 12, 'CANO DUPLO', 25, 'GUN');
+        spawnItem(16, 12, 'AGILIDADE', 15, 'SPEED');
     } else {
-        for(let i=0; i<10; i++){ map[Math.floor(Math.random()*(MAP_SIZE*MAP_SIZE))] = 1; }
-        for(let i=0; i<2 + Math.floor(G.room/3); i++) {
-            enemies.push({x:(8+Math.random()*8)*TILE, y:(8+Math.random()*8)*TILE, hp: 50, alive:true});
-        }
+        document.getElementById('biome-name').innerText = "ABISMO";
+        for(let i=0; i<15; i++) map[Math.floor(Math.random()*map.length)] = 1;
+        for(let i=0; i<2 + Math.floor(G.room/3); i++) enemies.push({x:(8+Math.random()*8)*TILE, y:(8+Math.random()*8)*TILE, hp: 50+(G.room*5), alive:true});
     }
-    map[Math.floor(MAP_SIZE/2)] = 2;
+    map[Math.floor(MAP_SIZE/2)] = 2; // Saída
     player.x = 12*TILE; player.y = 21*TILE; player.angle = -Math.PI/2;
     saveGame();
 }
 
-function spawnItem(tx, ty, name, price, type) { shopItems.push({ x: tx*TILE, y: ty*TILE, name, price, type, active: true }); }
+function spawnItem(tx, ty, name, price, type) { 
+    shopItems.push({ x: tx*TILE, y: ty*TILE, name, price, type, active: true, float: 0 }); 
+}
 
 function startGame() {
     G.isMobile = /Android|iPhone/i.test(navigator.userAgent);
-    G.res = G.isMobile ? 6 : 4; // Resolução dinâmica para evitar lag
-    document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('save-screen').style.display = 'none';
-    document.getElementById('hud').style.display = 'block';
+    G.res = G.isMobile ? 6 : 4;
+    document.querySelectorAll('.ui-screen').forEach(s => s.style.display = 'none');
+    document.querySelectorAll('#hud, #crosshair, #minimap').forEach(s => s.style.display = 'block');
     if(G.isMobile) document.getElementById('mobile-controls').style.display = 'block';
-    else canvas.requestPointerLock();
     
-    // Inputs
     window.onkeydown = e => keys[e.key.toLowerCase()] = true;
     window.onkeyup = e => delete keys[e.key.toLowerCase()];
-    canvas.onmousedown = e => { if(e.button === 0) shoot(); if(e.button === 2) interact(); };
+    canvas.onmousedown = e => { if(e.button===0) shoot(); if(e.button===2) interact(); };
     window.onmousemove = e => { if(document.pointerLockElement) { player.angle += e.movementX * 0.002; player.pitch = Math.max(-300, Math.min(300, player.pitch - e.movementY * 1.5)); } };
+    if(!G.isMobile) canvas.onclick = () => canvas.requestPointerLock();
     
-    if(G.isMobile) {
-        document.getElementById('btn-fire').ontouchstart = e => { e.preventDefault(); shoot(); };
-        document.getElementById('btn-use').ontouchstart = e => { e.preventDefault(); interact(); };
-        const base = document.getElementById('joy-base');
-        base.ontouchmove = e => { const t = e.touches[0]; const r = base.getBoundingClientRect(); window.mX = (t.clientX - (r.left+55))/40; window.mY = (t.clientY - (r.top+55))/40; };
-        base.ontouchend = () => { window.mX = 0; window.mY = 0; };
-    }
-
-    document.getElementById('cheat-trigger').onclick = () => { if(++G.clicks >= 5) { G.god = true; G.hp = 999; alert("KADTR!"); } };
+    document.getElementById('cheat-trigger').onclick = () => { if(++G.clicks >= 5) { G.god = true; G.hp = 999; G.souls = 999; alert("MODO DEUS ATIVADO"); } };
 
     setupRoom(); G.play = true; loop();
 }
 
 function shoot() {
     if(G.ammo <= 0 && !G.god) return;
-    G.ammo--;
-    const b = (a) => bullets.push({x: player.x, y: player.y, vx: Math.cos(a)*15, vy: Math.sin(a)*15, d: 0});
+    if(!G.god) G.ammo--; 
+    G.lastShotTime = Date.now();
+    const b = (a) => bullets.push({x: player.x, y: player.y, vx: Math.cos(a)*20, vy: Math.sin(a)*20, life: 50});
     b(player.angle);
-    if(G.weaponType === 2) { b(player.angle-0.1); b(player.angle+0.1); }
+    if(G.weaponType === 2) { b(player.angle-0.12); b(player.angle+0.12); }
 }
 
 function interact() {
     shopItems.forEach(s => {
         if(s.active && Math.hypot(player.x-s.x, player.y-s.y) < 100) {
             if(G.souls >= s.price || G.god) {
-                G.souls -= s.price; s.active = false;
-                if(s.type === 'HP') G.hp = 100;
-                if(s.type === 'GUN') G.weaponType = 2;
+                if(!G.god) G.souls -= s.price;
+                s.active = false;
+                if(s.type==='HP') G.hp = 100;
+                if(s.type==='GUN') G.weaponType = 2;
+                if(s.type==='SPEED') G.speed += 1.5;
                 saveGame();
             }
         }
@@ -181,32 +190,43 @@ function interact() {
 
 function update() {
     if(!G.play) return;
+    G.time += 0.05;
+
+    // Regen Munição
+    if(Date.now() - G.lastShotTime > 1800 && G.ammo < G.maxAmmo) {
+        if(Math.floor(Date.now()/400) % 2 === 0) G.ammo++;
+    }
+
     let mx = 0, my = 0;
     if(keys['w']) { mx += Math.cos(player.angle); my += Math.sin(player.angle); }
     if(keys['s']) { mx -= Math.cos(player.angle); my -= Math.sin(player.angle); }
     if(keys['a']) { mx += Math.cos(player.angle-1.57); my += Math.sin(player.angle-1.57); }
     if(keys['d']) { mx += Math.cos(player.angle+1.57); my += Math.sin(player.angle+1.57); }
-    if(G.isMobile) { mx += (window.mY||0)*-Math.cos(player.angle) + (window.mX||0)*Math.cos(player.angle+1.57); my += (window.mY||0)*-Math.sin(player.angle) + (window.mX||0)*Math.sin(player.angle+1.57); }
     
-    let nx = player.x + mx*4, ny = player.y + my*4;
+    if(G.isMobile) {
+        mx += (window.mY||0)*-Math.cos(player.angle) + (window.mX||0)*Math.cos(player.angle+1.57);
+        my += (window.mY||0)*-Math.sin(player.angle) + (window.mX||0)*Math.sin(player.angle+1.57);
+    }
+
+    let nx = player.x + mx*G.speed, ny = player.y + my*G.speed;
     if(map[Math.floor(ny/TILE)*MAP_SIZE + Math.floor(nx/TILE)] !== 1) { player.x = nx; player.y = ny; }
 
     bullets = bullets.filter(b => {
-        b.x += b.vx; b.y += b.vy; b.d++;
-        if(map[Math.floor(b.y/TILE)*MAP_SIZE + Math.floor(b.x/TILE)] === 1 || b.d > 60) return false;
+        b.x += b.vx; b.y += b.vy; b.life--;
+        if(map[Math.floor(b.y/TILE)*MAP_SIZE+Math.floor(b.x/TILE)]===1 || b.life <= 0) return false;
         let hit = false;
-        enemies.forEach(en => { if(en.alive && Math.hypot(b.x-en.x, b.y-en.y) < 30) { en.hp -= 25; hit = true; if(en.hp<=0) {en.alive=false; G.souls+=2;} } });
+        enemies.forEach(en => { if(en.alive && Math.hypot(b.x-en.x, b.y-en.y) < 35) { en.hp -= 25; hit = true; if(en.hp<=0){en.alive=false; G.souls+=3;} } });
         return !hit;
     });
 
     enemies.forEach(en => {
         if(!en.alive) return;
         let d = Math.hypot(player.x-en.x, player.y-en.y);
-        if(d < 400) { en.x += (player.x-en.x)/d*1.5; en.y += (player.y-en.y)/d*1.5; }
-        if(d < 40) { G.hp -= 0.2; if(G.hp <= 0 && !G.god) location.reload(); }
+        if(d < 500) { en.x += (player.x-en.x)/d*2.2; en.y += (player.y-en.y)/d*2.2; }
+        if(d < 40) { G.hp -= 0.4; if(G.hp <= 0 && !G.god) { G.play = false; document.getElementById('death-screen').style.display='flex'; document.exitPointerLock(); } }
     });
 
-    if(map[Math.floor(player.y/TILE)*MAP_SIZE + Math.floor(player.x/TILE)] === 2 && enemies.every(e => !e.alive)) { G.room++; setupRoom(); }
+    if(map[Math.floor(player.y/TILE)*MAP_SIZE+Math.floor(player.x/TILE)]===2 && enemies.every(e => !e.alive)) { G.room++; setupRoom(); }
 
     document.getElementById('hp-fill').style.width = G.hp + "%";
     document.getElementById('ammo-hud').innerText = G.ammo;
@@ -215,49 +235,79 @@ function update() {
 }
 
 function draw() {
-    // Fundo sólido (Mais rápido que gradiente)
-    ctx.fillStyle = "#050000"; ctx.fillRect(0,0,canvas.width, canvas.height/2 + player.pitch);
-    ctx.fillStyle = "#100505"; ctx.fillRect(0,canvas.height/2 + player.pitch, canvas.width, canvas.height);
-
+    ctx.fillStyle = "#020000"; ctx.fillRect(0,0,canvas.width, canvas.height/2+player.pitch);
+    ctx.fillStyle = "#0a0505"; ctx.fillRect(0,canvas.height/2+player.pitch, canvas.width, canvas.height);
     const zBuffer = [];
+    
     for(let i=0; i<canvas.width; i+=G.res) {
         let ang = (player.angle - player.fov/2) + (i/canvas.width)*player.fov;
         let d=0, hit=0, cos=Math.cos(ang), sin=Math.sin(ang);
-        while(hit === 0 && d < 800) {
-            d += 8; // Passo maior = Mais FPS
+        while(hit === 0 && d < 1000) {
+            d += 7;
             let tx = Math.floor((player.x + cos*d)/TILE), ty = Math.floor((player.y + sin*d)/TILE);
             if(map[ty*MAP_SIZE+tx] > 0) {
                 hit = map[ty*MAP_SIZE+tx];
                 let distNorm = d * Math.cos(player.angle-ang);
                 zBuffer[i] = distNorm;
                 let h = (TILE * canvas.height) / distNorm;
-                let lum = Math.max(20, 100 - (distNorm/6));
-                ctx.fillStyle = hit === 2 ? `rgb(0,${lum*2},0)` : `rgb(${lum},0,0)`;
+                let colorBase = hit === 2 ? 150 : 80 - (distNorm/10);
+                ctx.fillStyle = hit === 2 ? `rgb(0,${colorBase},0)` : `rgb(${colorBase},0,0)`;
                 ctx.fillRect(i, (canvas.height-h)/2 + player.pitch, G.res, h);
             }
         }
     }
 
-    // Sprites leves
-    [...enemies, ...shopItems, ...bullets].forEach(s => {
+    // Renderizar Sprites (Inimigos, Pedestais e Itens Flutuando)
+    const sprites = [...enemies, ...shopItems, ...bullets].sort((a,b) => Math.hypot(player.x-b.x, player.y-b.y) - Math.hypot(player.x-a.x, player.y-a.y));
+    
+    sprites.forEach(s => {
         if(s.alive === false || s.active === false) return;
         let dx = s.x - player.x, dy = s.y - player.y;
         let dist = Math.hypot(dx, dy);
         let ang = Math.atan2(dy, dx) - player.angle;
         while(ang < -Math.PI) ang += Math.PI*2; while(ang > Math.PI) ang -= Math.PI*2;
+        
         if(Math.abs(ang) < player.fov) {
             let sx = (0.5 * (ang/(player.fov/2)) + 0.5) * canvas.width;
             if(dist < (zBuffer[Math.floor(sx)] || 999)) {
                 let sh = (TILE * canvas.height) / dist;
-                ctx.fillStyle = s.vx ? "#0ff" : (s.price !== undefined ? "#ff0" : "#f00");
-                ctx.fillRect(sx-sh/8, (canvas.height-sh/8)/2 + player.pitch, sh/4, sh/4);
+                let sy = (canvas.height/2) + player.pitch;
+
+                if(s.price !== undefined) { // É um item de SHOP
+                    // Desenha Pedestal
+                    ctx.fillStyle = "#333";
+                    ctx.fillRect(sx-sh/4, sy+sh/8, sh/2, sh/2);
+                    // Desenha Item Flutuando (Efeito Bobbing)
+                    let bob = Math.sin(G.time * 2) * 15;
+                    ctx.fillStyle = s.type === 'HP' ? "#f00" : (s.type === 'GUN' ? "#0ff" : "#0f0");
+                    ctx.fillRect(sx-sh/8, sy-sh/4 + bob, sh/4, sh/4);
+                    // Preço
+                    ctx.fillStyle = "#ff0"; ctx.font = "bold 12px Orbitron";
+                    ctx.fillText(`$${s.price}`, sx-10, sy-sh/2 + bob);
+                    ctx.fillStyle = "#fff"; ctx.font = "9px Orbitron";
+                    ctx.fillText(s.name, sx-25, sy+sh/1.5);
+                } else if(s.vx) { // Bala
+                    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(sx, sy, sh/12, 0, Math.PI*2); ctx.fill();
+                } else { // Inimigo
+                    ctx.fillStyle = "#800"; ctx.fillRect(sx-sh/4, sy-sh/4, sh/2, sh/2);
+                }
             }
         }
     });
+
+    // Minimapa
+    mCtx.clearRect(0,0,110,110);
+    mCtx.fillStyle = "#000"; mCtx.beginPath(); mCtx.arc(55,55,53,0,Math.PI*2); mCtx.fill();
+    const ms = 110/MAP_SIZE;
+    for(let y=0; y<MAP_SIZE; y++) for(let x=0; x<MAP_SIZE; x++) {
+        if(map[y*MAP_SIZE+x] === 1) { mCtx.fillStyle = "#444"; mCtx.fillRect(x*ms, y*ms, ms, ms); }
+        if(map[y*MAP_SIZE+x] === 2) { mCtx.fillStyle = "#0f0"; mCtx.fillRect(x*ms, y*ms, ms, ms); }
+    }
+    mCtx.fillStyle = "#f00"; mCtx.fillRect((player.x/TILE)*ms-1, (player.y/TILE)*ms-1, 3, 3);
 }
 
 function loop() { update(); draw(); requestAnimationFrame(loop); }
-window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; mCanvas.width=110; mCanvas.height=110; };
 window.onresize();
 </script>
 </body>
