@@ -3,52 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 V1.0</title>
+    <title>Den of Shadow 💀 V2.0</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&display=swap');
         * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
         body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; width: 100vw; height: 100vh; }
         canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
 
-        /* UI Screens */
         .ui-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 9000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .glass-panel { background: #050000; border: 2px solid #f00; padding: 20px; width: 90%; max-width: 400px; border-radius: 8px; }
-        .btn-main { padding: 15px; background: #200; border: 1px solid #f00; color: #fff; cursor: pointer; width: 100%; margin: 5px 0; font-family: 'Orbitron'; font-weight: bold; }
+        .glass-panel { background: #110000; border: 2px solid #f00; padding: 20px; width: 90%; max-width: 500px; border-radius: 8px; box-shadow: 0 0 20px #f00; }
+        .btn-main { padding: 12px; background: #300; border: 1px solid #f00; color: #fff; cursor: pointer; width: 100%; margin: 5px 0; font-family: 'Orbitron'; font-weight: bold; transition: 0.2s; }
         .btn-main:hover { background: #f00; color: #000; }
+        
+        .save-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 15px 0; }
+        .class-select { display: none; flex-direction: column; gap: 10px; margin-top: 15px; }
 
-        /* HUD */
         #hud { position: absolute; top: 10px; left: 10px; z-index: 4000; pointer-events: none; }
         .masks-container { display: flex; gap: 5px; margin-bottom: 5px; }
-        .mask { width: 25px; height: 30px; background: #fff; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); transition: 0.3s; }
-        .mask.broken { background: #311; opacity: 0.4; transform: scale(0.8); }
-        #minimap { width: 120px; height: 120px; border: 2px solid #f00; background: rgba(0,0,0,0.7); margin-top: 10px; }
+        .mask { width: 20px; height: 25px; background: #f00; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); shadow: 0 0 5px #f00; }
+        .mask.broken { background: #222; opacity: 0.3; }
+        #minimap { width: 100px; height: 100px; border: 1px solid #f00; background: rgba(20,0,0,0.8); }
 
-        /* MOBILE CONTROLS */
         #mobile-controls { position: absolute; inset: 0; z-index: 3000; display: none; }
         #move-zone { position: absolute; bottom: 0; left: 0; width: 50%; height: 50%; }
         #look-zone { position: absolute; bottom: 0; right: 0; width: 50%; height: 100%; }
         #joy-base { position: absolute; bottom: 60px; left: 60px; width: 80px; height: 80px; background: rgba(255,0,0,0.1); border: 2px solid #f00; border-radius: 50%; }
         #stick { position: absolute; top: 20px; left: 20px; width: 40px; height: 40px; background: #f00; border-radius: 50%; }
         .action-btns { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .btn-act { width: 65px; height: 65px; background: rgba(0,0,0,0.8); border: 2px solid #f00; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; }
+        .btn-act { width: 60px; height: 60px; background: rgba(0,0,0,0.8); border: 2px solid #f00; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; }
 
-        #cross { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 14px; height: 14px; border: 1px solid #0f0; border-radius: 50%; pointer-events: none; z-index: 2000; }
+        #cross { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; border: 2px solid rgba(0,255,0,0.5); border-radius: 50%; pointer-events: none; z-index: 2000; }
+        #cross::after { content: ''; position: absolute; top: 50%; left: 50%; width: 2px; height: 2px; background: #0f0; transform: translate(-50%, -50%); }
     </style>
 </head>
 <body>
 
 <div id="start-screen" class="ui-screen">
     <div class="glass-panel">
-        <h1 style="font-family:'Nosifer'; color:#f00;">DEN OF SHADOW</h1>
-        <div id="save-info" style="font-size: 12px; margin-bottom: 10px; color: #aaa;">Nenhum registro encontrado</div>
-        <button class="btn-main" onclick="initGame(false)">NOVO PROTOCOLO</button>
-        <button class="btn-main" id="btn-load" onclick="initGame(true)" style="display:none;">CONTINUAR JORNADA</button>
+        <h1 style="font-family:'Nosifer'; color:#f00; margin:0;">DEN OF SHADOW</h1>
+        <p style="font-size: 10px; color: #f66;">V2.0 - MOBILE & CONSOLE SUPPORT</p>
+        
+        <div id="save-menu">
+            <h3>SELECIONE O SLOT</h3>
+            <div class="save-grid">
+                <button class="btn-main" onclick="selectSlot(1)">SLOT 1<br><small id="s1-info">Vazio</small></button>
+                <button class="btn-main" onclick="selectSlot(2)">SLOT 2<br><small id="s2-info">Vazio</small></button>
+                <button class="btn-main" onclick="selectSlot(3)">SLOT 3<br><small id="s3-info">Vazio</small></button>
+            </div>
+        </div>
+
+        <div id="class-menu" class="class-select">
+            <h3>ESCOLHA SUA CLASSE</h3>
+            <button class="btn-main" onclick="startWithClass('assassin')">ASSASSINO (FACA/VELOZ)</button>
+            <button class="btn-main" onclick="startWithClass('soldier')">SOLDADO (PISTOLA/EQUILIBRADO)</button>
+            <button class="btn-main" onclick="startWithClass('mage')">MAGO (FEITIÇO/DANO ÁREA)</button>
+        </div>
     </div>
 </div>
 
 <div id="death-screen" class="ui-screen" style="display:none;">
     <div class="glass-panel">
-        <h1 id="death-title" style="color:#f00; font-family:'Nosifer';">SUA ALMA FOI CONSUMIDA</h1>
+        <h1 style="color:#f00; font-family:'Nosifer';">ALMA CONSUMIDA</h1>
         <p id="death-stats"></p>
         <button class="btn-main" onclick="location.reload()">REENCARNAR</button>
     </div>
@@ -56,7 +71,7 @@
 
 <div id="hud" style="display:none;">
     <div class="masks-container" id="masks"></div>
-    <div id="stats-txt" style="font-size:11px; color:#f00;">SALA: <span id="val-room">1</span> | ALMAS: <span id="val-souls">0</span></div>
+    <div id="stats-txt" style="font-size:12px; color:#f00; text-shadow: 1px 1px #000;">SALA: <span id="val-room">1</span> | ALMAS: <span id="val-souls">0</span></div>
     <canvas id="minimap"></canvas>
 </div>
 
@@ -64,9 +79,9 @@
     <div id="move-zone"><div id="joy-base"><div id="stick"></div></div></div>
     <div id="look-zone"></div>
     <div class="action-btns">
-        <div class="btn-act" id="btn-fire">FIRE</div>
-        <div class="btn-act" id="btn-interact">USE</div>
-        <div class="btn-act" id="btn-jump">UP</div>
+        <div class="btn-act" id="btn-fire">ATACAR</div>
+        <div class="btn-act" id="btn-interact">USAR</div>
+        <div class="btn-act" id="btn-jump">PULAR</div>
     </div>
 </div>
 
@@ -75,9 +90,10 @@
 
 <script>
 const G = { 
-    play: false, room: 1, hp: 5, maxHp: 5, souls: 0, ammo: 30, weapon: 1,
-    res: 4, isMobile: false, z: 0, jv: 0, recoil: 0, sens: 0.003,
-    doorActive: false, doorPos: {x:0, y:0}
+    play: false, room: 1, hp: 5, maxHp: 5, souls: 0, 
+    weapon: 'knife', currentSlot: 1, class: '',
+    res: 4, isMobile: false, z: 0, jv: 0, recoil: 0, sens: 0.0025,
+    doorActive: false, doorPos: {x:0, y:0}, speed: 4
 };
 
 const canvas = document.getElementById('gameCanvas');
@@ -89,36 +105,51 @@ const TILE = 64, MAP_SIZE = 24;
 let map = [], enemies = [], items = [], bullets = [], keys = {};
 let player = { x: 0, y: 0, angle: 0, pitch: 0, fov: Math.PI / 3 };
 
-// Mobile Joystick
-let mJoy = { active: false, sx: 0, sy: 0, dx: 0, dy: 0, id: null };
-let mLook = { id: null, lx: 0, ly: 0 };
-
-// Salvamento
-function saveGame() {
-    const data = { room: G.room, souls: G.souls, weapon: G.weapon };
-    localStorage.setItem('den_shadow_save', JSON.stringify(data));
-}
-
-function loadGame() {
-    const saved = localStorage.getItem('den_shadow_save');
-    if(saved) {
-        const d = JSON.parse(saved);
-        G.room = d.room; G.souls = d.souls; G.weapon = d.weapon;
-        document.getElementById('save-info').innerText = `SALA: ${d.room} | ALMAS: ${d.souls}`;
-        document.getElementById('btn-load').style.display = 'block';
+// --- SISTEMA DE SAVES E CLASSES ---
+function updateSaveUI() {
+    for(let i=1; i<=3; i++) {
+        const data = localStorage.getItem('den_save_' + i);
+        document.getElementById(`s${i}-info`).innerText = data ? `Sala: ${JSON.parse(data).room}` : "Vazio";
     }
 }
 
-function initGame(resume) {
+function selectSlot(slot) {
+    G.currentSlot = slot;
+    const data = localStorage.getItem('den_save_' + slot);
+    if(data) {
+        const d = JSON.parse(data);
+        G.room = d.room; G.souls = d.souls; G.weapon = d.weapon; G.class = d.class;
+        initGame();
+    } else {
+        document.getElementById('save-menu').style.display = 'none';
+        document.getElementById('class-menu').style.display = 'flex';
+    }
+}
+
+function startWithClass(type) {
+    G.class = type;
+    G.room = 1; G.souls = 0;
+    if(type === 'assassin') { G.weapon = 'knife'; G.speed = 5.5; G.hp = 4; G.maxHp = 4; }
+    if(type === 'soldier') { G.weapon = 'pistol'; G.speed = 4; G.hp = 6; G.maxHp = 6; }
+    if(type === 'mage') { G.weapon = 'magic'; G.speed = 3.5; G.hp = 5; G.maxHp = 5; }
+    initGame();
+}
+
+function saveGame() {
+    const data = { room: G.room, souls: G.souls, weapon: G.weapon, class: G.class };
+    localStorage.setItem('den_save_' + G.currentSlot, JSON.stringify(data));
+}
+
+// --- ENGINE ---
+function initGame() {
     G.isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-    if(!resume) { G.room = 1; G.souls = 0; G.weapon = 1; }
-    
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('hud').style.display = 'block';
     document.getElementById('cross').style.display = 'block';
     if(G.isMobile) document.getElementById('mobile-controls').style.display = 'block';
-    
-    mCanvas.width = 120; mCanvas.height = 120;
+    else canvas.requestPointerLock();
+
+    mCanvas.width = 100; mCanvas.height = 100;
     updateMasks();
     setupRoom();
     G.play = true;
@@ -130,194 +161,156 @@ function setupRoom() {
     map = Array(MAP_SIZE * MAP_SIZE).fill(0);
     enemies = []; items = []; bullets = [];
     
-    const isShop = (G.room % 5 === 0);
-    const isBoss = (G.room % 10 === 0);
-
-    // Paredes
+    // Bordas
     for(let i=0; i<MAP_SIZE; i++){ 
         map[i]=1; map[i+(MAP_SIZE*(MAP_SIZE-1))]=1; 
         map[i*MAP_SIZE]=1; map[i*MAP_SIZE+(MAP_SIZE-1)]=1; 
     }
 
+    const isShop = (G.room % 5 === 0);
     if(isShop) {
-        // Pedestais da Loja
-        const shopItems = [
-            {t:'HP', p: 15}, {t:'FUZIL', p: 100}, {t:'BAZUKA', p: 900}, {t:'MAX-HP', p: 500}, {t:'AMMO', p: 20}
-        ];
-        for(let i=0; i<Math.min(5, G.room); i++) {
-            spawnItem(8 + (i*2), 12, shopItems[i].t, shopItems[i].p);
-        }
+        spawnItem(12, 10, 'HP', 20);
+        spawnItem(10, 10, 'AMMO', 15);
     } else {
-        // Níveis normais ou Boss
-        if(!isBoss && Math.random() > 0.4) {
-            for(let i=0; i<40; i++) map[Math.floor(Math.random()*map.length)] = Math.random() > 0.5 ? 1 : 4;
+        // Obstáculos aleatórios (menos densos)
+        for(let i=0; i<15; i++) {
+            let tx = Math.floor(Math.random()*(MAP_SIZE-4))+2;
+            let ty = Math.floor(Math.random()*(MAP_SIZE-4))+2;
+            map[ty*MAP_SIZE+tx] = Math.random() > 0.8 ? 4 : 1;
         }
-        let count = isBoss ? 1 : 2 + Math.floor(G.room/3);
+        
+        // Progressão de Inimigos
+        let count = Math.min(15, 2 + Math.floor(G.room / 2));
         for(let i=0; i<count; i++) {
             enemies.push({
                 x:(5+Math.random()*14)*TILE, y:(5+Math.random()*14)*TILE, 
-                hp: isBoss ? 500 + (G.room*10) : 50, maxHp: isBoss ? 500 + (G.room*10) : 50,
-                type: isBoss ? 'BOSS' : 'MOB', alive: true
+                hp: 40 + (G.room*5), alive: true, 
+                type: (G.room % 10 === 0 && i === 0) ? 'BOSS' : 'MOB'
             });
         }
     }
 
-    // Porta (Sempre no topo)
     G.doorPos = { x: 12*TILE + 32, y: 1.5*TILE };
-    map[1*MAP_SIZE + 12] = 2;
+    map[1*MAP_SIZE + 12] = 2; // Porta
     player.x = 12*TILE; player.y = 21*TILE;
 }
 
-function spawnItem(tx, ty, type, price) {
-    items.push({ x: tx*TILE+32, y: ty*TILE+32, type, price, active: true });
-    map[ty*MAP_SIZE+tx] = 3;
-}
-
-// Mobile Events Fix
-const moveZone = document.getElementById('move-zone');
-moveZone.ontouchstart = e => {
-    let t = e.changedTouches[0];
-    mJoy.active = true; mJoy.id = t.identifier; mJoy.sx = t.clientX; mJoy.sy = t.clientY;
-};
-moveZone.ontouchmove = e => {
-    for(let t of e.changedTouches) if(t.identifier === mJoy.id) {
-        let dx = t.clientX - mJoy.sx, dy = t.clientY - mJoy.sy;
-        let dist = Math.min(30, Math.hypot(dx, dy));
-        let ang = Math.atan2(dy, dx);
-        mJoy.dx = Math.cos(ang) * (dist/30); mJoy.dy = Math.sin(ang) * (dist/30);
-        document.getElementById('stick').style.transform = `translate(${Math.cos(ang)*dist}px, ${Math.sin(ang)*dist}px)`;
-    }
-};
-moveZone.ontouchend = e => { mJoy.active = false; mJoy.dx = 0; mJoy.dy = 0; document.getElementById('stick').style.transform = `translate(0,0)`; };
-
-const lookZone = document.getElementById('look-zone');
-lookZone.ontouchstart = e => { let t = e.changedTouches[0]; mLook.id = t.identifier; mLook.lx = t.clientX; mLook.ly = t.clientY; };
-lookZone.ontouchmove = e => {
-    for(let t of e.changedTouches) if(t.identifier === mLook.id) {
-        player.angle += (t.clientX - mLook.lx) * 0.008;
-        player.pitch = Math.max(-200, Math.min(200, player.pitch - (t.clientY - mLook.ly) * 1.5));
-        mLook.lx = t.clientX; mLook.ly = t.clientY;
-    }
-};
-
-// Interaction Logic
-function performInteract() {
-    // Porta
-    if(G.doorActive && Math.hypot(player.x-G.doorPos.x, player.y-G.doorPos.y) < 100) {
-        G.room++; setupRoom(); return;
-    }
-    // Lojas
-    items.forEach(it => {
-        if(it.active && Math.hypot(player.x-it.x, player.y-it.y) < 100) {
-            if(G.souls >= it.price) {
-                G.souls -= it.price; it.active = false;
-                if(it.type === 'HP') { G.hp = Math.min(G.maxHp, G.hp+1); updateMasks(); }
-                if(it.type === 'MAX-HP') { G.maxHp++; G.hp++; updateMasks(); }
-                if(it.type === 'FUZIL') G.weapon = 2;
-                if(it.type === 'BAZUKA') G.weapon = 3;
-                map[Math.floor(it.y/TILE)*MAP_SIZE + Math.floor(it.x/TILE)] = 0;
-            }
-        }
-    });
-}
-
 function shoot() {
+    if(G.recoil > 0) return;
     G.recoil = 15;
-    const b = { x: player.x, y: player.y, vx: Math.cos(player.angle)*20, vy: Math.sin(player.angle)*20, life: 50 };
-    bullets.push(b);
-    if(G.weapon >= 2) bullets.push({...b, vx: Math.cos(player.angle+0.1)*20, vy: Math.sin(player.angle+0.1)*20});
-}
-
-function die() {
-    G.play = false;
-    const titles = ["VOCÊ FOI ESQUECIDO", "O ABISMO TE LEVOU", "MORTE PREMATURA", "ALMA QUEBRADA"];
-    document.getElementById('death-title').innerText = titles[Math.floor(Math.random()*titles.length)];
-    document.getElementById('death-stats').innerText = `SALA ALCANÇADA: ${G.room}\nALMAS COLETADAS: ${G.souls}`;
-    document.getElementById('death-screen').style.display = 'flex';
-    localStorage.removeItem('den_shadow_save');
+    
+    let type = G.weapon;
+    let bCount = type === 'magic' ? 1 : (type === 'pistol' ? 1 : 0);
+    
+    if(type === 'knife') {
+        // Ataque curto
+        enemies.forEach(en => {
+            let d = Math.hypot(player.x-en.x, player.y-en.y);
+            if(d < 100 && en.alive) { en.hp -= 60; if(en.hp<=0) {en.alive=false; G.souls+=10;} }
+        });
+    } else {
+        bullets.push({ 
+            x: player.x, y: player.y, 
+            vx: Math.cos(player.angle)*15, vy: Math.sin(player.angle)*15, 
+            life: 60, magic: type === 'magic' 
+        });
+    }
 }
 
 function update() {
     if(!G.play) return;
 
-    // Pulo e Gravidade
+    // Gravidade
     G.z += G.jv; G.jv -= 0.8;
     if(G.z <= 0) { G.z = 0; G.jv = 0; }
-    if(G.recoil > 0) G.recoil -= 2;
+    if(G.recoil > 0) G.recoil -= 1.5;
 
-    // Movimento
+    // Movimento com colisão melhorada
     let mx = 0, my = 0;
-    if(keys['w']) { mx += Math.cos(player.angle); my += Math.sin(player.angle); }
-    if(keys['s']) { mx -= Math.cos(player.angle); my -= Math.sin(player.angle); }
-    if(keys['a']) { mx += Math.cos(player.angle - Math.PI/2); my += Math.sin(player.angle - Math.PI/2); }
-    if(keys['d']) { mx += Math.cos(player.angle + Math.PI/2); my += Math.sin(player.angle + Math.PI/2); }
+    if(keys['w'] || keys['arrowup']) { mx += Math.cos(player.angle); my += Math.sin(player.angle); }
+    if(keys['s'] || keys['arrowdown']) { mx -= Math.cos(player.angle); my -= Math.sin(player.angle); }
+    if(keys['a'] || keys['arrowleft']) { mx += Math.cos(player.angle - Math.PI/2); my += Math.sin(player.angle - Math.PI/2); }
+    if(keys['d'] || keys['arrowright']) { mx += Math.cos(player.angle + Math.PI/2); my += Math.sin(player.angle + Math.PI/2); }
+    
     if(mJoy.active) {
         mx += Math.cos(player.angle) * (-mJoy.dy) + Math.cos(player.angle + Math.PI/2) * mJoy.dx;
         my += Math.sin(player.angle) * (-mJoy.dy) + Math.sin(player.angle + Math.PI/2) * mJoy.dx;
     }
 
-    let speed = 4;
-    let nx = player.x + mx * speed, ny = player.y + my * speed;
-    let cell = map[Math.floor(ny/TILE)*MAP_SIZE + Math.floor(nx/TILE)];
+    let nx = player.x + mx * G.speed;
+    let ny = player.y + my * G.speed;
     
-    if(cell !== 1) {
-        if(cell === 4 && G.z < 5) { G.hp--; updateMasks(); player.x=12*TILE; player.y=21*TILE; if(G.hp<=0) die(); }
-        else { player.x = nx; player.y = ny; }
+    // Check Colisão Simples (Círculo vs Grid)
+    let buffer = 20;
+    let cx = Math.floor(nx/TILE), cy = Math.floor(ny/TILE);
+    let cell = map[cy*MAP_SIZE + cx];
+
+    if(cell !== 1 && cell !== 2) {
+        if(cell === 4 && G.z < 5) { // Dano de Lava/Espinho
+            G.hp -= 0.05; 
+            if(G.hp <= 0) die();
+        }
+        player.x = nx; player.y = ny;
     }
 
-    // Inimigos e Balas
+    // Inimigos AI
     enemies.forEach(en => {
         if(!en.alive) return;
         let d = Math.hypot(player.x-en.x, player.y-en.y);
-        if(d < 45 && G.z < 15) { G.hp -= 0.03; updateMasks(); if(G.hp<=0) die(); }
-        else { en.x += (player.x-en.x)/d * 2; en.y += (player.y-en.y)/d * 2; }
+        if(d < 40 && G.z < 20) {
+            G.hp -= 0.02; updateMasks();
+            if(G.hp <= 0) die();
+        } else if(d < 500) {
+            en.x += (player.x-en.x)/d * 2;
+            en.y += (player.y-en.y)/d * 2;
+        }
     });
 
+    // Projéteis
     bullets = bullets.filter(b => {
         b.x += b.vx; b.y += b.vy; b.life--;
         let hit = false;
         enemies.forEach(en => {
             if(en.alive && Math.hypot(b.x-en.x, b.y-en.y) < 40) {
-                en.hp -= G.weapon === 3 ? 100 : 25; hit = true;
-                if(en.hp <= 0) { en.alive = false; G.souls += 10; }
+                en.hp -= b.magic ? 40 : 25; hit = true;
+                if(en.hp <= 0) { en.alive = false; G.souls += 12; }
             }
         });
-        return !hit && b.life > 0 && map[Math.floor(b.y/TILE)*MAP_SIZE+Math.floor(b.x/TILE)] !== 1;
+        let wall = map[Math.floor(b.y/TILE)*MAP_SIZE + Math.floor(b.x/TILE)];
+        return !hit && b.life > 0 && wall !== 1;
     });
 
-    G.doorActive = (enemies.length === 0 || enemies.every(e => !e.alive));
-    
-    document.getElementById('val-room').innerText = G.room;
-    document.getElementById('val-souls').innerText = G.souls;
-    drawMinimap();
+    G.doorActive = enemies.every(e => !e.alive);
+    updateMasks();
 }
 
 function draw() {
-    ctx.fillStyle = "#050000"; ctx.fillRect(0,0,canvas.width, canvas.height/2 + player.pitch + G.z);
-    ctx.fillStyle = "#0a0505"; ctx.fillRect(0,canvas.height/2 + player.pitch + G.z, canvas.width, canvas.height);
+    // Aumento de Brilho: Cores mais claras
+    ctx.fillStyle = "#1a0505"; ctx.fillRect(0,0,canvas.width, canvas.height/2 + player.pitch + G.z);
+    ctx.fillStyle = "#221111"; ctx.fillRect(0,canvas.height/2 + player.pitch + G.z, canvas.width, canvas.height);
 
     const zB = [];
     for(let i=0; i<canvas.width; i+=G.res) {
         let a = (player.angle - player.fov/2) + (i/canvas.width)*player.fov;
         let d=0, cos=Math.cos(a), sin=Math.sin(a), hit=0;
-        while(hit===0 && d<800) {
-            d += 6;
+        while(hit===0 && d<900) {
+            d += 5;
             let tx = Math.floor((player.x+cos*d)/TILE), ty = Math.floor((player.y+sin*d)/TILE);
             let wall = map[ty*MAP_SIZE+tx];
             if(wall > 0 && wall !== 4) {
                 hit = wall;
                 let dist = d * Math.cos(player.angle-a);
-                zB[i] = dist;
                 let h = (TILE * canvas.height) / dist;
-                ctx.fillStyle = hit===1 ? "#100" : (hit===2 ? (G.doorActive ? "#0f0" : "#222") : "#330");
+                let color = hit === 1 ? 40 + (2000/dist) : 150;
+                ctx.fillStyle = hit === 2 ? (G.doorActive ? "#0f0" : "#444") : `rgb(${color},${color/4},${color/4})`;
                 ctx.fillRect(i, (canvas.height-h)/2 + player.pitch + G.z, G.res, h);
             }
         }
     }
 
-    // Renderizar Sprites (Inimigos e Balas)
-    [...enemies, ...bullets, ...items].forEach(s => {
-        if(s.alive === false || s.active === false || s.life <= 0) return;
+    // Sprites
+    [...enemies, ...bullets].forEach(s => {
+        if(s.alive === false || s.life <= 0) return;
         let dx = s.x - player.x, dy = s.y - player.y;
         let dist = Math.hypot(dx, dy);
         let ang = Math.atan2(dy, dx) - player.angle;
@@ -326,52 +319,61 @@ function draw() {
         if(Math.abs(ang) < player.fov && dist > 10) {
             let sx = (0.5 * (ang/(player.fov/2)) + 0.5) * canvas.width;
             let sh = (TILE * canvas.height) / dist;
-            ctx.fillStyle = s.vx ? "#0ff" : (s.price ? "#ff0" : "#f00");
-            ctx.fillRect(sx - sh/8, (canvas.height/2) + player.pitch + G.z - sh/8, sh/4, sh/4);
+            ctx.fillStyle = s.vx ? (s.magic ? "#0af" : "#ff0") : (s.type === 'BOSS' ? "#f0f" : "#f00");
+            ctx.fillRect(sx - sh/4, (canvas.height/2) + player.pitch + G.z - sh/4, sh/2, sh/2);
         }
     });
-
-    // Arma FPS
-    ctx.save();
-    ctx.translate(canvas.width/2, canvas.height - 150 + G.recoil - G.z/2);
-    ctx.fillStyle = "#111"; ctx.fillRect(-30, 0, 60, 150);
-    ctx.restore();
 }
 
-function drawMinimap() {
-    mCtx.clearRect(0,0,120,120);
-    let s = 120/MAP_SIZE;
-    for(let y=0; y<MAP_SIZE; y++) for(let x=0; x<MAP_SIZE; x++){
-        let v = map[y*MAP_SIZE+x];
-        if(v===1) mCtx.fillStyle="#500";
-        else if(v===2) mCtx.fillStyle=G.doorActive?"#0f0":"#444";
-        else if(v===3) mCtx.fillStyle="#ff0";
-        else continue;
-        mCtx.fillRect(x*s, y*s, s, s);
+// Controles Mouse
+window.addEventListener('mousemove', e => {
+    if(document.pointerLockElement === canvas) {
+        player.angle += e.movementX * G.sens;
+        player.pitch = Math.max(-300, Math.min(300, player.pitch - e.movementY * 2));
     }
-    mCtx.fillStyle="#fff"; mCtx.fillRect((player.x/TILE)*s-1, (player.y/TILE)*s-1, 3, 3);
+});
+
+function die() {
+    G.play = false;
+    document.getElementById('death-stats').innerText = `SALA: ${G.room}\nALMAS: ${G.souls}`;
+    document.getElementById('death-screen').style.display = 'flex';
 }
 
 function updateMasks() {
     const c = document.getElementById('masks'); c.innerHTML = '';
     for(let i=0; i<G.maxHp; i++) {
-        let m = document.createElement('div'); m.className = i < Math.ceil(G.hp) ? 'mask' : 'mask broken';
+        let m = document.createElement('div'); m.className = i < Math.floor(G.hp) ? 'mask' : 'mask broken';
         c.appendChild(m);
     }
 }
 
-// Event Listeners
+// Mobile Joy e Eventos
+const moveZone = document.getElementById('move-zone');
+let mJoy = { active: false, sx:0, sy:0, dx:0, dy:0, id:null };
+moveZone.ontouchstart = e => { let t = e.changedTouches[0]; mJoy.active=true; mJoy.id=t.identifier; mJoy.sx=t.clientX; mJoy.sy=t.clientY; };
+moveZone.ontouchmove = e => {
+    for(let t of e.changedTouches) if(t.identifier === mJoy.id) {
+        let dx = t.clientX-mJoy.sx, dy = t.clientY-mJoy.sy;
+        let d = Math.min(35, Math.hypot(dx,dy));
+        let ang = Math.atan2(dy,dx);
+        mJoy.dx = Math.cos(ang)*(d/35); mJoy.dy = Math.sin(ang)*(d/35);
+        document.getElementById('stick').style.transform = `translate(${Math.cos(ang)*d}px,${Math.sin(ang)*d}px)`;
+    }
+};
+moveZone.ontouchend = () => { mJoy.active=false; mJoy.dx=0; mJoy.dy=0; document.getElementById('stick').style.transform = `translate(0,0)`; };
+
 window.onkeydown = e => { keys[e.key.toLowerCase()] = true; if(e.code==='Space') G.jv=12; if(e.key==='e') performInteract(); };
 window.onkeyup = e => delete keys[e.key.toLowerCase()];
-window.onmousedown = () => { if(G.play && !G.isMobile) shoot(); };
-document.getElementById('btn-fire').ontouchstart = e => { e.preventDefault(); shoot(); };
-document.getElementById('btn-jump').ontouchstart = e => { e.preventDefault(); G.jv=12; };
-document.getElementById('btn-interact').ontouchstart = e => { e.preventDefault(); performInteract(); };
+window.onclick = () => { if(G.play && !G.isMobile) shoot(); if(!document.pointerLockElement && !G.isMobile) canvas.requestPointerLock(); };
 
-window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-window.onload = loadGame;
-window.onresize();
+function performInteract() {
+    if(G.doorActive && Math.hypot(player.x-G.doorPos.x, player.y-G.doorPos.y) < 100) { G.room++; setupRoom(); }
+}
+
 function loop() { update(); draw(); if(G.play) requestAnimationFrame(loop); }
+window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+window.onresize();
+updateSaveUI();
 </script>
 </body>
 </html>
