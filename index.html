@@ -3,32 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 V15.20 FIXED</title>
+    <title>Den of Shadow 💀 V15.25 PRO FIX</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&display=swap');
         * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
         body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; }
         canvas { display: block; width: 100vw; height: 100vh; image-rendering: pixelated; }
 
-        .ui-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .glass-panel { background: #0a0a0a; border: 2px solid #f00; padding: 25px; width: 90%; max-width: 450px; box-shadow: 0 0 20px #500; }
-        .btn-main { padding: 12px; font-size: 13px; background: #111; border: 1px solid #f00; color: #fff; cursor: pointer; font-family: 'Orbitron'; margin: 5px 0; width: 100%; text-transform: uppercase; }
+        /* UI Screens */
+        .ui-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 9000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .glass-panel { background: #0a0000; border: 2px solid #f00; padding: 25px; width: 85%; max-width: 400px; text-align: center; border-radius: 10px; }
+        .btn-main { padding: 15px; background: #111; border: 1px solid #f00; color: #fff; cursor: pointer; width: 100%; margin: 8px 0; font-family: 'Orbitron'; text-transform: uppercase; }
 
-        #hud { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; width: 95%; max-width: 650px; pointer-events: none; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; background: rgba(0,0,0,0.85); padding: 12px; border: 1px solid #f00; }
-        #hp-fill { height: 8px; width: 100%; background: #f00; transition: 0.2s; }
+        /* HUD */
+        #hud { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; z-index: 4000; pointer-events: none; }
+        .hp-bar { background: #300; height: 12px; width: 100%; border: 1px solid #f00; }
+        #hp-fill { background: #f00; height: 100%; width: 100%; transition: 0.2s; }
+
+        /* MOBILE CONTROLS - FIXED */
+        #mobile-controls { position: absolute; inset: 0; z-index: 3000; display: none; }
+        #move-zone { position: absolute; bottom: 0; left: 0; width: 50%; height: 60%; pointer-events: auto; }
+        #look-zone { position: absolute; bottom: 0; right: 0; width: 50%; height: 100%; pointer-events: auto; }
         
-        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; border: 1px solid rgba(255,0,0,0.5); border-radius: 50%; pointer-events: none; z-index: 1000; display: none; }
-        #crosshair::after { content: ''; position: absolute; top: 50%; left: 50%; width: 2px; height: 2px; background: #f00; transform: translate(-50%, -50%); }
+        #joy-base { position: absolute; bottom: 60px; left: 60px; width: 100px; height: 100px; background: rgba(255,0,0,0.1); border: 2px solid #f00; border-radius: 50%; pointer-events: none; }
+        #stick { position: absolute; top: 30px; left: 30px; width: 40px; height: 40px; background: #f00; border-radius: 50%; pointer-events: none; }
 
-        #minimap { position: absolute; top: 15px; right: 15px; width: 100px; height: 100px; border: 2px solid #f00; background: rgba(0,0,0,0.8); border-radius: 50%; z-index: 1000; display: none; }
+        .action-btns { position: absolute; bottom: 40px; right: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .btn-act { width: 75px; height: 75px; background: rgba(0,0,0,0.7); border: 2px solid #f00; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; pointer-events: auto; }
 
-        /* Mobile Controls */
-        #mobile-ui { position: absolute; inset: 0; z-index: 2000; display: none; pointer-events: none; }
-        .joy-zone { position: absolute; bottom: 30px; left: 30px; width: 110px; height: 110px; background: rgba(255,0,0,0.1); border: 1px solid #444; border-radius: 50%; pointer-events: auto; }
-        #stick { position: absolute; top: 35px; left: 35px; width: 40px; height: 40px; background: #f00; border-radius: 50%; opacity: 0.4; }
-        .btn-circ { width: 70px; height: 70px; background: rgba(255,0,0,0.2); border: 2px solid #f00; border-radius: 50%; pointer-events: auto; display: flex; align-items: center; justify-content: center; position: absolute; }
-        #touch-look { position: absolute; top: 0; right: 0; width: 55%; height: 100%; pointer-events: auto; }
+        #weapon-view { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 300px; height: 200px; pointer-events: none; z-index: 2500; }
     </style>
 </head>
 <body>
@@ -36,163 +39,167 @@
 <div id="start-screen" class="ui-screen">
     <div class="glass-panel">
         <h1 style="font-family:'Nosifer'; color:#f00;">DEN OF SHADOW</h1>
-        <button class="btn-main" onclick="showSaveSelection()">CARREGAR ALMA</button>
-        <button class="btn-main" onclick="G.clicks=5; document.getElementById('cheat-trigger').click()">MODO KADTR</button>
+        <button class="btn-main" onclick="loadAndStart(1)">JOGAR AGORA</button>
+        <p style="font-size: 10px; color: #555;">V15.25 MOBILE STABLE</p>
     </div>
 </div>
 
-<div id="save-screen" class="ui-screen" style="display:none;">
-    <div class="glass-panel">
-        <h2 style="color:#f00;">SAVES</h2>
-        <div id="save-list"></div>
-        <button class="btn-main" onclick="document.getElementById('save-screen').style.display='none'">VOLTAR</button>
-    </div>
+<div id="hud" style="display:none;">
+    <div style="margin-bottom:5px;">SALA <span id="room-txt">1</span> | ALMAS: <span id="soul-txt">0</span></div>
+    <div class="hp-bar"><div id="hp-fill"></div></div>
 </div>
 
-<div id="crosshair"></div>
-<canvas id="minimap"></canvas>
-
-<div id="hud">
-    <div class="stats-grid">
-        <div>HP<div style="background:#200; height:8px;"><div id="hp-fill"></div></div></div>
-        <div style="text-align:center;"><div id="biome-name" style="font-size:9px;">ABISMO</div><div id="room-txt" style="font-size:18px;">1</div></div>
-        <div style="text-align:right;"><div id="cheat-trigger" style="color:#ff0; font-size:9px; cursor:pointer;">MUN / ALMAS</div><div><span id="ammo-hud">40</span> / <span id="soul-hud">0</span></div></div>
+<div id="mobile-controls">
+    <div id="move-zone">
+        <div id="joy-base"><div id="stick"></div></div>
     </div>
-</div>
-
-<div id="mobile-ui">
-    <div id="touch-look"></div>
-    <div class="joy-zone" id="joy-base"><div id="stick"></div></div>
-    <div class="btn-circ" id="btn-fire" style="bottom:40px; right:20px;">🔥</div>
-    <div class="btn-circ" id="btn-use" style="bottom:130px; right:35px; width:55px; height:55px; font-size:10px;">COMPRAR</div>
+    <div id="look-zone"></div>
+    <div class="action-btns">
+        <div class="btn-act" id="btn-fire">🔥</div>
+        <div class="btn-act" id="btn-jump" style="width:60px; height:60px;">PULAR</div>
+        <div class="btn-act" id="btn-buy" style="font-size:12px; height:50px;">LOJA</div>
+    </div>
 </div>
 
 <canvas id="gameCanvas"></canvas>
 
 <script>
 const G = { 
-    play: false, room: 1, hp: 100, ammo: 40, maxAmmo: 40, souls: 0, 
-    res: 4, god: false, isMobile: false, speed: 4.5, weaponType: 1, 
-    fireRate: 400, lastShot: 0, pierce: false, shield: false, time: 0, clicks: 0, currentSlot: 1 
+    play: false, room: 1, hp: 100, souls: 0, ammo: 40, weapon: 1, 
+    res: 8, isMobile: false, speed: 4.5, jumpV: 0, z: 0, recoil: 0 
 };
 
 const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d', { alpha: false });
-const mCanvas = document.getElementById('minimap');
-const mCtx = mCanvas.getContext('2d');
-
+const ctx = canvas.getContext('2d');
 const TILE = 64, MAP_SIZE = 24;
-let map = [], enemies = [], bullets = [], shopItems = [], keys = {};
+let map = [], enemies = [], items = [], bullets = [], keys = {};
 let player = { x: 0, y: 0, angle: 0, pitch: 0, fov: Math.PI / 3 };
-let lookTouch = { id: null, x: 0, y: 0 };
 
-function showSaveSelection() {
-    document.getElementById('save-screen').style.display = 'flex';
-    const list = document.getElementById('save-list');
-    list.innerHTML = '';
-    for (let i = 1; i <= 3; i++) {
-        const data = JSON.parse(localStorage.getItem(`dos_v20_save_${i}`)) || { room: 1, souls: 0 };
-        list.innerHTML += `<div class="btn-main" onclick="loadAndStart(${i})">SLOT ${i} - SALA ${data.room}</div>`;
-    }
-}
+// Controles Mobile Refatorados (Independência de Dedos)
+let joyId = null, lookId = null;
+let moveJoy = { startX: 0, startY: 0, curX: 0, curY: 0, active: false };
+let lastLookX = 0, lastLookY = 0;
 
 function loadAndStart(slot) {
-    G.currentSlot = slot;
-    const data = JSON.parse(localStorage.getItem(`dos_v20_save_${slot}`));
-    if(data) Object.assign(G, data);
-    startGame();
-}
-
-function saveGame() {
-    localStorage.setItem(`dos_v20_save_${G.currentSlot}`, JSON.stringify({ 
-        room: G.room, souls: G.souls, weaponType: G.weaponType, speed: G.speed,
-        fireRate: G.fireRate, pierce: G.pierce, shield: G.shield, maxAmmo: G.maxAmmo
-    }));
+    G.isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('hud').style.display = 'block';
+    if(G.isMobile) document.getElementById('mobile-controls').style.display = 'block';
+    
+    setupRoom();
+    G.play = true;
+    loop();
 }
 
 function setupRoom() {
     map = Array(MAP_SIZE * MAP_SIZE).fill(0);
-    enemies = []; shopItems = [];
+    enemies = []; items = [];
     const isShop = (G.room % 5 === 0);
-    G.wallColor = isShop ? '#222' : `hsl(${(G.room * 40) % 360}, 40%, 15%)`;
-
+    
+    // Paredes
     for(let i=0; i<MAP_SIZE; i++){ map[i]=1; map[i+(MAP_SIZE*(MAP_SIZE-1))]=1; map[i*MAP_SIZE]=1; map[i*MAP_SIZE+(MAP_SIZE-1)]=1; }
 
     if(isShop) {
-        document.getElementById('biome-name').innerText = "SHOP SOMBRIO";
-        const pool = [
-            {n:'VIDA FULL', p:10, t:'HP'}, {n:'PERFURANTE', p:20, t:'PIERCE'}, {n:'ESCUDO', p:25, t:'SHIELD'},
-            {n:'VELOCIDADE', p:15, t:'SPEED'}, {n:'CADÊNCIA', p:20, t:'RATE'}, {n:'PENTE+', p:15, t:'CLIP'}, {n:'SUPER ARMA', p:40, t:'GUN'}
-        ];
-        pool.sort(()=>Math.random()-0.5).slice(0,3).forEach((u, i) => spawnItem(8+i*4, 12, u.n, u.p, u.t));
+        // Pedestais (Shopping)
+        spawnItem(10, 12, 'HP', 10);
+        spawnItem(14, 12, 'GUN', 30);
     } else {
-        document.getElementById('biome-name').innerText = "ABISMO";
-        for(let i=0; i<10; i++) map[Math.floor(Math.random()*map.length)] = 1;
-        for(let i=0; i<2 + Math.floor(G.room/3); i++) enemies.push({x:(8+Math.random()*8)*TILE, y:(8+Math.random()*8)*TILE, hp: 50+(G.room*5), alive:true});
+        for(let i=0; i<20; i++) map[Math.floor(Math.random()*map.length)] = 1;
+        for(let i=0; i<2+G.room; i++) enemies.push({x:(8+Math.random()*8)*TILE, y:(8+Math.random()*8)*TILE, hp: 50, alive:true});
     }
-    map[Math.floor(MAP_SIZE/2)] = 2;
-    player.x = 12*TILE; player.y = 21*TILE; player.angle = -Math.PI/2;
-    saveGame();
+    map[Math.floor(MAP_SIZE/2)] = 2; // Saída
+    player.x = 12*TILE; player.y = 20*TILE;
 }
 
-function spawnItem(tx, ty, name, price, type) { shopItems.push({ x: tx*TILE, y: ty*TILE, name, price, type, active: true }); }
+function spawnItem(tx, ty, type, price) {
+    map[ty*MAP_SIZE+tx] = 3; // Bloco de Pedestal
+    items.push({ x: tx*TILE + 32, y: ty*TILE + 32, type, price, active: true });
+}
 
-function startGame() {
-    G.isMobile = /Android|iPhone/i.test(navigator.userAgent);
-    G.res = G.isMobile ? 6 : 4;
-    document.querySelectorAll('.ui-screen').forEach(s => s.style.display = 'none');
-    document.querySelectorAll('#hud, #crosshair, #minimap').forEach(s => s.style.display = 'block');
-    if(G.isMobile) document.getElementById('mobile-ui').style.display = 'block';
-    
-    window.onkeydown = e => keys[e.key.toLowerCase()] = true;
-    window.onkeyup = e => delete keys[e.key.toLowerCase()];
-    canvas.onmousedown = e => { if(e.button===0) shoot(); if(e.button===2) interact(); };
-    window.onmousemove = e => { if(document.pointerLockElement) { player.angle += e.movementX * 0.002; player.pitch = Math.max(-300, Math.min(300, player.pitch - e.movementY * 1.5)); } };
-    
-    // Mobile Touch
-    const lookZone = document.getElementById('touch-look');
-    lookZone.ontouchstart = e => { lookTouch.id = e.changedTouches[0].identifier; lookTouch.x = e.changedTouches[0].clientX; lookTouch.y = e.changedTouches[0].clientY; };
-    lookZone.ontouchmove = e => {
-        for(let t of e.changedTouches) if(t.identifier === lookTouch.id) {
-            player.angle += (t.clientX - lookTouch.x) * 0.006;
-            player.pitch = Math.max(-300, Math.min(300, player.pitch - (t.clientY - lookTouch.y) * 1.5));
-            lookTouch.x = t.clientX; lookTouch.y = t.clientY;
+// Lógica de Movimento Mobile Fixa
+const moveZone = document.getElementById('move-zone');
+moveZone.addEventListener('touchstart', e => {
+    for(let t of e.changedTouches) {
+        if(!moveJoy.active) {
+            joyId = t.identifier;
+            moveJoy.active = true;
+            moveJoy.startX = t.clientX; moveJoy.startY = t.clientY;
         }
-    };
-    const joyBase = document.getElementById('joy-base');
-    joyBase.ontouchmove = e => { const t = e.touches[0]; const r = joyBase.getBoundingClientRect(); window.mX = (t.clientX - (r.left+55))/50; window.mY = (t.clientY - (r.top+55))/50; };
-    joyBase.ontouchend = () => { window.mX = 0; window.mY = 0; };
-    document.getElementById('btn-fire').ontouchstart = e => { e.preventDefault(); shoot(); };
-    document.getElementById('btn-use').ontouchstart = e => { e.preventDefault(); interact(); };
-    document.getElementById('cheat-trigger').onclick = () => { if(++G.clicks >= 5) { G.god = true; G.hp = 999; G.souls = 999; alert("KADTR!"); } };
+    }
+});
 
-    if(!G.isMobile) canvas.onclick = () => canvas.requestPointerLock();
-    setupRoom(); G.play = true; loop();
-}
+moveZone.addEventListener('touchmove', e => {
+    for(let t of e.changedTouches) {
+        if(t.identifier === joyId) {
+            let dx = t.clientX - moveJoy.startX, dy = t.clientY - moveJoy.startY;
+            let dist = Math.min(40, Math.hypot(dx, dy));
+            let ang = Math.atan2(dy, dx);
+            moveJoy.curX = Math.cos(ang) * (dist/40);
+            moveJoy.curY = Math.sin(ang) * (dist/40);
+            document.getElementById('stick').style.transform = `translate(${Math.cos(ang)*dist}px, ${Math.sin(ang)*dist}px)`;
+        }
+    }
+});
+
+moveZone.addEventListener('touchend', e => {
+    for(let t of e.changedTouches) {
+        if(t.identifier === joyId) {
+            moveJoy.active = false; moveJoy.curX = 0; moveJoy.curY = 0;
+            joyId = null;
+            document.getElementById('stick').style.transform = `translate(0,0)`;
+        }
+    }
+});
+
+// Lógica de Olhar Mobile Fixa
+const lookZone = document.getElementById('look-zone');
+lookZone.addEventListener('touchstart', e => {
+    for(let t of e.changedTouches) {
+        if(lookId === null) {
+            lookId = t.identifier;
+            lastLookX = t.clientX; lastLookY = t.clientY;
+        }
+    }
+});
+
+lookZone.addEventListener('touchmove', e => {
+    for(let t of e.changedTouches) {
+        if(t.identifier === lookId) {
+            player.angle += (t.clientX - lastLookX) * 0.007;
+            player.pitch = Math.max(-200, Math.min(200, player.pitch - (t.clientY - lastLookY) * 1.5));
+            lastLookX = t.clientX; lastLookY = t.clientY;
+        }
+    }
+});
+
+lookZone.addEventListener('touchend', e => {
+    for(let t of e.changedTouches) if(t.identifier === lookId) lookId = null;
+});
+
+// Ações
+document.getElementById('btn-fire').ontouchstart = e => { e.preventDefault(); shoot(); };
+document.getElementById('btn-jump').ontouchstart = e => { e.preventDefault(); jump(); };
+document.getElementById('btn-buy').ontouchstart = e => { e.preventDefault(); buy(); };
+
+window.onkeydown = e => { keys[e.key.toLowerCase()] = true; if(e.key === ' ') jump(); };
+window.onkeyup = e => delete keys[e.key.toLowerCase()];
+
+function jump() { if(G.z === 0) G.jumpV = 10; }
 
 function shoot() {
-    let now = Date.now();
-    if(now - G.lastShot < G.fireRate) return;
-    if(G.ammo <= 0 && !G.god) return;
-    G.lastShot = now; if(!G.god) G.ammo--;
-    const b = (a) => bullets.push({x: player.x, y: player.y, vx: Math.cos(a)*20, vy: Math.sin(a)*20, life: 60, p: G.pierce});
+    G.recoil = 20;
+    const b = (a) => bullets.push({x: player.x, y: player.y, vx: Math.cos(a)*20, vy: Math.sin(a)*20, life: 50});
     b(player.angle);
-    if(G.weaponType === 2) { b(player.angle-0.12); b(player.angle+0.12); }
+    if(G.weapon === 2) { b(player.angle-0.1); b(player.angle+0.1); }
 }
 
-function interact() {
-    shopItems.forEach(s => {
-        if(s.active && Math.hypot(player.x-s.x, player.y-s.y) < 100) {
-            if(G.souls >= s.price || G.god) {
-                G.souls -= s.price; s.active = false;
-                if(s.type==='HP') G.hp=100;
-                if(s.type==='GUN') G.weaponType=2;
-                if(s.type==='PIERCE') G.pierce=true;
-                if(s.type==='SHIELD') G.shield=true;
-                if(s.type==='SPEED') G.speed+=1.2;
-                if(s.type==='RATE') G.fireRate*=0.75;
-                if(s.type==='CLIP') G.maxAmmo+=20;
-                saveGame();
+function buy() {
+    items.forEach(it => {
+        if(it.active && Math.hypot(player.x-it.x, player.y-it.y) < 100) {
+            if(G.souls >= it.price) {
+                G.souls -= it.price; it.active = false;
+                if(it.type === 'HP') G.hp = 100;
+                if(it.type === 'GUN') G.weapon = 2;
             }
         }
     });
@@ -200,105 +207,97 @@ function interact() {
 
 function update() {
     if(!G.play) return;
-    G.time += 0.05;
-    if(Date.now() - G.lastShot > 1800 && G.ammo < G.maxAmmo) G.ammo += 0.1;
+    
+    // Gravidade / Pulo
+    G.z += G.jumpV;
+    G.jumpV -= 1;
+    if(G.z <= 0) { G.z = 0; G.jumpV = 0; }
+    if(G.recoil > 0) G.recoil -= 2;
 
+    // Movimento
     let mx = 0, my = 0;
-    // CORREÇÃO A E D: Adicionado suporte para strafe (movimento lateral)
     if(keys['w']) { mx += Math.cos(player.angle); my += Math.sin(player.angle); }
     if(keys['s']) { mx -= Math.cos(player.angle); my -= Math.sin(player.angle); }
-    if(keys['a']) { mx += Math.cos(player.angle - Math.PI/2); my += Math.sin(player.angle - Math.PI/2); }
-    if(keys['d']) { mx += Math.cos(player.angle + Math.PI/2); my += Math.sin(player.angle + Math.PI/2); }
-
-    if(G.isMobile) {
-        mx += (window.mY||0)*-Math.cos(player.angle) + (window.mX||0)*Math.cos(player.angle+1.57);
-        my += (window.mY||0)*-Math.sin(player.angle) + (window.mX||0)*Math.sin(player.angle+1.57);
+    if(moveJoy.active) {
+        mx += Math.cos(player.angle) * (-moveJoy.curY) + Math.cos(player.angle + Math.PI/2) * moveJoy.curX;
+        my += Math.sin(player.angle) * (-moveJoy.curY) + Math.sin(player.angle + Math.PI/2) * moveJoy.curX;
     }
     
     let nx = player.x + mx*G.speed, ny = player.y + my*G.speed;
-    if(map[Math.floor(ny/TILE)*MAP_SIZE + Math.floor(nx/TILE)] !== 1) { player.x = nx; player.y = ny; }
+    if(map[Math.floor(ny/TILE)*MAP_SIZE + Math.floor(nx/TILE)] === 0) { player.x = nx; player.y = ny; }
 
-    bullets = bullets.filter(b => {
-        b.x += b.vx; b.y += b.vy; b.life--;
-        if(map[Math.floor(b.y/TILE)*MAP_SIZE+Math.floor(b.x/TILE)]===1 || b.life <= 0) return false;
-        let hit = false;
-        enemies.forEach(en => { if(en.alive && Math.hypot(b.x-en.x, b.y-en.y) < 35) { en.hp -= 25; hit = !b.p; if(en.hp<=0){en.alive=false; G.souls+=3;} } });
-        return !hit;
-    });
-
+    // Inimigos com Colisão
     enemies.forEach(en => {
         if(!en.alive) return;
         let d = Math.hypot(player.x-en.x, player.y-en.y);
-        if(d < 500) { en.x += (player.x-en.x)/d*2.2; en.y += (player.y-en.y)/d*2.2; }
-        if(d < 45) { if(G.shield) { G.shield=false; en.alive=false; } else if(!G.god) { G.hp -= 0.5; if(G.hp<=0) location.reload(); } }
+        let ex = (player.x-en.x)/d * 2, ey = (player.y-en.y)/d * 2;
+        // Checagem de parede para inimigo
+        if(map[Math.floor((en.y+ey)/TILE)*MAP_SIZE + Math.floor((en.x+ex)/TILE)] === 0) {
+            en.x += ex; en.y += ey;
+        }
+        if(d < 40) G.hp -= 0.5;
     });
 
-    if(map[Math.floor(player.y/TILE)*MAP_SIZE+Math.floor(player.x/TILE)]===2 && enemies.every(e => !e.alive)) { G.room++; setupRoom(); }
+    bullets = bullets.filter(b => {
+        b.x += b.vx; b.y += b.vy; b.life--;
+        let hit = false;
+        enemies.forEach(en => { if(en.alive && Math.hypot(b.x-en.x, b.y-en.y)<30){ en.hp-=20; hit=true; if(en.hp<=0){en.alive=false; G.souls+=5;} } });
+        return !hit && b.life > 0 && map[Math.floor(b.y/TILE)*MAP_SIZE+Math.floor(b.x/TILE)] === 0;
+    });
+
+    if(map[Math.floor(player.y/TILE)*MAP_SIZE+Math.floor(player.x/TILE)] === 2) { G.room++; setupRoom(); }
+    
     document.getElementById('hp-fill').style.width = G.hp + "%";
-    document.getElementById('ammo-hud').innerText = Math.floor(G.ammo);
-    document.getElementById('soul-hud').innerText = G.souls;
-    document.getElementById('room-txt').innerText = G.room;
+    document.getElementById('soul-txt').innerText = G.souls;
 }
 
 function draw() {
-    ctx.fillStyle = "#020000"; ctx.fillRect(0,0,canvas.width, canvas.height/2+player.pitch);
-    ctx.fillStyle = "#0a0505"; ctx.fillRect(0,canvas.height/2+player.pitch, canvas.width, canvas.height);
-    const zBuffer = [];
+    ctx.fillStyle = "#050000"; ctx.fillRect(0,0,canvas.width, canvas.height/2 + player.pitch + G.z);
+    ctx.fillStyle = "#110505"; ctx.fillRect(0,canvas.height/2 + player.pitch + G.z, canvas.width, canvas.height);
+
+    const zBuf = [];
     for(let i=0; i<canvas.width; i+=G.res) {
         let ang = (player.angle - player.fov/2) + (i/canvas.width)*player.fov;
-        let d=0, hit=0, cos=Math.cos(ang), sin=Math.sin(ang);
-        while(hit === 0 && d < 900) {
-            d += 7;
-            let tx = Math.floor((player.x + cos*d)/TILE), ty = Math.floor((player.y + sin*d)/TILE);
+        let d=0, cos=Math.cos(ang), sin=Math.sin(ang), hit=0;
+        while(hit===0 && d<800) {
+            d += 5;
+            let tx = Math.floor((player.x+cos*d)/TILE), ty = Math.floor((player.y+sin*d)/TILE);
             if(map[ty*MAP_SIZE+tx] > 0) {
                 hit = map[ty*MAP_SIZE+tx];
-                let distNorm = d * Math.cos(player.angle-ang);
-                zBuffer[i] = distNorm;
-                let h = (TILE * canvas.height) / distNorm;
-                ctx.fillStyle = hit === 2 ? "#0f0" : G.wallColor;
-                ctx.fillRect(i, (canvas.height-h)/2 + player.pitch, G.res, h);
+                let dist = d * Math.cos(player.angle-ang);
+                zBuf[i] = dist;
+                let h = (TILE * canvas.height) / dist;
+                ctx.fillStyle = hit===1 ? "#200" : (hit===2 ? "#0f0" : "#444");
+                ctx.fillRect(i, (canvas.height-h)/2 + player.pitch + G.z, G.res, h);
             }
         }
     }
 
-    [...enemies, ...shopItems, ...bullets].forEach(s => {
-        if(s.alive === false || s.active === false) return;
+    // Desenhar Inimigos e Itens
+    [...enemies, ...items].forEach(s => {
+        if(s.alive===false || s.active===false) return;
         let dx = s.x - player.x, dy = s.y - player.y;
         let dist = Math.hypot(dx, dy);
         let ang = Math.atan2(dy, dx) - player.angle;
-        while(ang < -Math.PI) ang += Math.PI*2; while(ang > Math.PI) ang -= Math.PI*2;
-        if(Math.abs(ang) < player.fov) {
+        if(ang < -Math.PI) ang += Math.PI*2; if(ang > Math.PI) ang -= Math.PI*2;
+        if(Math.abs(ang) < player.fov && dist < (zBuf[Math.floor(canvas.width/2)] || 999)) {
             let sx = (0.5 * (ang/(player.fov/2)) + 0.5) * canvas.width;
-            if(dist < (zBuffer[Math.floor(sx)] || 999)) {
-                let sh = (TILE * canvas.height) / dist;
-                let sy = (canvas.height/2) + player.pitch;
-                if(s.price) { // Shop Pedestal
-                    ctx.fillStyle = "#333"; ctx.fillRect(sx-sh/4, sy+sh/8, sh/2, sh/2);
-                    let bob = Math.sin(G.time*2)*12;
-                    ctx.fillStyle = "#ff0"; ctx.fillRect(sx-sh/10, sy-sh/4+bob, sh/5, sh/5);
-                    ctx.fillStyle = "#fff"; ctx.font = "bold 10px Orbitron";
-                    ctx.fillText(`${s.name}`, sx-20, sy-sh/2+bob);
-                    ctx.fillStyle = "#ff0"; ctx.fillText(`$${s.price}`, sx-10, sy+sh/1.5);
-                } else {
-                    ctx.fillStyle = s.vx ? "#fff" : "#800";
-                    ctx.fillRect(sx-sh/10, sy-sh/10, sh/5, sh/5);
-                }
-            }
+            let sh = (TILE * canvas.height) / dist;
+            ctx.fillStyle = s.price ? "#ff0" : "#f00";
+            ctx.fillRect(sx-sh/4, (canvas.height/2) + player.pitch + G.z - sh/4, sh/2, sh/2);
         }
     });
 
-    mCtx.clearRect(0,0,100,100);
-    mCtx.fillStyle = "#111"; mCtx.beginPath(); mCtx.arc(50,50,48,0,Math.PI*2); mCtx.fill();
-    const ms = 100/MAP_SIZE;
-    for(let y=0; y<MAP_SIZE; y++) for(let x=0; x<MAP_SIZE; x++) {
-        if(map[y*MAP_SIZE+x] === 1) { mCtx.fillStyle = "#444"; mCtx.fillRect(x*ms, y*ms, ms, ms); }
-        if(map[y*MAP_SIZE+x] === 2) { mCtx.fillStyle = "#0f0"; mCtx.fillRect(x*ms, y*ms, ms, ms); }
-    }
-    mCtx.fillStyle = "#f00"; mCtx.fillRect((player.x/TILE)*ms-1, (player.y/TILE)*ms-1, 2, 2);
+    // ARMA FPS
+    ctx.fillStyle = "#333";
+    let gunX = canvas.width/2 - 50, gunY = canvas.height - 150 + G.recoil - G.z/2;
+    ctx.fillRect(gunX, gunY, 100, 200); // Corpo da arma
+    ctx.fillStyle = "#f00";
+    ctx.fillRect(gunX+40, gunY-20, 20, 40); // Cano
 }
 
 function loop() { update(); draw(); requestAnimationFrame(loop); }
-window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; mCanvas.width=100; mCanvas.height=100; };
+window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
 window.onresize();
 </script>
 </body>
