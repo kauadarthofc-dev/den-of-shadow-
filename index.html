@@ -3,89 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 V15.25 PRO FIX</title>
+    <title>Den of Shadow 💀 V16.0</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&display=swap');
         * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
-        body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; }
-        canvas { display: block; width: 100vw; height: 100vh; image-rendering: pixelated; }
+        body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; width: 100vw; height: 100vh; }
+        canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; cursor: crosshair; }
 
         /* UI Screens */
-        .ui-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 9000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .glass-panel { background: #0a0000; border: 2px solid #f00; padding: 25px; width: 85%; max-width: 400px; text-align: center; border-radius: 10px; }
-        .btn-main { padding: 15px; background: #111; border: 1px solid #f00; color: #fff; cursor: pointer; width: 100%; margin: 8px 0; font-family: 'Orbitron'; text-transform: uppercase; }
+        .ui-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 9000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .glass-panel { background: #050000; border: 2px solid #f00; padding: 25px; width: 85%; max-width: 420px; text-align: center; border-radius: 8px; box-shadow: 0 0 30px #400; }
+        .btn-main { padding: 15px; background: #1a0000; border: 1px solid #f00; color: #fff; cursor: pointer; width: 100%; margin: 8px 0; font-family: 'Orbitron'; text-transform: uppercase; font-weight: bold; }
+        .btn-main:hover { background: #f00; color: #000; }
 
         /* HUD */
-        #hud { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; z-index: 4000; pointer-events: none; }
-        .hp-bar { background: #300; height: 12px; width: 100%; border: 1px solid #f00; }
-        #hp-fill { background: #f00; height: 100%; width: 100%; transition: 0.2s; }
+        #hud { position: absolute; top: 20px; left: 20px; z-index: 4000; pointer-events: none; text-shadow: 2px 2px #000; }
+        .hp-container { width: 200px; height: 20px; border: 2px solid #f00; background: #300; margin-bottom: 10px; }
+        #hp-fill { height: 100%; width: 100%; background: #f00; transition: 0.3s; }
+        #stats-txt { font-size: 14px; line-height: 1.5; }
 
-        /* MOBILE CONTROLS - FIXED */
+        /* MOBILE CONTROLS */
         #mobile-controls { position: absolute; inset: 0; z-index: 3000; display: none; }
         #move-zone { position: absolute; bottom: 0; left: 0; width: 50%; height: 60%; pointer-events: auto; }
         #look-zone { position: absolute; bottom: 0; right: 0; width: 50%; height: 100%; pointer-events: auto; }
-        
-        #joy-base { position: absolute; bottom: 60px; left: 60px; width: 100px; height: 100px; background: rgba(255,0,0,0.1); border: 2px solid #f00; border-radius: 50%; pointer-events: none; }
-        #stick { position: absolute; top: 30px; left: 30px; width: 40px; height: 40px; background: #f00; border-radius: 50%; pointer-events: none; }
+        #joy-base { position: absolute; bottom: 80px; left: 80px; width: 100px; height: 100px; background: rgba(255,0,0,0.1); border: 2px solid #f00; border-radius: 50%; }
+        #stick { position: absolute; top: 30px; left: 30px; width: 40px; height: 40px; background: #f00; border-radius: 50%; }
+        .action-btns { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 10px; }
+        .btn-act { width: 80px; height: 80px; background: rgba(0,0,0,0.8); border: 3px solid #f00; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 18px; pointer-events: auto; }
 
-        .action-btns { position: absolute; bottom: 40px; right: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .btn-act { width: 75px; height: 75px; background: rgba(0,0,0,0.7); border: 2px solid #f00; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; pointer-events: auto; }
-
-        #weapon-view { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 300px; height: 200px; pointer-events: none; z-index: 2500; }
+        /* CROSSHAIR */
+        #cross { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; border: 1px solid #f00; border-radius: 50%; pointer-events: none; z-index: 2000; }
     </style>
 </head>
 <body>
 
 <div id="start-screen" class="ui-screen">
     <div class="glass-panel">
-        <h1 style="font-family:'Nosifer'; color:#f00;">DEN OF SHADOW</h1>
-        <button class="btn-main" onclick="loadAndStart(1)">JOGAR AGORA</button>
-        <p style="font-size: 10px; color: #555;">V15.25 MOBILE STABLE</p>
+        <h1 style="font-family:'Nosifer'; color:#f00; font-size: 2.2rem;">DEN OF SHADOW</h1>
+        <button class="btn-main" onclick="initGame()">INICIAR PROTOCOLO</button>
+        <p style="font-size: 10px; color: #888;">USE [WASD] PARA MOVER | [MOUSE] PARA OLHAR | [ESP] PULAR</p>
+    </div>
+</div>
+
+<div id="settings-screen" class="ui-screen" style="display:none;">
+    <div class="glass-panel">
+        <h2>CONFIGURAÇÕES</h2>
+        <button class="btn-main" onclick="toggleSettings()">FECHAR (INS)</button>
+        <button class="btn-main" onclick="location.reload()">REINICIAR</button>
     </div>
 </div>
 
 <div id="hud" style="display:none;">
-    <div style="margin-bottom:5px;">SALA <span id="room-txt">1</span> | ALMAS: <span id="soul-txt">0</span></div>
-    <div class="hp-bar"><div id="hp-fill"></div></div>
+    <div class="hp-container"><div id="hp-fill"></div></div>
+    <div id="stats-txt">
+        SALA: <span id="val-room">1</span><br>
+        ALMAS: <span id="val-souls">0</span><br>
+        MUNIÇÃO: <span id="val-ammo">20</span>
+    </div>
 </div>
 
 <div id="mobile-controls">
-    <div id="move-zone">
-        <div id="joy-base"><div id="stick"></div></div>
-    </div>
+    <div id="move-zone"><div id="joy-base"><div id="stick"></div></div></div>
     <div id="look-zone"></div>
     <div class="action-btns">
         <div class="btn-act" id="btn-fire">🔥</div>
-        <div class="btn-act" id="btn-jump" style="width:60px; height:60px;">PULAR</div>
+        <div class="btn-act" id="btn-jump" style="width:60px; height:60px;">UP</div>
         <div class="btn-act" id="btn-buy" style="font-size:12px; height:50px;">LOJA</div>
     </div>
 </div>
 
+<div id="cross" style="display:none;"></div>
 <canvas id="gameCanvas"></canvas>
 
 <script>
 const G = { 
-    play: false, room: 1, hp: 100, souls: 0, ammo: 40, weapon: 1, 
-    res: 8, isMobile: false, speed: 4.5, jumpV: 0, z: 0, recoil: 0 
+    play: false, room: 1, hp: 100, souls: 0, ammo: 20, weapon: 1, god: false,
+    res: 6, isMobile: false, speed: 4.0, z: 0, jv: 0, recoil: 0,
+    doorPos: {x: 0, y: 0}, doorActive: false
 };
 
 const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext('2d', {alpha: false});
 const TILE = 64, MAP_SIZE = 24;
 let map = [], enemies = [], items = [], bullets = [], keys = {};
 let player = { x: 0, y: 0, angle: 0, pitch: 0, fov: Math.PI / 3 };
 
-// Controles Mobile Refatorados (Independência de Dedos)
+// Mobile Fixed IDs
 let joyId = null, lookId = null;
-let moveJoy = { startX: 0, startY: 0, curX: 0, curY: 0, active: false };
-let lastLookX = 0, lastLookY = 0;
+let mJoy = { sx: 0, sy: 0, cx: 0, cy: 0, active: false };
+let mLook = { lx: 0, ly: 0 };
 
-function loadAndStart(slot) {
+function initGame() {
     G.isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('hud').style.display = 'block';
+    document.getElementById('cross').style.display = 'block';
     if(G.isMobile) document.getElementById('mobile-controls').style.display = 'block';
     
+    // Captura de mouse para PC
+    if(!G.isMobile) {
+        canvas.addEventListener('click', () => canvas.requestPointerLock());
+        document.addEventListener('pointerlockchange', () => {
+            if(!document.pointerLockElement) console.log("Mouse liberado");
+        });
+    }
+
     setupRoom();
     G.play = true;
     loop();
@@ -93,113 +115,121 @@ function loadAndStart(slot) {
 
 function setupRoom() {
     map = Array(MAP_SIZE * MAP_SIZE).fill(0);
-    enemies = []; items = [];
-    const isShop = (G.room % 5 === 0);
+    enemies = []; items = []; bullets = [];
+    G.doorActive = false;
     
-    // Paredes
+    const isShop = (G.room % 5 === 0);
+    const isBoss = (G.room % 10 === 0);
+
+    // Borda
     for(let i=0; i<MAP_SIZE; i++){ map[i]=1; map[i+(MAP_SIZE*(MAP_SIZE-1))]=1; map[i*MAP_SIZE]=1; map[i*MAP_SIZE+(MAP_SIZE-1)]=1; }
 
     if(isShop) {
-        // Pedestais (Shopping)
-        spawnItem(10, 12, 'HP', 10);
-        spawnItem(14, 12, 'GUN', 30);
+        spawnItem(10, 10, 'HP', 15);
+        spawnItem(14, 10, 'MUNIÇÃO', 10);
+        if(G.weapon === 1) spawnItem(12, 14, 'FUZIL', 50);
     } else {
-        for(let i=0; i<20; i++) map[Math.floor(Math.random()*map.length)] = 1;
-        for(let i=0; i<2+G.room; i++) enemies.push({x:(8+Math.random()*8)*TILE, y:(8+Math.random()*8)*TILE, hp: 50, alive:true});
+        // Obstáculos aleatórios
+        for(let i=0; i<15; i++) map[Math.floor(Math.random()*map.length)] = 1;
+        
+        let count = isBoss ? 1 : 2 + Math.floor(G.room/3);
+        for(let i=0; i<count; i++) {
+            enemies.push({
+                x:(5+Math.random()*14)*TILE, y:(5+Math.random()*14)*TILE, 
+                hp: isBoss ? 500 : 60, 
+                maxHp: isBoss ? 500 : 60,
+                type: isBoss ? 'BOSS' : (Math.random() > 0.7 ? 'FAST' : 'NORMAL'),
+                alive: true
+            });
+        }
     }
-    map[Math.floor(MAP_SIZE/2)] = 2; // Saída
-    player.x = 12*TILE; player.y = 20*TILE;
+
+    // Porta em 3 locais aleatórios
+    const locs = [{x:12, y:2}, {x:2, y:12}, {x:21, y:12}];
+    const sel = locs[Math.floor(Math.random()*locs.length)];
+    G.doorPos = { x: sel.x * TILE + 32, y: sel.y * TILE + 32 };
+    map[sel.y * MAP_SIZE + sel.x] = 2;
+
+    player.x = 12 * TILE; player.y = 20 * TILE;
 }
 
 function spawnItem(tx, ty, type, price) {
-    map[ty*MAP_SIZE+tx] = 3; // Bloco de Pedestal
     items.push({ x: tx*TILE + 32, y: ty*TILE + 32, type, price, active: true });
+    map[ty*MAP_SIZE+tx] = 3;
 }
 
-// Lógica de Movimento Mobile Fixa
+// Input Handlers
+window.addEventListener('keydown', e => {
+    keys[e.key.toLowerCase()] = true;
+    if(e.key === ' ' || e.key === 'Spacebar') jump();
+    if(e.key === 'Insert') toggleSettings();
+});
+window.addEventListener('keyup', e => delete keys[e.key.toLowerCase()]);
+window.addEventListener('mousemove', e => {
+    if(document.pointerLockElement) {
+        player.angle += e.movementX * 0.003;
+        player.pitch = Math.max(-300, Math.min(300, player.pitch - e.movementY * 2));
+    }
+});
+
+// Mobile Logic
 const moveZone = document.getElementById('move-zone');
 moveZone.addEventListener('touchstart', e => {
-    for(let t of e.changedTouches) {
-        if(!moveJoy.active) {
-            joyId = t.identifier;
-            moveJoy.active = true;
-            moveJoy.startX = t.clientX; moveJoy.startY = t.clientY;
-        }
-    }
+    for(let t of e.changedTouches) if(!mJoy.active) { joyId = t.identifier; mJoy.active = true; mJoy.sx = t.clientX; mJoy.sy = t.clientY; }
 });
-
 moveZone.addEventListener('touchmove', e => {
-    for(let t of e.changedTouches) {
-        if(t.identifier === joyId) {
-            let dx = t.clientX - moveJoy.startX, dy = t.clientY - moveJoy.startY;
-            let dist = Math.min(40, Math.hypot(dx, dy));
-            let ang = Math.atan2(dy, dx);
-            moveJoy.curX = Math.cos(ang) * (dist/40);
-            moveJoy.curY = Math.sin(ang) * (dist/40);
-            document.getElementById('stick').style.transform = `translate(${Math.cos(ang)*dist}px, ${Math.sin(ang)*dist}px)`;
-        }
+    for(let t of e.changedTouches) if(t.identifier === joyId) {
+        let dx = t.clientX - mJoy.sx, dy = t.clientY - mJoy.sy;
+        let d = Math.min(40, Math.hypot(dx, dy));
+        let a = Math.atan2(dy, dx);
+        mJoy.cx = Math.cos(a)*(d/40); mJoy.cy = Math.sin(a)*(d/40);
+        document.getElementById('stick').style.transform = `translate(${Math.cos(a)*d}px, ${Math.sin(a)*d}px)`;
     }
 });
-
 moveZone.addEventListener('touchend', e => {
-    for(let t of e.changedTouches) {
-        if(t.identifier === joyId) {
-            moveJoy.active = false; moveJoy.curX = 0; moveJoy.curY = 0;
-            joyId = null;
-            document.getElementById('stick').style.transform = `translate(0,0)`;
-        }
-    }
+    for(let t of e.changedTouches) if(t.identifier === joyId) { mJoy.active = false; mJoy.cx = 0; mJoy.cy = 0; joyId = null; document.getElementById('stick').style.transform = `translate(0,0)`; }
 });
 
-// Lógica de Olhar Mobile Fixa
 const lookZone = document.getElementById('look-zone');
 lookZone.addEventListener('touchstart', e => {
-    for(let t of e.changedTouches) {
-        if(lookId === null) {
-            lookId = t.identifier;
-            lastLookX = t.clientX; lastLookY = t.clientY;
-        }
-    }
+    for(let t of e.changedTouches) if(lookId === null) { lookId = t.identifier; mLook.lx = t.clientX; mLook.ly = t.clientY; }
 });
-
 lookZone.addEventListener('touchmove', e => {
-    for(let t of e.changedTouches) {
-        if(t.identifier === lookId) {
-            player.angle += (t.clientX - lastLookX) * 0.007;
-            player.pitch = Math.max(-200, Math.min(200, player.pitch - (t.clientY - lastLookY) * 1.5));
-            lastLookX = t.clientX; lastLookY = t.clientY;
-        }
+    for(let t of e.changedTouches) if(t.identifier === lookId) {
+        player.angle += (t.clientX - mLook.lx) * 0.008;
+        player.pitch = Math.max(-250, Math.min(250, player.pitch - (t.clientY - mLook.ly) * 1.5));
+        mLook.lx = t.clientX; mLook.ly = t.clientY;
     }
 });
-
 lookZone.addEventListener('touchend', e => {
     for(let t of e.changedTouches) if(t.identifier === lookId) lookId = null;
 });
 
-// Ações
-document.getElementById('btn-fire').ontouchstart = e => { e.preventDefault(); shoot(); };
-document.getElementById('btn-jump').ontouchstart = e => { e.preventDefault(); jump(); };
-document.getElementById('btn-buy').ontouchstart = e => { e.preventDefault(); buy(); };
+document.getElementById('btn-fire').addEventListener('touchstart', (e) => { e.preventDefault(); shoot(); });
+document.getElementById('btn-jump').addEventListener('touchstart', (e) => { e.preventDefault(); jump(); });
+document.getElementById('btn-buy').addEventListener('touchstart', (e) => { e.preventDefault(); interact(); });
 
-window.onkeydown = e => { keys[e.key.toLowerCase()] = true; if(e.key === ' ') jump(); };
-window.onkeyup = e => delete keys[e.key.toLowerCase()];
-
-function jump() { if(G.z === 0) G.jumpV = 10; }
+function jump() { if(G.z === 0) G.jv = 12; }
+function toggleSettings() { G.play = !G.play; document.getElementById('settings-screen').style.display = G.play ? 'none' : 'flex'; }
 
 function shoot() {
-    G.recoil = 20;
-    const b = (a) => bullets.push({x: player.x, y: player.y, vx: Math.cos(a)*20, vy: Math.sin(a)*20, life: 50});
-    b(player.angle);
-    if(G.weapon === 2) { b(player.angle-0.1); b(player.angle+0.1); }
+    if(G.ammo <= 0 && !G.god) return;
+    if(!G.god) G.ammo--;
+    G.recoil = 15;
+    const bullet = (a) => bullets.push({x: player.x, y: player.y, vx: Math.cos(a)*25, vy: Math.sin(a)*25, life: 40});
+    bullet(player.angle);
+    if(G.weapon === 2) { bullet(player.angle-0.05); bullet(player.angle+0.05); }
 }
 
-function buy() {
+function interact() {
     items.forEach(it => {
-        if(it.active && Math.hypot(player.x-it.x, player.y-it.y) < 100) {
-            if(G.souls >= it.price) {
+        if(it.active && Math.hypot(player.x-it.x, player.y-it.y) < 80) {
+            if(G.souls >= it.price || G.god) {
                 G.souls -= it.price; it.active = false;
                 if(it.type === 'HP') G.hp = 100;
-                if(it.type === 'GUN') G.weapon = 2;
+                if(it.type === 'MUNIÇÃO') G.ammo += 30;
+                if(it.type === 'FUZIL') G.weapon = 2;
+                map[Math.floor(it.y/TILE)*MAP_SIZE + Math.floor(it.x/TILE)] = 0;
             }
         }
     });
@@ -207,93 +237,118 @@ function buy() {
 
 function update() {
     if(!G.play) return;
-    
-    // Gravidade / Pulo
-    G.z += G.jumpV;
-    G.jumpV -= 1;
-    if(G.z <= 0) { G.z = 0; G.jumpV = 0; }
+
+    G.z += G.jv; G.jv -= 1;
+    if(G.z <= 0) { G.z = 0; G.jv = 0; }
     if(G.recoil > 0) G.recoil -= 2;
 
-    // Movimento
     let mx = 0, my = 0;
+    // PC Keys
     if(keys['w']) { mx += Math.cos(player.angle); my += Math.sin(player.angle); }
     if(keys['s']) { mx -= Math.cos(player.angle); my -= Math.sin(player.angle); }
-    if(moveJoy.active) {
-        mx += Math.cos(player.angle) * (-moveJoy.curY) + Math.cos(player.angle + Math.PI/2) * moveJoy.curX;
-        my += Math.sin(player.angle) * (-moveJoy.curY) + Math.sin(player.angle + Math.PI/2) * moveJoy.curX;
-    }
+    if(keys['a']) { mx += Math.cos(player.angle - Math.PI/2); my += Math.sin(player.angle - Math.PI/2); }
+    if(keys['d']) { mx += Math.cos(player.angle + Math.PI/2); my += Math.sin(player.angle + Math.PI/2); }
     
-    let nx = player.x + mx*G.speed, ny = player.y + my*G.speed;
-    if(map[Math.floor(ny/TILE)*MAP_SIZE + Math.floor(nx/TILE)] === 0) { player.x = nx; player.y = ny; }
+    // Mobile Move
+    if(mJoy.active) {
+        mx += Math.cos(player.angle)*(-mJoy.cy) + Math.cos(player.angle+Math.PI/2)*mJoy.cx;
+        my += Math.sin(player.angle)*(-mJoy.cy) + Math.sin(player.angle+Math.PI/2)*mJoy.cx;
+    }
 
-    // Inimigos com Colisão
+    let nx = player.x + mx*G.speed, ny = player.y + my*G.speed;
+    if(map[Math.floor(ny/TILE)*MAP_SIZE + Math.floor(nx/TILE)] !== 1) { player.x = nx; player.y = ny; }
+
+    // Inimigos
     enemies.forEach(en => {
         if(!en.alive) return;
         let d = Math.hypot(player.x-en.x, player.y-en.y);
-        let ex = (player.x-en.x)/d * 2, ey = (player.y-en.y)/d * 2;
-        // Checagem de parede para inimigo
-        if(map[Math.floor((en.y+ey)/TILE)*MAP_SIZE + Math.floor((en.x+ex)/TILE)] === 0) {
-            en.x += ex; en.y += ey;
+        let spd = en.type === 'BOSS' ? 1.5 : (en.type === 'FAST' ? 3.5 : 2.2);
+        
+        if(d > 50) { // Distância de parada para não entrar no player
+            let ex = (player.x-en.x)/d * spd, ey = (player.y-en.y)/d * spd;
+            if(map[Math.floor((en.y+ey)/TILE)*MAP_SIZE+Math.floor((en.x+ex)/TILE)] === 0) { en.x += ex; en.y += ey; }
+        } else if(!G.god) {
+            G.hp -= 0.3; // Dano equilibrado
+            if(G.hp <= 0) location.reload();
         }
-        if(d < 40) G.hp -= 0.5;
     });
 
     bullets = bullets.filter(b => {
         b.x += b.vx; b.y += b.vy; b.life--;
         let hit = false;
-        enemies.forEach(en => { if(en.alive && Math.hypot(b.x-en.x, b.y-en.y)<30){ en.hp-=20; hit=true; if(en.hp<=0){en.alive=false; G.souls+=5;} } });
-        return !hit && b.life > 0 && map[Math.floor(b.y/TILE)*MAP_SIZE+Math.floor(b.x/TILE)] === 0;
+        enemies.forEach(en => {
+            if(en.alive && Math.hypot(b.x-en.x, b.y-en.y) < 35) {
+                en.hp -= 25; hit = true;
+                if(en.hp <= 0) { en.alive = false; G.souls += 5; }
+            }
+        });
+        return !hit && b.life > 0 && map[Math.floor(b.y/TILE)*MAP_SIZE+Math.floor(b.x/TILE)] !== 1;
     });
 
-    if(map[Math.floor(player.y/TILE)*MAP_SIZE+Math.floor(player.x/TILE)] === 2) { G.room++; setupRoom(); }
-    
+    // Porta: Ativa só se todos os inimigos morrerem
+    G.doorActive = enemies.every(e => !e.alive);
+    if(G.doorActive && Math.hypot(player.x-G.doorPos.x, player.y-G.doorPos.y) < 50) {
+        G.room++;
+        setupRoom();
+    }
+
     document.getElementById('hp-fill').style.width = G.hp + "%";
-    document.getElementById('soul-txt').innerText = G.souls;
+    document.getElementById('val-souls').innerText = G.souls;
+    document.getElementById('val-room').innerText = G.room;
+    document.getElementById('val-ammo').innerText = G.ammo;
 }
 
 function draw() {
-    ctx.fillStyle = "#050000"; ctx.fillRect(0,0,canvas.width, canvas.height/2 + player.pitch + G.z);
-    ctx.fillStyle = "#110505"; ctx.fillRect(0,canvas.height/2 + player.pitch + G.z, canvas.width, canvas.height);
+    ctx.fillStyle = "#020000"; ctx.fillRect(0,0,canvas.width, canvas.height/2 + player.pitch + G.z);
+    ctx.fillStyle = "#0a0505"; ctx.fillRect(0,canvas.height/2 + player.pitch + G.z, canvas.width, canvas.height);
 
-    const zBuf = [];
+    const zB = [];
     for(let i=0; i<canvas.width; i+=G.res) {
-        let ang = (player.angle - player.fov/2) + (i/canvas.width)*player.fov;
-        let d=0, cos=Math.cos(ang), sin=Math.sin(ang), hit=0;
-        while(hit===0 && d<800) {
-            d += 5;
+        let a = (player.angle - player.fov/2) + (i/canvas.width)*player.fov;
+        let d=0, cos=Math.cos(a), sin=Math.sin(a), hit=0;
+        while(hit===0 && d<900) {
+            d += 6;
             let tx = Math.floor((player.x+cos*d)/TILE), ty = Math.floor((player.y+sin*d)/TILE);
             if(map[ty*MAP_SIZE+tx] > 0) {
                 hit = map[ty*MAP_SIZE+tx];
-                let dist = d * Math.cos(player.angle-ang);
-                zBuf[i] = dist;
+                let dist = d * Math.cos(player.angle-a);
+                zB[i] = dist;
                 let h = (TILE * canvas.height) / dist;
-                ctx.fillStyle = hit===1 ? "#200" : (hit===2 ? "#0f0" : "#444");
+                ctx.fillStyle = hit===1 ? "#100" : (hit===2 ? (G.doorActive ? "#0f0" : "#222") : "#333");
                 ctx.fillRect(i, (canvas.height-h)/2 + player.pitch + G.z, G.res, h);
             }
         }
     }
 
-    // Desenhar Inimigos e Itens
+    // Sprites (Inimigos, Portas, Itens)
     [...enemies, ...items].forEach(s => {
         if(s.alive===false || s.active===false) return;
         let dx = s.x - player.x, dy = s.y - player.y;
         let dist = Math.hypot(dx, dy);
         let ang = Math.atan2(dy, dx) - player.angle;
         if(ang < -Math.PI) ang += Math.PI*2; if(ang > Math.PI) ang -= Math.PI*2;
-        if(Math.abs(ang) < player.fov && dist < (zBuf[Math.floor(canvas.width/2)] || 999)) {
+        if(Math.abs(ang) < player.fov && dist < (zB[Math.floor(canvas.width/2)] || 900)) {
             let sx = (0.5 * (ang/(player.fov/2)) + 0.5) * canvas.width;
             let sh = (TILE * canvas.height) / dist;
-            ctx.fillStyle = s.price ? "#ff0" : "#f00";
+            ctx.fillStyle = s.type === 'BOSS' ? "#f0f" : (s.price ? "#ff0" : "#f00");
             ctx.fillRect(sx-sh/4, (canvas.height/2) + player.pitch + G.z - sh/4, sh/2, sh/2);
+            // Barra de vida do boss
+            if(s.type === 'BOSS') {
+                ctx.fillStyle = "#300"; ctx.fillRect(sx-50, (canvas.height/2)+player.pitch-sh/2, 100, 5);
+                ctx.fillStyle = "#f00"; ctx.fillRect(sx-50, (canvas.height/2)+player.pitch-sh/2, (s.hp/s.maxHp)*100, 5);
+            }
         }
     });
 
-    // ARMA FPS
-    ctx.fillStyle = "#333";
-    let gunX = canvas.width/2 - 50, gunY = canvas.height - 150 + G.recoil - G.z/2;
-    ctx.fillRect(gunX, gunY, 100, 200); // Corpo da arma
+    // ARMA FPS MELHORADA
+    ctx.save();
+    let gunW = 120, gunH = 250;
+    ctx.translate(canvas.width/2 + (G.isMobile?0:20), canvas.height - gunH + G.recoil - G.z/2);
+    ctx.fillStyle = "#1a1a1a";
+    ctx.fillRect(-gunW/2, 0, gunW, gunH); // Base
     ctx.fillStyle = "#f00";
-    ctx.fillRect(gunX+40, gunY-20, 20, 40); // Cano
+    ctx.fillRect(-5, -30, 10, 50); // Mira Laser
+    ctx.restore();
 }
 
 function loop() { update(); draw(); requestAnimationFrame(loop); }
