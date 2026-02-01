@@ -3,21 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 V2.2</title>
+    <title>Den of Shadow 💀 V2.3</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&display=swap');
         * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
         body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; width: 100vw; height: 100vh; }
-        canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+        canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; cursor: crosshair; }
 
         .ui-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 9000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .glass-panel { background: #110000; border: 2px solid #f00; padding: 20px; width: 90%; max-width: 500px; border-radius: 8px; box-shadow: 0 0 20px #f00; }
-        .btn-main { padding: 15px; background: #300; border: 1px solid #f00; color: #fff; cursor: pointer; width: 100%; margin: 8px 0; font-family: 'Orbitron'; font-weight: bold; transition: 0.2s; font-size: 14px; }
-        .btn-main:active, .btn-main:hover { background: #f00; color: #000; }
+        .glass-panel { background: #110000; border: 2px solid #f00; padding: 20px; width: 95%; max-width: 600px; border-radius: 8px; box-shadow: 0 0 20px #f00; }
         
-        #save-menu { display: block; width: 100%; }
-        #class-menu { display: none; width: 100%; flex-direction: column; }
+        /* Botões de Save */
+        .save-slot-container { position: relative; margin: 8px 0; }
+        .btn-main { padding: 15px; background: #300; border: 1px solid #f00; color: #fff; cursor: pointer; width: 100%; font-family: 'Orbitron'; font-weight: bold; transition: 0.2s; font-size: 14px; }
+        .btn-main:hover { background: #500; }
+        .btn-delete { position: absolute; right: 5px; top: 5px; background: #f00; color: #000; border: none; padding: 5px 10px; font-weight: bold; cursor: pointer; z-index: 9001; border-radius: 4px; }
 
+        #class-menu { display: none; width: 100%; flex-direction: column; }
         .save-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 15px 0; }
         @media (min-width: 600px) { .save-grid { grid-template-columns: 1fr 1fr 1fr; } }
 
@@ -26,12 +28,14 @@
         .mask { width: 20px; height: 25px; background: #f00; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
         .mask.broken { background: #444; opacity: 0.3; }
 
-        #mobile-controls { position: absolute; inset: 0; z-index: 3000; display: none; }
-        #move-zone { position: absolute; bottom: 0; left: 0; width: 50%; height: 60%; }
-        #joy-base { position: absolute; bottom: 60px; left: 60px; width: 80px; height: 80px; background: rgba(255,0,0,0.1); border: 2px solid #f00; border-radius: 50%; }
-        #stick { position: absolute; top: 20px; left: 20px; width: 40px; height: 40px; background: #f00; border-radius: 50%; pointer-events: none; }
-        .action-btns { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 3100; }
-        .btn-act { width: 80px; height: 80px; background: rgba(40,0,0,0.8); border: 3px solid #f00; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
+        #mobile-controls { position: absolute; inset: 0; z-index: 3000; display: none; pointer-events: none; }
+        #move-zone { position: absolute; bottom: 20px; left: 20px; width: 150px; height: 150px; pointer-events: auto; }
+        #joy-base { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100px; height: 100px; background: rgba(255,0,0,0.1); border: 2px solid #f00; border-radius: 50%; }
+        #stick { position: absolute; top: 30px; left: 30px; width: 40px; height: 40px; background: #f00; border-radius: 50%; transition: transform 0.1s; }
+        
+        .look-zone { position: absolute; inset: 0; z-index: 2900; pointer-events: auto; }
+        .action-btns { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 3100; pointer-events: auto; }
+        .btn-act { width: 80px; height: 80px; background: rgba(40,0,0,0.8); border: 3px solid #f00; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; touch-action: manipulation; }
 
         #cross { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; border: 2px solid rgba(255,0,0,0.8); border-radius: 50%; pointer-events: none; z-index: 2000; }
         #cross::after { content: ''; position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: red; transform: translate(-50%, -50%); }
@@ -42,14 +46,23 @@
 <div id="start-screen" class="ui-screen">
     <div class="glass-panel">
         <h1 style="font-family:'Nosifer'; color:#f00; margin:0; font-size: 28px;">DEN OF SHADOW</h1>
-        <p style="font-size: 10px; color: #f66; margin-bottom: 20px;">V2.2 - MOBILE & CONSOLE READY</p>
+        <p style="font-size: 10px; color: #f66; margin-bottom: 20px;">V2.3 - FIX CONTROLS & SAVE MGR</p>
         
         <div id="save-menu">
             <h3 style="font-size: 14px;">SELECIONE O SLOT</h3>
             <div class="save-grid">
-                <button class="btn-main" onclick="selectSlot(1)">SLOT 1<br><small id="s1-info">Vazio</small></button>
-                <button class="btn-main" onclick="selectSlot(2)">SLOT 2<br><small id="s2-info">Vazio</small></button>
-                <button class="btn-main" onclick="selectSlot(3)">SLOT 3<br><small id="s3-info">Vazio</small></button>
+                <div class="save-slot-container">
+                    <button class="btn-main" onclick="selectSlot(1)">SLOT 1<br><small id="s1-info">Vazio</small></button>
+                    <button class="btn-delete" onclick="deleteSave(1, event)">X</button>
+                </div>
+                <div class="save-slot-container">
+                    <button class="btn-main" onclick="selectSlot(2)">SLOT 2<br><small id="s2-info">Vazio</small></button>
+                    <button class="btn-delete" onclick="deleteSave(2, event)">X</button>
+                </div>
+                <div class="save-slot-container">
+                    <button class="btn-main" onclick="selectSlot(3)">SLOT 3<br><small id="s3-info">Vazio</small></button>
+                    <button class="btn-delete" onclick="deleteSave(3, event)">X</button>
+                </div>
             </div>
         </div>
 
@@ -70,7 +83,7 @@
 </div>
 
 <div id="mobile-controls">
-    <div id="look-zone" style="position:absolute; inset:0; z-index:2900;"></div>
+    <div id="look-zone" class="look-zone"></div>
     <div id="move-zone"><div id="joy-base"><div id="stick"></div></div></div>
     <div class="action-btns">
         <div class="btn-act" id="btn-fire">ATACAR</div>
@@ -103,6 +116,14 @@ function updateSaveUI() {
         const data = localStorage.getItem('den_save_' + i);
         const info = document.getElementById(`s${i}-info`);
         if(info) info.innerText = data ? `Sala: ${JSON.parse(data).room}` : "Vazio";
+    }
+}
+
+function deleteSave(slot, event) {
+    event.stopPropagation();
+    if(confirm(`Deseja apagar o progresso do Slot ${slot}?`)) {
+        localStorage.removeItem('den_save_' + slot);
+        updateSaveUI();
     }
 }
 
@@ -168,20 +189,17 @@ function performInteract() {
     let dx = player.x - G.doorPos.x;
     let dy = player.y - G.doorPos.y;
     let dist = Math.sqrt(dx*dx + dy*dy);
-    
     if(enemies.every(e => !e.alive) && dist < 120) {
         G.room++;
         setupRoom();
     }
 }
 
-// --- RENDERIZAÇÃO ---
+// --- RENDER ---
 function draw() {
-    // Fundo
     ctx.fillStyle = "#050000"; ctx.fillRect(0,0,canvas.width, canvas.height/2 + player.pitch + G.z);
     ctx.fillStyle = "#150505"; ctx.fillRect(0,canvas.height/2 + player.pitch + G.z, canvas.width, canvas.height);
 
-    // Paredes
     for(let i=0; i<canvas.width; i+=G.res) {
         let a = (player.angle - player.fov/2) + (i/canvas.width)*player.fov;
         let d=0, cos=Math.cos(a), sin=Math.sin(a), hit=0;
@@ -201,38 +219,27 @@ function draw() {
         }
     }
 
-    // Sprites (Inimigos e Balas)
     let sprites = [...enemies.filter(e=>e.alive), ...bullets];
-    sprites.sort((a,b) => {
-        let da = Math.hypot(player.x-a.x, player.y-a.y);
-        let db = Math.hypot(player.x-b.x, player.y-b.y);
-        return db - da;
-    });
+    sprites.sort((a,b) => Math.hypot(player.x-b.x, player.y-b.y) - Math.hypot(player.x-a.x, player.y-a.y));
 
     sprites.forEach(s => {
         let dx = s.x - player.x, dy = s.y - player.y;
         let dist = Math.sqrt(dx*dx + dy*dy);
         let ang = Math.atan2(dy, dx) - player.angle;
         while(ang < -Math.PI) ang += Math.PI*2; while(ang > Math.PI) ang -= Math.PI*2;
-        
         if(Math.abs(ang) < player.fov && dist > 10) {
             let sx = (0.5 * (ang/(player.fov/2)) + 0.5) * canvas.width;
             let sh = (TILE * canvas.height) / dist;
             let sy = (canvas.height/2) + player.pitch + G.z;
-
-            if(s.vx !== undefined) { // É uma bala
+            if(s.vx !== undefined) { 
                 ctx.fillStyle = s.magic ? "#f0f" : "#ff0";
                 ctx.beginPath(); ctx.arc(sx, sy, sh/8, 0, 7); ctx.fill();
-            } else { // É um inimigo
+            } else { 
                 ctx.fillStyle = s.type === 'BOSS' ? "#f0f" : "#f00";
                 ctx.fillRect(sx - sh/3, sy - sh/2, sh/1.5, sh);
-                // Barra de HP simples
-                ctx.fillStyle = "#300"; ctx.fillRect(sx-sh/3, sy-sh/1.8, sh/1.5, 5);
-                ctx.fillStyle = "#f00"; ctx.fillRect(sx-sh/3, sy-sh/1.8, (sh/1.5)*(s.hp/(40+(G.room*5))), 5);
             }
         }
     });
-
     drawWeapon();
 }
 
@@ -244,7 +251,6 @@ function drawWeapon() {
     if(G.weapon === 'knife') {
         ctx.translate(sw * 0.7, sh - 100 + bob - rec);
         ctx.fillStyle = '#aaa'; ctx.fillRect(-10, -100, 20, 120);
-        ctx.fillStyle = '#422'; ctx.fillRect(-15, 20, 30, 50);
     } else {
         ctx.translate(sw * 0.55, sh - 100 + bob - rec);
         ctx.fillStyle = G.weapon === 'magic' ? '#404' : '#222';
@@ -253,13 +259,12 @@ function drawWeapon() {
     ctx.restore();
 }
 
-// --- LÓGICA DE MOVIMENTO E IA ---
+// --- UPDATE ---
 function update() {
     if(!G.play) return;
     if(G.recoil > 0) G.recoil -= 2;
     G.z += G.jv; G.jv -= 0.8; if(G.z <= 0) { G.z = 0; G.jv = 0; }
 
-    // Movimentação Jogador
     let mx = 0, my = 0;
     if(keys['w'] || keys['arrowup']) { mx += Math.cos(player.angle); my += Math.sin(player.angle); }
     if(keys['s'] || keys['arrowdown']) { mx -= Math.cos(player.angle); my -= Math.sin(player.angle); }
@@ -276,26 +281,22 @@ function update() {
     if(map[Math.floor(player.y/TILE)*MAP_SIZE + Math.floor(nx/TILE)] === 0) player.x = nx;
     if(map[Math.floor(ny/TILE)*MAP_SIZE + Math.floor(player.x/TILE)] === 0) player.y = ny;
 
-    // IA Inimigos
     enemies.forEach(en => {
         if(!en.alive) return;
         let dx = player.x - en.x, dy = player.y - en.y;
         let dist = Math.hypot(dx, dy);
-        
-        if(dist < 400) { // Persegue se estiver perto
+        if(dist < 400) { 
             let ang = Math.atan2(dy, dx);
             let ex = en.x + Math.cos(ang) * en.speed;
             let ey = en.y + Math.sin(ang) * en.speed;
             if(map[Math.floor(ey/TILE)*MAP_SIZE + Math.floor(ex/TILE)] === 0) { en.x = ex; en.y = ey; }
         }
-
         if(dist < 40 && Date.now() - G.lastHit > 1000) {
             G.hp--; G.lastHit = Date.now(); updateMasks();
             if(G.hp <= 0) location.reload();
         }
     });
 
-    // Balas
     bullets = bullets.filter(b => {
         b.x += b.vx; b.y += b.vy; b.life--;
         let hit = false;
@@ -323,35 +324,74 @@ function shoot() {
     }
 }
 
-// --- CONTROLES ---
+// --- CONTROLES CORRIGIDOS ---
 const mJoy = { active: false, sx:0, sy:0, dx:0, dy:0, id:null };
-document.getElementById('move-zone').ontouchstart = e => { 
-    let t = e.changedTouches[0]; mJoy.active=true; mJoy.id=t.identifier; mJoy.sx=t.clientX; mJoy.sy=t.clientY; 
-};
-document.getElementById('move-zone').ontouchmove = e => {
-    for(let t of e.changedTouches) if(t.identifier === mJoy.id) {
-        let dx = t.clientX-mJoy.sx, dy = t.clientY-mJoy.sy;
-        let d = Math.min(35, Math.hypot(dx,dy));
-        let ang = Math.atan2(dy,dx);
-        mJoy.dx = Math.cos(ang)*(d/35); mJoy.dy = Math.sin(ang)*(d/35);
-        document.getElementById('stick').style.transform = `translate(${Math.cos(ang)*d}px,${Math.sin(ang)*d}px)`;
-    }
-};
-document.getElementById('move-zone').ontouchend = () => { mJoy.active=false; mJoy.dx=0; mJoy.dy=0; document.getElementById('stick').style.transform = `translate(0,0)`; };
+const moveZone = document.getElementById('move-zone');
 
+moveZone.addEventListener('touchstart', e => { 
+    const t = e.changedTouches[0];
+    mJoy.active = true; mJoy.id = t.identifier;
+    mJoy.sx = t.clientX; mJoy.sy = t.clientY;
+}, {passive: false});
+
+moveZone.addEventListener('touchmove', e => {
+    e.preventDefault();
+    for(let t of e.changedTouches) {
+        if(t.identifier === mJoy.id) {
+            let dx = t.clientX - mJoy.sx;
+            let dy = t.clientY - mJoy.sy;
+            let dist = Math.min(40, Math.hypot(dx, dy));
+            let ang = Math.atan2(dy, dx);
+            mJoy.dx = (Math.cos(ang) * dist) / 40;
+            mJoy.dy = (Math.sin(ang) * dist) / 40;
+            document.getElementById('stick').style.transform = `translate(${Math.cos(ang)*dist}px, ${Math.sin(ang)*dist}px)`;
+        }
+    }
+}, {passive: false});
+
+moveZone.addEventListener('touchend', () => {
+    mJoy.active = false; mJoy.dx = 0; mJoy.dy = 0;
+    document.getElementById('stick').style.transform = `translate(0,0)`;
+});
+
+// Olhar Mobile
 let lTouch = { id: null, x: 0, y: 0 };
-document.getElementById('look-zone').ontouchstart = e => { lTouch.id = e.changedTouches[0].identifier; lTouch.x = e.changedTouches[0].clientX; lTouch.y = e.changedTouches[0].clientY; };
-document.getElementById('look-zone').ontouchmove = e => {
-    for(let t of e.changedTouches) if(t.identifier === lTouch.id) {
-        player.angle += (t.clientX - lTouch.x) * 0.006;
-        player.pitch = Math.max(-200, Math.min(200, player.pitch - (t.clientY - lTouch.y) * 1.2));
-        lTouch.x = t.clientX; lTouch.y = t.clientY;
-    }
-};
+document.getElementById('look-zone').addEventListener('touchstart', e => {
+    const t = e.changedTouches[0];
+    lTouch.id = t.identifier; lTouch.x = t.clientX; lTouch.y = t.clientY;
+});
 
-document.getElementById('btn-fire').ontouchstart = e => { e.preventDefault(); shoot(); };
-document.getElementById('btn-interact').ontouchstart = e => { e.preventDefault(); performInteract(); };
-document.getElementById('btn-jump').ontouchstart = e => { e.preventDefault(); if(G.z===0) G.jv=10; };
+document.getElementById('look-zone').addEventListener('touchmove', e => {
+    for(let t of e.changedTouches) {
+        if(t.identifier === lTouch.id) {
+            player.angle += (t.clientX - lTouch.x) * 0.005;
+            player.pitch = Math.max(-150, Math.min(150, player.pitch - (t.clientY - lTouch.y) * 1.5));
+            lTouch.x = t.clientX; lTouch.y = t.clientY;
+        }
+    }
+});
+
+// Mouse e Cliques
+window.addEventListener('mousedown', (e) => {
+    if(G.play) {
+        if(document.pointerLockElement === canvas) {
+            shoot();
+        } else {
+            canvas.requestPointerLock();
+        }
+    }
+});
+
+window.addEventListener('mousemove', (e) => {
+    if(document.pointerLockElement === canvas && G.play) {
+        player.angle += e.movementX * 0.003;
+        player.pitch = Math.max(-200, Math.min(200, player.pitch - e.movementY * 1.5));
+    }
+});
+
+document.getElementById('btn-fire').onclick = e => { e.preventDefault(); shoot(); };
+document.getElementById('btn-interact').onclick = e => { e.preventDefault(); performInteract(); };
+document.getElementById('btn-jump').onclick = e => { e.preventDefault(); if(G.z===0) G.jv=10; };
 
 window.onkeydown = e => { 
     keys[e.key.toLowerCase()] = true; 
@@ -359,15 +399,13 @@ window.onkeydown = e => {
     if(e.code==='Space' && G.z===0) G.jv=10; 
 };
 window.onkeyup = e => delete keys[e.key.toLowerCase()];
-window.onclick = () => { if(G.play && !G.isMobile) { shoot(); canvas.requestPointerLock(); } };
 
 function saveGame() {
-    const data = { room: G.room, souls: G.souls, weapon: G.weapon, class: G.class };
-    localStorage.setItem('den_save_' + G.currentSlot, JSON.stringify(data));
+    localStorage.setItem('den_save_' + G.currentSlot, JSON.stringify({ room: G.room, souls: G.souls, weapon: G.weapon, class: G.class }));
 }
 
 function updateMasks() {
-    const c = document.getElementById('masks'); if(!c) return;
+    const c = document.getElementById('masks');
     c.innerHTML = '';
     for(let i=0; i<G.maxHp; i++) {
         let m = document.createElement('div'); m.className = i < G.hp ? 'mask' : 'mask broken';
