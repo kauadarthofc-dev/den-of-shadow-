@@ -3,549 +3,627 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 V3.0 Reforged</title>
+    <title>Den of Shadow 💀 V3.0 (Fixed)</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&display=swap');
-        
-        :root { --c-red: #ff0000; --c-dark: #110000; --c-glass: rgba(20, 0, 0, 0.9); }
-        * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
-        
-        body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; width: 100vw; height: 100vh; }
-        
-        /* CANVAS & LAYERS */
-        #game-layer { position: relative; width: 100%; height: 100%; }
+        * { touch-action: none; user-select: none; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: #050505; color: white; font-family: 'Orbitron', monospace; overflow: hidden; width: 100vw; height: 100vh; }
         canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+
+        /* UI Overlay */
+        .ui-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.92); z-index: 9000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .glass-panel { background: #1a0505; border: 1px solid #f00; padding: 20px; width: 90%; max-width: 500px; border-radius: 4px; box-shadow: 0 0 30px rgba(255,0,0,0.2); text-align: center; }
         
-        /* UI SCREENS */
-        .ui-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.92); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; transition: opacity 0.3s; }
-        .hidden { display: none !important; opacity: 0; pointer-events: none; }
+        /* Save Slots - Layout Corrigido */
+        .slot-wrapper { position: relative; margin-bottom: 10px; height: 60px; }
+        .btn-slot { width: 100%; height: 100%; background: #300; border: 1px solid #600; color: #fff; font-family: inherit; cursor: pointer; text-align: left; padding-left: 15px; transition: 0.2s; }
+        .btn-slot:active { background: #500; }
+        .btn-slot small { color: #f88; display: block; margin-top: 4px; font-size: 0.8em; }
         
-        .panel { background: var(--c-dark); border: 2px solid var(--c-red); padding: 25px; width: 90%; max-width: 500px; border-radius: 4px; box-shadow: 0 0 30px rgba(255,0,0,0.2); position: relative; }
-        
-        h1 { font-family: 'Nosifer', cursive; color: var(--c-red); margin: 0 0 10px 0; font-size: 2rem; text-shadow: 0 0 10px var(--c-red); }
-        h2 { font-size: 1.2rem; margin-bottom: 20px; color: #fff; }
-        
-        /* BUTTONS */
-        .btn-grid { display: grid; gap: 10px; margin-top: 20px; }
-        .btn { background: #300; border: 1px solid var(--c-red); color: white; padding: 15px; font-family: inherit; font-size: 1rem; cursor: pointer; transition: all 0.2s; text-transform: uppercase; position: relative; }
-        .btn:hover, .btn:active { background: #600; box-shadow: 0 0 15px var(--c-red); }
-        .btn small { display: block; font-size: 0.7em; color: #aaa; margin-top: 4px; }
-        .btn-del { position: absolute; right: 5px; top: 5px; background: red; color: black; border: none; width: 24px; height: 24px; font-weight: bold; cursor: pointer; z-index: 10; }
-        
+        /* Botão Delete separado do Main para evitar Event Bubbling issues */
+        .btn-delete { position: absolute; right: 0; top: 0; height: 100%; width: 50px; background: #500; border: 1px solid #f00; color: #fff; cursor: pointer; font-weight: bold; border-left: none; }
+        .btn-delete:active { background: #f00; }
+
+        .class-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        .btn-action { padding: 15px; background: #222; border: 1px solid #444; color: #fff; font-family: inherit; cursor: pointer; width: 100%; }
+        .btn-action:hover { border-color: #f00; color: #f00; }
+
         /* HUD */
-        #hud { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 40; display: none; }
-        .hud-top { position: absolute; top: 15px; left: 15px; display: flex; flex-direction: column; gap: 8px; }
-        .health-bar { display: flex; gap: 4px; }
-        .hp-icon { width: 18px; height: 24px; background: var(--c-red); clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); transition: 0.2s; }
-        .hp-icon.lost { background: #333; opacity: 0.5; transform: scale(0.9); }
-        .stats { font-size: 14px; text-shadow: 1px 1px 0 #000; color: #f55; font-weight: bold; letter-spacing: 1px; }
+        #hud { position: absolute; top: 15px; left: 15px; z-index: 10; pointer-events: none; }
+        .stats-row { display: flex; align-items: center; gap: 15px; margin-top: 5px; font-size: 14px; text-shadow: 1px 1px 0 #000; font-weight: bold; color: #ddd; }
+        .hp-bar { display: flex; gap: 2px; }
+        .hp-segment { width: 24px; height: 12px; background: #f00; transform: skewX(-20deg); border: 1px solid #500; }
+        .hp-segment.lost { background: #311; border-color: #200; }
+
+        /* Mobile Controls */
+        #mobile-ui { position: absolute; inset: 0; z-index: 5000; display: none; pointer-events: none; }
+        .touch-zone { pointer-events: auto; position: absolute; }
+        #stick-zone { bottom: 20px; left: 20px; width: 160px; height: 160px; }
+        #stick-base { width: 100px; height: 100px; background: rgba(255,0,0,0.1); border: 2px solid rgba(255,0,0,0.3); border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        #stick-knob { width: 50px; height: 50px; background: rgba(255, 0, 0, 0.5); border-radius: 50%; position: absolute; top: 25px; left: 25px; pointer-events: none; }
         
-        /* CROSSHAIR */
-        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 4px; height: 4px; background: var(--c-red); border-radius: 50%; box-shadow: 0 0 4px var(--c-red); z-index: 35; }
-
-        /* DAMAGE FLASH */
-        #flash { position: absolute; inset: 0; background: red; opacity: 0; pointer-events: none; z-index: 45; transition: opacity 0.1s; }
-
-        /* MOBILE CONTROLS */
-        #mobile-layer { position: absolute; inset: 0; z-index: 60; display: none; }
-        .touch-zone { position: absolute; }
-        #zone-move { bottom: 20px; left: 20px; width: 160px; height: 160px; }
-        #zone-look { top: 0; left: 0; width: 100%; height: 100%; z-index: -1; } /* Background layer */
+        #look-zone { top: 0; left: 0; width: 100%; height: 100%; z-index: 4900; } /* Full screen look except buttons */
         
-        /* Joystick Visual */
-        #joy-base { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100px; height: 100px; border: 2px solid rgba(255,0,0,0.3); border-radius: 50%; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
-        #joy-stick { position: absolute; top: 30px; left: 30px; width: 40px; height: 40px; background: rgba(255,0,0,0.5); border-radius: 50%; }
-        #joy-base.active { opacity: 1; }
+        .action-group { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 20px; pointer-events: auto; z-index: 5001; }
+        .touch-btn { width: 70px; height: 70px; border-radius: 50%; background: rgba(50,0,0,0.6); border: 2px solid #f00; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; backdrop-filter: blur(2px); user-select: none; }
+        .touch-btn:active { background: rgba(255,0,0,0.4); transform: scale(0.95); }
 
-        /* Action Buttons */
-        .actions { position: absolute; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 20px; pointer-events: auto; }
-        .btn-round { width: 70px; height: 70px; border-radius: 50%; background: rgba(50,0,0,0.6); border: 2px solid var(--c-red); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; transition: 0.1s; backdrop-filter: blur(2px); }
-        .btn-round:active, .btn-round.pressed { background: var(--c-red); color: black; transform: scale(0.95); }
-        #btn-jump { width: 50px; height: 50px; align-self: flex-end; margin-right: 10px; border-color: #aaa; }
-        #btn-use { border-color: #0f0; color: #afa; }
-
-        /* Responsive Grid for Saves */
-        .save-grid { display: grid; grid-template-columns: 1fr; gap: 10px; max-height: 300px; overflow-y: auto; }
-        @media (min-width: 600px) { .save-grid { grid-template-columns: repeat(3, 1fr); } }
+        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 4px; height: 4px; background: #0f0; box-shadow: 0 0 4px #0f0; border-radius: 50%; z-index: 2000; pointer-events: none; }
+        
+        .damage-flash { position: absolute; inset: 0; background: red; opacity: 0; pointer-events: none; transition: opacity 0.5s; z-index: 8000; mix-blend-mode: overlay; }
     </style>
 </head>
 <body>
 
-<div id="screen-menu" class="ui-screen">
-    <div class="panel">
-        <h1>DEN OF SHADOW</h1>
-        <p style="color:#f66; font-size:12px; margin-top:-10px;">REFORGED V3.0</p>
-        
+<div id="start-screen" class="ui-screen">
+    <div class="glass-panel">
+        <h1 style="font-family:'Nosifer'; color:#f00; margin:0 0 10px 0; font-size: 32px; letter-spacing: 2px;">DEN OF SHADOW</h1>
+        <p style="color:#666; font-size: 11px; margin-bottom: 25px;">V3.0 // AUDITED & FIXED</p>
+
         <div id="menu-slots">
-            <h2>SELECIONE O SLOT</h2>
-            <div class="save-grid">
-                </div>
+            <div id="slots-container"></div>
         </div>
 
-        <div id="menu-classes" class="hidden">
-            <h2>ESCOLHA A CLASSE</h2>
-            <div class="btn-grid">
-                <button class="btn" onclick="Game.startNewGame('assassin')">ASSASSINO<small>Rápido / Faca</small></button>
-                <button class="btn" onclick="Game.startNewGame('soldier')">SOLDADO<small>Resistente / Pistola</small></button>
-                <button class="btn" onclick="Game.startNewGame('mage')">MAGO<small>Poderoso / Magia</small></button>
-                <button class="btn" style="background:#111" onclick="UI.showSlots()">Voltar</button>
+        <div id="menu-class" style="display:none;">
+            <h3 style="color:#f00;">SELECIONE CLASSE</h3>
+            <div class="class-grid">
+                <button class="btn-action" onclick="Game.startGame('assassin')">ASSASSINO <br><small style="color:#888">HP: 4 | SPD: FAST | KNIFE</small></button>
+                <button class="btn-action" onclick="Game.startGame('soldier')">SOLDADO <br><small style="color:#888">HP: 6 | SPD: MED | PISTOL</small></button>
+                <button class="btn-action" onclick="Game.startGame('mage')">MAGO <br><small style="color:#888">HP: 5 | SPD: SLOW | MAGIC</small></button>
             </div>
+            <button class="btn-action" style="margin-top:15px; background:#000;" onclick="UI.showSlots()">VOLTAR</button>
         </div>
     </div>
 </div>
 
-<div id="screen-gameover" class="ui-screen hidden">
-    <div class="panel">
-        <h1 style="font-size: 3rem;">MORREU</h1>
-        <p id="death-stats">Almas Coletadas: 0</p>
-        <div class="btn-grid">
-            <button class="btn" onclick="Game.retry()">TENTAR NOVAMENTE</button>
-            <button class="btn" style="background:#111" onclick="Game.toMenu()">MENU PRINCIPAL</button>
-        </div>
+<div id="hud" style="display:none;">
+    <div class="hp-bar" id="hud-hp"></div>
+    <div class="stats-row">
+        <span style="color:#f55">SALA <span id="hud-room">1</span></span>
+        <span style="color:#aaa">|</span>
+        <span style="color:#5f5">ALMAS <span id="hud-souls">0</span></span>
     </div>
 </div>
 
-<div id="hud">
-    <div class="hud-top">
-        <div class="health-bar" id="hud-hp"></div>
-        <div class="stats">SALA: <span id="hud-room">1</span> | ALMAS: <span id="hud-souls">0</span></div>
+<div id="dmg-overlay" class="damage-flash"></div>
+
+<div id="mobile-ui">
+    <div id="look-zone" class="touch-zone"></div>
+    <div id="stick-zone" class="touch-zone">
+        <div id="stick-base"><div id="stick-knob"></div></div>
     </div>
-    <div id="crosshair"></div>
-    <div id="flash"></div>
+    <div class="action-group">
+        <div class="touch-btn" id="btn-jump" style="border-color:#aaa;">PULAR</div>
+        <div class="touch-btn" id="btn-use" style="border-color:#0f0;">USAR</div>
+        <div class="touch-btn" id="btn-fire" style="width:80px; height:80px; background:rgba(100,0,0,0.6);">ATACAR</div>
+    </div>
 </div>
 
-<div id="game-layer">
-    <canvas id="canvas"></canvas>
-    
-    <div id="mobile-layer">
-        <div id="zone-look" class="touch-zone"></div>
-        <div id="zone-move" class="touch-zone">
-            <div id="joy-base"><div id="joy-stick"></div></div>
-        </div>
-        <div class="actions">
-            <div class="btn-round" id="btn-fire">ATACAR</div>
-            <div class="btn-round" id="btn-use">USAR</div>
-            <div class="btn-round" id="btn-jump">PULAR</div>
-        </div>
-    </div>
-</div>
+<div id="crosshair" style="display:none;"></div>
+<canvas id="canvas"></canvas>
 
 <script>
 /**
- * ──── CONSTANTS & CONFIG ────
+ * PSEUDO-RANDOM NUMBER GENERATOR (LCG)
+ * Vital para garantir que o mapa carregado seja idêntico ao salvo.
  */
-const C = {
-    TILE_SIZE: 64,
-    MAP_SIZE: 24,
-    FOV: Math.PI / 3,
-    RES_DIVIDER: 4, // 1 = High Quality, 4 = Retro/Fast
-    MAX_DIST: 800,
-    GRAVITY: 0.8,
-    COLORS: {
-        floor: '#150505',
-        ceil: '#050000',
-        wall: [150, 0, 0], // RGB Base
-        door: [0, 200, 0]
-    }
+const RNG = {
+    seed: 1,
+    setSeed(s) { this.seed = s; },
+    next() {
+        this.seed = (this.seed * 1664525 + 1013904223) % 4294967296;
+        return (this.seed / 4294967296);
+    },
+    range(min, max) { return Math.floor(this.next() * (max - min) + min); }
 };
 
 /**
- * ──── UTILS ────
+ * ENGINE CORE
  */
-const M = {
-    toRad: (d) => d * Math.PI / 180,
-    dist: (x1, y1, x2, y2) => Math.sqrt((x2-x1)**2 + (y2-y1)**2),
-    clamp: (val, min, max) => Math.max(min, Math.min(max, val)),
-    normalizeAngle: (a) => {
-        a = a % (2 * Math.PI);
-        if (a < 0) a += (2 * Math.PI);
-        return a;
-    }
+const TILE = 64, MAP_S = 24, FOV = Math.PI / 3;
+const G = {
+    slot: 1, playing: false, isMobile: false, width: 0, height: 0,
+    lastTime: 0,
+    zBuffer: [] // CORREÇÃO: Z-Buffer para sprites
 };
 
-/**
- * ──── SOUND MANAGER (Web Audio API) ────
- */
-class SoundManager {
-    constructor() {
-        this.ctx = null;
-    }
+// Player State
+let P = { x:0, y:0, a:0, pitch:0, z:0, jv:0, hp:5, maxHp:5, weapon:'knife', class:'soldier', speed:4 };
+// Level State
+let MapData = [], Enemies = [], Bullets = [], Room = 1, Souls = 0, MapSeed = 0;
+// Input State
+let Keys = {}, Mouse = {x:0, y:0}, Stick = {active:false, dx:0, dy:0, id:null};
 
+const cvs = document.getElementById('canvas');
+const ctx = cvs.getContext('2d', { alpha: false, desynchronized: true });
+
+// --- SAVE SYSTEM ROBUSTO ---
+const SaveMgr = {
+    getKey: (slot) => `den_save_v3_${slot}`,
+    
+    save() {
+        if(!P.hp) return; // Não salva se morto
+        const data = {
+            room: Room, souls: Souls, 
+            class: P.class, weapon: P.weapon,
+            hp: P.hp, maxHp: P.maxHp,
+            seed: MapSeed // Salva a semente do mapa atual
+        };
+        try { localStorage.setItem(this.getKey(G.slot), JSON.stringify(data)); } 
+        catch(e) { console.error("Save failed", e); }
+        UI.renderSlots();
+    },
+
+    load(slot) {
+        try {
+            const raw = localStorage.getItem(this.getKey(slot));
+            if(!raw) return false;
+            const d = JSON.parse(raw);
+            G.slot = slot;
+            Room = d.room; Souls = d.souls; P.class = d.class; P.weapon = d.weapon;
+            P.hp = d.hp || 5; P.maxHp = d.maxHp || 5; 
+            MapSeed = d.seed || Date.now();
+            return true;
+        } catch(e) {
+            console.error("Corrupted Save", e);
+            return false;
+        }
+    },
+
+    del(slot, e) {
+        if(e) e.stopPropagation(); // Prevenir double-fire
+        if(!confirm(`Apagar Slot ${slot}?`)) return;
+        localStorage.removeItem(this.getKey(slot));
+        UI.renderSlots();
+    },
+    
+    exists(slot) { return !!localStorage.getItem(this.getKey(slot)); }
+};
+
+// --- UI MANAGER ---
+const UI = {
+    screens: { start: document.getElementById('start-screen'), hud: document.getElementById('hud'), mobile: document.getElementById('mobile-ui') },
+    
     init() {
-        if (!this.ctx) {
-            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (this.ctx.state === 'suspended') this.ctx.resume();
-    }
-
-    playTone(freq, type, duration, vol=0.1) {
-        if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-        gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + duration);
-    }
-
-    shoot(type) {
-        if(type === 'knife') this.playTone(600, 'triangle', 0.1, 0.05); // Swoosh
-        else if(type === 'pistol') this.playTone(150, 'sawtooth', 0.3, 0.2); // Bang
-        else this.playTone(800, 'sine', 0.4, 0.1); // Magic
-    }
-
-    hit() { this.playTone(100, 'square', 0.2, 0.2); }
-    step() { this.playTone(50, 'triangle', 0.05, 0.05); }
-    door() { this.playTone(80, 'sine', 0.5, 0.1); }
-}
-
-/**
- * ──── INPUT MANAGER ────
- */
-class InputManager {
-    constructor() {
-        this.keys = {};
-        this.pLock = false;
-        this.actions = { fire: false, use: false, jump: false };
-        
-        // Mobile Virtual Joystick
-        this.joy = { active: false, dx: 0, dy: 0, originX: 0, originY: 0, id: null };
-        this.look = { active: false, x: 0, y: 0, id: null };
-        
-        this.setupListeners();
-    }
-
-    setupListeners() {
-        // Keyboard
-        window.addEventListener('keydown', e => {
-            this.keys[e.code] = true;
-            if(e.code === 'KeyE') this.actions.use = true;
-            if(e.code === 'Space') this.actions.jump = true;
-        });
-        window.addEventListener('keyup', e => {
-            this.keys[e.code] = false;
-            if(e.code === 'KeyE') this.actions.use = false;
-            if(e.code === 'Space') this.actions.jump = false;
-        });
-
-        // Mouse (Pointer Lock)
-        document.addEventListener('mousedown', () => {
-            if(Game.state !== 'PLAYING') return;
-            if(!this.pLock && !Game.isMobile) {
-                document.getElementById('canvas').requestPointerLock();
-            } else {
-                this.actions.fire = true;
-            }
-        });
-        document.addEventListener('mouseup', () => this.actions.fire = false);
-        document.addEventListener('mousemove', e => {
-            if(this.pLock) {
-                Game.player.angle += e.movementX * 0.002;
-                Game.player.pitch = M.clamp(Game.player.pitch - e.movementY * 2, -200, 200);
-            }
-        });
-        document.addEventListener('pointerlockchange', () => {
-            this.pLock = !!document.pointerLockElement;
-        });
-
-        // Mobile Touch
-        const mLayer = document.getElementById('mobile-layer');
-        const zMove = document.getElementById('zone-move');
-        const zLook = document.getElementById('zone-look');
-        const stick = document.getElementById('joy-stick');
-        const base = document.getElementById('joy-base');
-
-        // Joystick Logic
-        zMove.addEventListener('touchstart', e => {
-            e.preventDefault();
-            const t = e.changedTouches[0];
-            this.joy.id = t.identifier;
-            this.joy.active = true;
-            this.joy.originX = t.clientX;
-            this.joy.originY = t.clientY;
-            
-            // Visual feedback
-            base.style.left = t.clientX + 'px';
-            base.style.top = t.clientY + 'px';
-            base.classList.add('active');
-            stick.style.transform = `translate(0px, 0px)`;
-        }, {passive: false});
-
-        zMove.addEventListener('touchmove', e => {
-            e.preventDefault();
-            if(!this.joy.active) return;
-            for(let i=0; i<e.changedTouches.length; i++){
-                const t = e.changedTouches[i];
-                if(t.identifier === this.joy.id) {
-                    let dx = t.clientX - this.joy.originX;
-                    let dy = t.clientY - this.joy.originY;
-                    let dist = Math.min(50, Math.hypot(dx, dy));
-                    let angle = Math.atan2(dy, dx);
-                    
-                    this.joy.dx = (Math.cos(angle) * dist) / 50;
-                    this.joy.dy = (Math.sin(angle) * dist) / 50;
-                    
-                    stick.style.transform = `translate(${this.joy.dx * 25}px, ${this.joy.dy * 25}px)`;
-                }
-            }
-        }, {passive: false});
-
-        const endJoy = (e) => {
-             for(let i=0; i<e.changedTouches.length; i++){
-                if(e.changedTouches[i].identifier === this.joy.id) {
-                    this.joy.active = false;
-                    this.joy.dx = 0; this.joy.dy = 0;
-                    base.classList.remove('active');
-                }
-             }
-        };
-        zMove.addEventListener('touchend', endJoy);
-        zMove.addEventListener('touchcancel', endJoy);
-
-        // Look Logic
-        zLook.addEventListener('touchstart', e => {
-            const t = e.changedTouches[0];
-            this.look.id = t.identifier;
-            this.look.x = t.clientX;
-            this.look.y = t.clientY;
-        }, {passive: true});
-
-        zLook.addEventListener('touchmove', e => {
-            for(let i=0; i<e.changedTouches.length; i++){
-                const t = e.changedTouches[i];
-                if(t.identifier === this.look.id) {
-                    let dx = t.clientX - this.look.x;
-                    let dy = t.clientY - this.look.y;
-                    Game.player.angle += dx * 0.005; // Sensibilidade Horizontal
-                    Game.player.pitch = M.clamp(Game.player.pitch - dy * 2, -200, 200); // Sensibilidade Vertical
-                    this.look.x = t.clientX;
-                    this.look.y = t.clientY;
-                }
-            }
-        }, {passive: false});
-
-        // Touch Buttons
-        const bindBtn = (id, action) => {
-            const el = document.getElementById(id);
-            el.addEventListener('touchstart', (e) => { e.preventDefault(); this.actions[action] = true; el.classList.add('pressed'); });
-            el.addEventListener('touchend', (e) => { e.preventDefault(); this.actions[action] = false; el.classList.remove('pressed'); });
-        };
-        bindBtn('btn-fire', 'fire');
-        bindBtn('btn-use', 'use');
-        bindBtn('btn-jump', 'jump');
-    }
-
-    getMovementVector() {
-        let dx = 0, dy = 0;
-        // Keyboard
-        if(this.keys['KeyW']) dx = 1;
-        if(this.keys['KeyS']) dx = -1;
-        if(this.keys['KeyA']) dy = -1; // Strafe left
-        if(this.keys['KeyD']) dy = 1;  // Strafe right
-        
-        // Joystick override
-        if(this.joy.active) {
-            dx = -this.joy.dy; // Joy Y is inverted relative to forward
-            dy = this.joy.dx;
-        }
-        return { forward: dx, strafe: dy };
-    }
-}
-
-/**
- * ──── RENDERER (Raycaster) ────
- */
-class Renderer {
-    constructor(canvas) {
-        this.canvas = canvas;
-        this.ctx = canvas.getContext('2d', { alpha: false });
-        this.zBuffer = [];
+        this.renderSlots();
+        window.addEventListener('resize', this.resize);
         this.resize();
-    }
+    },
 
     resize() {
-        this.width = window.innerWidth;
-        this.height = window.innerHeight;
-        this.canvas.width = this.width / C.RES_DIVIDER;
-        this.canvas.height = this.height / C.RES_DIVIDER;
-        this.ctx.imageRendering = 'pixelated';
-        this.zBuffer = new Array(this.canvas.width).fill(0);
-    }
+        cvs.width = window.innerWidth;
+        cvs.height = window.innerHeight;
+        G.width = cvs.width; G.height = cvs.height;
+    },
 
-    draw(player, map, entities) {
-        // Clear & Draw Floor/Ceiling
-        const w = this.canvas.width;
-        const h = this.canvas.height;
-        const horizon = h / 2 + player.pitch;
-
-        // Simple gradient fill for better performance than per-pixel raycasting for floor
-        this.ctx.fillStyle = C.COLORS.ceil;
-        this.ctx.fillRect(0, 0, w, horizon);
-        this.ctx.fillStyle = C.COLORS.floor;
-        this.ctx.fillRect(0, horizon, w, h - horizon);
-
-        // Raycasting (DDA Algorithm)
-        for (let x = 0; x < w; x++) {
-            const cameraX = 2 * x / w - 1;
-            const rayDirX = Math.cos(player.angle) + Math.cos(player.angle + Math.PI/2) * cameraX * (C.FOV/2);
-            const rayDirY = Math.sin(player.angle) + Math.sin(player.angle + Math.PI/2) * cameraX * (C.FOV/2);
-
-            let mapX = Math.floor(player.x / C.TILE_SIZE);
-            let mapY = Math.floor(player.y / C.TILE_SIZE);
-            
-            let sideDistX, sideDistY;
-            const deltaDistX = Math.abs(1 / rayDirX);
-            const deltaDistY = Math.abs(1 / rayDirY);
-            let perpWallDist;
-            let stepX, stepY;
-            let hit = 0, side = 0;
-
-            if (rayDirX < 0) { stepX = -1; sideDistX = (player.x / C.TILE_SIZE - mapX) * deltaDistX; }
-            else { stepX = 1; sideDistX = (mapX + 1.0 - player.x / C.TILE_SIZE) * deltaDistX; }
-            
-            if (rayDirY < 0) { stepY = -1; sideDistY = (player.y / C.TILE_SIZE - mapY) * deltaDistY; }
-            else { stepY = 1; sideDistY = (mapY + 1.0 - player.y / C.TILE_SIZE) * deltaDistY; }
-
-            // DDA Loop
-            let maxSteps = 40; 
-            while (hit === 0 && maxSteps > 0) {
-                if (sideDistX < sideDistY) {
-                    sideDistX += deltaDistX; mapX += stepX; side = 0;
-                } else {
-                    sideDistY += deltaDistY; mapY += stepY; side = 1;
-                }
-                if (mapX < 0 || mapX >= C.MAP_SIZE || mapY < 0 || mapY >= C.MAP_SIZE) { hit = 1; }
-                else if (map[mapY * C.MAP_SIZE + mapX] > 0) { hit = map[mapY * C.MAP_SIZE + mapX]; }
-                maxSteps--;
+    renderSlots() {
+        const c = document.getElementById('slots-container');
+        c.innerHTML = '';
+        for(let i=1; i<=3; i++) {
+            const exists = SaveMgr.exists(i);
+            let info = "VAZIO";
+            if(exists) {
+                try {
+                    const d = JSON.parse(localStorage.getItem(SaveMgr.getKey(i)));
+                    info = `SALA: ${d.room} | ${d.class.toUpperCase()}`;
+                } catch { info = "DADOS CORROMPIDOS"; }
             }
 
-            if (side === 0) perpWallDist = (sideDistX - deltaDistX);
-            else perpWallDist = (sideDistY - deltaDistY);
-
-            this.zBuffer[x] = perpWallDist * C.TILE_SIZE; // Save for sprite depth check
-
-            // Draw Wall Strip
-            const lineHeight = Math.floor(h / perpWallDist);
-            const drawStart = Math.floor(-lineHeight / 2 + horizon + player.z);
-            
-            // Wall Colors & Simple Shading
-            let color = hit === 2 ? C.COLORS.door : C.COLORS.wall;
-            // Darker if side wall (pseudo lighting)
-            let r = color[0], g = color[1], b = color[2];
-            if(side === 1) { r*=0.7; g*=0.7; b*=0.7; }
-            // Distance fog
-            const fog = Math.min(1, 4 / perpWallDist);
-            r *= fog; g *= fog; b *= fog;
-
-            this.ctx.fillStyle = `rgb(${r},${g},${b})`;
-            this.ctx.fillRect(x, drawStart, 1, lineHeight);
+            const div = document.createElement('div');
+            div.className = 'slot-wrapper';
+            // HTML Válido: Botão Delete fora do Botão Load
+            div.innerHTML = `
+                <button class="btn-slot" onclick="Game.selectSlot(${i})">
+                    SLOT ${i}<br><small>${info}</small>
+                </button>
+                <button class="btn-delete" onclick="SaveMgr.del(${i}, event)">X</button>
+            `;
+            c.appendChild(div);
         }
+    },
 
-        // Draw Entities (Sprites)
-        this.drawSprites(player, entities, w, h, horizon);
-        
-        // Draw Weapon
-        this.drawWeapon(player, w, h);
+    showSlots() {
+        document.getElementById('menu-slots').style.display = 'block';
+        document.getElementById('menu-class').style.display = 'none';
+    },
+
+    showClassSel() {
+        document.getElementById('menu-slots').style.display = 'none';
+        document.getElementById('menu-class').style.display = 'grid';
+    },
+
+    updateHUD() {
+        document.getElementById('hud-room').innerText = Room;
+        document.getElementById('hud-souls').innerText = Souls;
+        const hpC = document.getElementById('hud-hp');
+        hpC.innerHTML = '';
+        for(let i=0; i<P.maxHp; i++) {
+            const seg = document.createElement('div');
+            seg.className = i < P.hp ? 'hp-segment' : 'hp-segment lost';
+            hpC.appendChild(seg);
+        }
+    },
+    
+    flashDmg() {
+        const el = document.getElementById('dmg-overlay');
+        el.style.opacity = 0.6;
+        setTimeout(() => el.style.opacity = 0, 100);
     }
+};
 
-    drawSprites(player, entities, w, h, horizon) {
-        // Sort entities by distance to player
-        entities.forEach(e => {
-            e.dist = Math.hypot(player.x - e.x, player.y - e.y);
-        });
-        entities.sort((a, b) => b.dist - a.dist);
-
-        entities.forEach(e => {
-            if(!e.alive) return;
-            
-            // Transform sprite with the inverse camera matrix
-            const spriteX = e.x - player.x;
-            const spriteY = e.y - player.y;
-
-            // Simple vector projection
-            const invDet = 1.0 / (Math.cos(player.angle) * Math.sin(player.angle + Math.PI/2) - Math.cos(player.angle + Math.PI/2) * Math.sin(player.angle));
-            const transformX = invDet * (Math.sin(player.angle + Math.PI/2) * spriteX - Math.cos(player.angle + Math.PI/2) * spriteY);
-            const transformY = invDet * (-Math.sin(player.angle) * spriteX + Math.cos(player.angle) * spriteY); // Depth inside screen
-
-            if (transformY <= 0) return; // Behind player
-
-            const spriteScreenX = Math.floor((w / 2) * (1 + transformX / transformY));
-            const spriteHeight = Math.abs(Math.floor(h / (transformY / C.TILE_SIZE))); 
-            const spriteTop = Math.floor(-spriteHeight / 2 + horizon + player.z);
-            
-            if (spriteHeight > 2000) return; // Too close/clipping
-
-            // Render primitive "sprite" (Circle or Square)
-            const size = spriteHeight / 1.5;
-            const xStart = Math.floor(spriteScreenX - size / 2);
-            
-            // Check Z-Buffer for center pixel to decide visibility
-            if(xStart > 0 && xStart < w && transformY * C.TILE_SIZE < this.zBuffer[Math.floor(spriteScreenX)]) {
-                if(e.type === 'bullet') {
-                    this.ctx.fillStyle = '#ff0';
-                    this.ctx.beginPath();
-                    this.ctx.arc(spriteScreenX, spriteTop + spriteHeight/2, size/4, 0, Math.PI*2);
-                    this.ctx.fill();
-                } else {
-                    // Enemy
-                    this.ctx.fillStyle = e.type === 'BOSS' ? '#f0f' : '#f00';
-                    if(e.hitTime > 0) this.ctx.fillStyle = '#fff'; // Flash white on hit
-                    this.ctx.fillRect(xStart, spriteTop, size, spriteHeight);
-                    
-                    // Eyes
-                    this.ctx.fillStyle = '#ff0';
-                    this.ctx.fillRect(xStart + size*0.2, spriteTop + size*0.2, size*0.2, size*0.2);
-                    this.ctx.fillRect(xStart + size*0.6, spriteTop + size*0.2, size*0.2, size*0.2);
-                }
-            }
-        });
-    }
-
-    drawWeapon(player, w, h) {
-        const bob = Math.sin(Date.now() / 150) * (player.isMoving ? 10 : 2);
-        const recoil = player.recoil * 5;
-        const wx = w * 0.6;
-        const wy = h - (h * 0.3) + bob + recoil;
-
-        this.ctx.save();
-        if(player.weapon === 'knife') {
-            this.ctx.translate(wx, wy);
-            this.ctx.rotate(-player.recoil * 0.2);
-            this.ctx.fillStyle = '#888';
-            this.ctx.fillRect(0, 0, 40, 150); // Lâmina
-            this.ctx.fillStyle = '#300';
-            this.ctx.fillRect(5, 100, 30, 60); // Cabo
+// --- GAME LOGIC ---
+const Game = {
+    selectSlot(i) {
+        if(SaveMgr.load(i)) {
+            this.boot(false); // Load existing
         } else {
-            // Gun / Magic
-            this.ctx.fillStyle = player.weapon === 'magic' ? '#508' : '#333';
-            this.ctx.fillRect(wx - 20, wy, 40, 120);
-            // Muzzle flash
-            if(player.recoil > 5) {
-                this.ctx.fillStyle = player.weapon === 'magic' ? '#f0f' : '#fa0';
-                this.ctx.beginPath();
-                this.ctx.arc(wx, wy - 20, 30 + Math.random()*10, 0, Math.PI*2);
-                this.ctx.fill();
+            G.slot = i;
+            UI.showClassSel(); // New game
+        }
+    },
+
+    startGame(cls) {
+        P.class = cls;
+        if(cls === 'assassin') { P.weapon='knife'; P.speed=6; P.hp=P.maxHp=4; }
+        else if(cls === 'soldier') { P.weapon='pistol'; P.speed=4.5; P.hp=P.maxHp=6; }
+        else if(cls === 'mage') { P.weapon='magic'; P.speed=4; P.hp=P.maxHp=5; }
+        
+        Room = 1; Souls = 0; MapSeed = Date.now();
+        this.boot(true);
+    },
+
+    boot(newGame) {
+        G.isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+        
+        // Setup Room
+        if(newGame) RNG.setSeed(MapSeed); // Nova seed
+        else RNG.setSeed(MapSeed); // Reusa seed salva para gerar MESMO mapa
+
+        this.genMap();
+        
+        // Hide UI
+        UI.screens.start.style.display = 'none';
+        UI.screens.hud.style.display = 'block';
+        document.getElementById('crosshair').style.display = 'block';
+        if(G.isMobile) UI.screens.mobile.style.display = 'block';
+
+        UI.updateHUD();
+        G.playing = true;
+        G.lastTime = performance.now();
+        SaveMgr.save(); // Checkpoint inicial
+        requestAnimationFrame(loop);
+    },
+
+    genMap() {
+        MapData = new Int8Array(MAP_S * MAP_S);
+        Enemies = []; Bullets = [];
+        
+        // Walls borders
+        for(let i=0; i<MAP_S; i++) {
+            MapData[i]=1; MapData[i+(MAP_S*(MAP_S-1))]=1;
+            MapData[i*MAP_S]=1; MapData[i*MAP_S+(MAP_S-1)]=1;
+        }
+
+        // Random blocks (Deterministic via RNG)
+        for(let i=0; i<20; i++) {
+            let x = RNG.range(2, MAP_S-2);
+            let y = RNG.range(2, MAP_S-2);
+            if(x!==12 && y!==12) MapData[y*MAP_S+x] = 1;
+        }
+
+        // Door
+        MapData[1*MAP_S + 12] = 2; // Exit
+        P.x = 12 * TILE + 32; P.y = 20 * TILE + 32; P.a = -Math.PI/2;
+        
+        // Enemies
+        let count = Math.min(8, 2 + Math.floor(Room/2));
+        for(let i=0; i<count; i++) {
+            let ex, ey;
+            do {
+                ex = RNG.range(2, MAP_S-2)*TILE + 32;
+                ey = RNG.range(2, MAP_S-2)*TILE + 32;
+            } while(MapData[Math.floor(ey/TILE)*MAP_S+Math.floor(ex/TILE)] !== 0 || Math.hypot(ex-P.x, ey-P.y) < 200);
+
+            Enemies.push({
+                x: ex, y: ey, hp: 40+(Room*10),
+                type: (Room%5===0 && i===0) ? 'BOSS' : 'MOB',
+                active: true
+            });
+        }
+    },
+    
+    interact() {
+        let dx = P.x - (12*TILE+32), dy = P.y - (1.5*TILE);
+        if(Math.hypot(dx, dy) < 90 && Enemies.every(e => !e.active)) {
+            Room++;
+            MapSeed = Date.now(); // Nova seed para nova sala
+            RNG.setSeed(MapSeed);
+            SaveMgr.save(); // Auto-save ao entrar
+            this.genMap();
+            UI.updateHUD();
+        }
+    },
+    
+    damage(amount) {
+        P.hp -= amount;
+        UI.flashDmg();
+        UI.updateHUD();
+        if(P.hp <= 0) {
+            G.playing = false;
+            alert("VOCÊ MORREU. ALMAS: " + Souls);
+            location.reload();
+        }
+        SaveMgr.save(); // Salva estado de HP
+    }
+};
+
+// --- INPUTS (Unified) ---
+function bindTouch(id, startFn, moveFn, endFn) {
+    const el = document.getElementById(id);
+    el.addEventListener('touchstart', e => { e.preventDefault(); startFn(e); }, {passive:false});
+    el.addEventListener('touchmove', e => { e.preventDefault(); moveFn(e); }, {passive:false});
+    el.addEventListener('touchend', e => { e.preventDefault(); endFn(e); }, {passive:false});
+}
+
+// Joystick
+bindTouch('stick-zone', 
+    e => {
+        const t = e.changedTouches[0];
+        Stick.id = t.identifier; Stick.active = true;
+        Stick.sx = t.clientX; Stick.sy = t.clientY;
+    },
+    e => {
+        for(let t of e.changedTouches) {
+            if(t.identifier === Stick.id) {
+                let dx = t.clientX - Stick.sx, dy = t.clientY - Stick.sy;
+                let dist = Math.min(40, Math.hypot(dx, dy));
+                let ang = Math.atan2(dy, dx);
+                Stick.dx = (Math.cos(ang) * dist) / 40; // Normalize 0-1
+                Stick.dy = (Math.sin(ang) * dist) / 40;
+                document.getElementById('stick-knob').style.transform = `translate(${Stick.dx*40}px, ${Stick.dy*40}px)`;
             }
         }
-        this.ctx.restore();
+    },
+    () => { Stick.active = false; Stick.dx=0; Stick.dy=0; document.getElementById('stick-knob').style.transform = 'none'; }
+);
+
+// Look
+let lastTouch = {};
+bindTouch('look-zone',
+    e => { lastTouch[e.changedTouches[0].identifier] = {x: e.changedTouches[0].clientX, y:e.changedTouches[0].clientY}; },
+    e => {
+        for(let t of e.changedTouches) {
+            const last = lastTouch[t.identifier];
+            if(last) {
+                P.a += (t.clientX - last.x) * 0.005;
+                P.pitch = Math.max(-100, Math.min(100, P.pitch - (t.clientY - last.y) * 2));
+                lastTouch[t.identifier] = {x: t.clientX, y: t.clientY};
+            }
+        }
+    },
+    e => { delete lastTouch[e.changedTouches[0].identifier]; }
+);
+
+// Actions
+const setAct = (id, key) => {
+    const el = document.getElementById(id);
+    const trigger = (e) => { e.preventDefault(); e.stopPropagation(); if(key==='fire') shoot(); if(key==='use') Game.interact(); if(key==='jump' && P.z===0) P.jv=300; };
+    el.addEventListener('touchstart', trigger, {passive:false});
+    el.addEventListener('mousedown', trigger);
+};
+setAct('btn-fire', 'fire'); setAct('btn-use', 'use'); setAct('btn-jump', 'jump');
+
+// PC Inputs
+window.onkeydown = e => {
+    Keys[e.code] = true;
+    if(e.code==='KeyE') Game.interact();
+    if(e.code==='Space' && P.z===0) P.jv=300;
+};
+window.onkeyup = e => Keys[e.code] = false;
+window.onmousedown = e => {
+    if(!G.playing || G.isMobile) return;
+    if(document.pointerLockElement !== cvs) cvs.requestPointerLock();
+    else shoot();
+};
+window.onmousemove = e => {
+    if(G.playing && document.pointerLockElement === cvs) {
+        P.a += e.movementX * 0.002;
+        P.pitch = Math.max(-150, Math.min(150, P.pitch - e.movementY));
+    }
+};
+
+// --- PHYSICS & RENDER ---
+function shoot() {
+    if(P.weapon === 'knife') {
+        // Swing anim
+        Enemies.forEach(e => {
+            if(!e.active) return;
+            // CORREÇÃO: Check distância euclidiana E se está visível (evitar tiro através da parede)
+            let dist = Math.hypot(e.x - P.x, e.y - P.y);
+            // Simples Ray check pro inimigo
+            if(dist < 90) { 
+                e.hp -= 50; 
+                e.active = e.hp > 0;
+                if(!e.active) { Souls += 15; UI.updateHUD(); }
+            }
+        });
+    } else {
+        Bullets.push({ x: P.x, y: P.y, vx: Math.cos(P.a)*1000, vy: Math.sin(P.a)*1000, life: 1 });
     }
 }
 
-/**
- * ──── ENTITIES ────
- */
-class Entity {
-    constructor(x, y) {
-        this.x = x; this.y = y; this.alive = true;
+function loop(now) {
+    if(!G.playing) return;
+    let dt = (now - G.lastTime) / 1000;
+    if(dt > 0.1) dt = 0.1; // Cap lag
+    G.lastTime = now;
+
+    // --- UPDATE ---
+    
+    // Jump
+    P.z += P.jv * dt;
+    P.jv -= 1000 * dt; // Gravity
+    if(P.z < 0) { P.z = 0; P.jv = 0; }
+
+    // Move
+    let speed = P.speed * 60; // Normalize speed
+    let mx = 0, my = 0;
+    if(Keys['KeyW'] || Stick.dy < -0.1) { mx += Math.cos(P.a); my += Math.sin(P.a); }
+    if(Keys['KeyS'] || Stick.dy > 0.1) { mx -= Math.cos(P.a); my -= Math.sin(P.a); }
+    if(Keys['KeyA'] || Stick.dx < -0.1) { mx += Math.cos(P.a - Math.PI/2); my += Math.sin(P.a - Math.PI/2); }
+    if(Keys['KeyD'] || Stick.dx > 0.1) { mx += Math.cos(P.a + Math.PI/2); my += Math.sin(P.a + Math.PI/2); }
+
+    let moveStep = speed * dt;
+    // Sliding collision
+    if(MapData[Math.floor(P.y/TILE)*MAP_S + Math.floor((P.x+mx*moveStep)/TILE)] === 0) P.x += mx*moveStep;
+    if(MapData[Math.floor((P.y+my*moveStep)/TILE)*MAP_S + Math.floor(P.x/TILE)] === 0) P.y += my*moveStep;
+
+    // Enemies & Bullets
+    Enemies.forEach(e => {
+        if(!e.active) return;
+        let dx = P.x - e.x, dy = P.y - e.y;
+        let dist = Math.hypot(dx, dy);
+        
+        // Move to player
+        if(dist < 500 && dist > 40) {
+            let ea = Math.atan2(dy, dx);
+            let ex = e.x + Math.cos(ea) * (100*dt);
+            let ey = e.y + Math.sin(ea) * (100*dt);
+            // Wall collision for enemy
+            if(MapData[Math.floor(ey/TILE)*MAP_S + Math.floor(ex/TILE)] === 0) { e.x = ex; e.y = ey; }
+            
+            // Soft collision between enemies (avoid stacking)
+            Enemies.forEach(other => {
+                if(e === other || !other.active) return;
+                let odx = e.x - other.x, ody = e.y - other.y;
+                let odist = Math.hypot(odx, ody);
+                if(odist < 30) {
+                    e.x += odx/odist; e.y += ody/odist;
+                }
+            });
+        }
+        
+        // Attack
+        if(dist < 40 && Math.random() < dt) Game.damage(1);
+    });
+
+    for(let i=Bullets.length-1; i>=0; i--) {
+        let b = Bullets[i];
+        b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt;
+        let hit = false;
+        // Check Wall
+        if(MapData[Math.floor(b.y/TILE)*MAP_S + Math.floor(b.x/TILE)] !== 0) hit = true;
+        // Check Enemies
+        if(!hit) {
+            for(let e of Enemies) {
+                if(e.active && Math.hypot(b.x-e.x, b.y-e.y) < 30) {
+                    e.hp -= 35; 
+                    if(e.hp<=0) { e.active=false; Souls+=15; UI.updateHUD(); }
+                    hit = true; break;
+                }
+            }
+        }
+        if(hit || b.life <= 0) Bullets.splice(i, 1);
     }
+
+    // --- RENDER ---
+    // Floor/Ceiling
+    ctx.fillStyle = "#111"; ctx.fillRect(0,0,G.width, G.height/2 + P.pitch);
+    ctx.fillStyle = "#211"; ctx.fillRect(0,G.height/2 + P.pitch, G.width, G.height);
+
+    // Raycasting (DDA IMPLEMENTATION - High Precision)
+    G.zBuffer = new Float32Array(G.width); // Reset Z-Buffer
+    
+    // Resolução ajustável para performance vs qualidade
+    const RES = 2; 
+    
+    for(let x=0; x<G.width; x+=RES) {
+        let camX = 2 * x / G.width - 1;
+        let rayDirX = Math.cos(P.a) + Math.cos(P.a + Math.PI/2) * camX * 0.66; // 0.66 is FOV scale
+        let rayDirY = Math.sin(P.a) + Math.sin(P.a + Math.PI/2) * camX * 0.66;
+
+        let mapX = Math.floor(P.x/TILE), mapY = Math.floor(P.y/TILE);
+        let deltaDistX = Math.abs(1/rayDirX), deltaDistY = Math.abs(1/rayDirY);
+        let stepX, stepY, sideDistX, sideDistY, side;
+
+        if(rayDirX < 0) { stepX = -1; sideDistX = (P.x/TILE - mapX) * deltaDistX; }
+        else { stepX = 1; sideDistX = (mapX + 1.0 - P.x/TILE) * deltaDistX; }
+        if(rayDirY < 0) { stepY = -1; sideDistY = (P.y/TILE - mapY) * deltaDistY; }
+        else { stepY = 1; sideDistY = (mapY + 1.0 - P.y/TILE) * deltaDistY; }
+
+        let hit = 0;
+        // DDA Loop
+        while (hit === 0) {
+            if(sideDistX < sideDistY) { sideDistX += deltaDistX; mapX += stepX; side = 0; }
+            else { sideDistY += deltaDistY; mapY += stepY; side = 1; }
+            if(mapX<0||mapX>=MAP_S||mapY<0||mapY>=MAP_S) { hit=1; break; } // Bounds check
+            if(MapData[mapY*MAP_S+mapX] > 0) hit = MapData[mapY*MAP_S+mapX];
+        }
+
+        let perpWallDist;
+        if(side === 0) perpWallDist = (mapX - P.x/TILE + (1 - stepX) / 2) / rayDirX;
+        else           perpWallDist = (mapY - P.y/TILE + (1 - stepY) / 2) / rayDirY;
+
+        // Fill Z-Buffer for this column
+        for(let k=0; k<RES; k++) G.zBuffer[x+k] = perpWallDist * TILE;
+
+        let h = Math.floor(G.height / perpWallDist);
+        let start = -h / 2 + G.height / 2 + P.pitch + P.z;
+        
+        let color = hit === 2 ? '#0f0' : (side===1 ? '#700' : '#A00');
+        // Simple fog
+        if(perpWallDist > 5) color = hit===2 ? '#050' : '#400';
+        
+        ctx.fillStyle = color;
+        ctx.fillRect(x, start, RES, h);
+    }
+
+    // Sprite Casting (Sorted & Z-Buffered)
+    let sprites = [];
+    Enemies.forEach(e => { if(e.active) sprites.push({...e, tex:'E'}); });
+    Bullets.forEach(b => sprites.push({...b, tex:'B'}));
+    
+    sprites.sort((a,b) => {
+        return ((P.x-b.x)**2 + (P.y-b.y)**2) - ((P.x-a.x)**2 + (P.y-a.y)**2);
+    });
+
+    for(let s of sprites) {
+        let dx = s.x - P.x, dy = s.y - P.y;
+        let invDet = 1.0 / (0.66 * Math.cos(P.a) * Math.sin(P.a + Math.PI/2) - Math.cos(P.a+Math.PI/2) * Math.sin(P.a)); // Matrix inverse
+        // Simplificação matemática: Transformar sprite para espaço da câmera
+        // Rotacionar sprite baseado no angulo do player
+        let ang = Math.atan2(dy, dx) - P.a;
+        while(ang < -Math.PI) ang += Math.PI*2; while(ang > Math.PI) ang -= Math.PI*2;
+        
+        let dist = Math.hypot(dx, dy);
+        
+        if(Math.abs(ang) < FOV && dist > 20) {
+            let screenX = (0.5 * (ang/(FOV/2)) + 0.5) * G.width;
+            let h = (G.height * TILE) / dist; // Altura projetada
+            let w = h / 1.5;
+            let top = (G.height - h) / 2 + P.pitch + P.z;
+            
+            // Renderizar apenas se estiver na frente da parede (Z-BUFFER CHECK)
+            let zIdx = Math.floor(Math.max(0, Math.min(G.width-1, screenX)));
+            
+            // Checagem simples do centro do sprite contra o Z-Buffer
+            if(dist < G.zBuffer[zIdx]) {
+                ctx.fillStyle = s.tex === 'E' ? (s.type==='BOSS'?'#f0f':'#f00') : '#ff0';
+                ctx.fillRect(screenX - w/2, top, w, h);
+            }
+        }
+    }
+
+    // Weapon
+    let bob = Math.sin(now/150) * (G.playing && (mx||my) ? 10 : 2);
+    ctx.fillStyle = P.weapon === 'magic' ? '#909' : '#555';
+    ctx.fillRect(G.width*0.6, G.height - 150 + bob, 40, 150);
+
+    requestAnimationFrame(loop);
 }
 
-class Enemy extends Entity {
-    constructor(x, y, type, roomLevel) {
-        super(x, y);
-        this.type = type; // 'MOB' or 'BOSS'
-        this.hp = type === 'BOSS
+// Inicialização segura
+window.onload = UI.init;
+</script>
+</body>
+</html>
