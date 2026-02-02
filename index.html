@@ -1,95 +1,95 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Den of Shadow 💀 V2.3</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&display=swap');
-        * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
-        body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; width: 100vw; height: 100vh; }
-        canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; cursor: crosshair; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Den of Shadow 💀 V2.3</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Nosifer&display=swap');
+        * { touch-action: none; user-select: none; box-sizing: border-box; outline: none; }
+        body { margin: 0; background: #000; color: white; font-family: 'Orbitron', sans-serif; overflow: hidden; width: 100vw; height: 100vh; }
+        canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; cursor: crosshair; }
 
-        .ui-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 9000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .glass-panel { background: #110000; border: 2px solid #f00; padding: 20px; width: 95%; max-width: 600px; border-radius: 8px; box-shadow: 0 0 20px #f00; }
-        
-        /* Botões de Save */
-        .save-slot-container { position: relative; margin: 8px 0; }
-        .btn-main { padding: 15px; background: #300; border: 1px solid #f00; color: #fff; cursor: pointer; width: 100%; font-family: 'Orbitron'; font-weight: bold; transition: 0.2s; font-size: 14px; }
-        .btn-main:hover { background: #500; }
-        .btn-delete { position: absolute; right: 5px; top: 5px; background: #f00; color: #000; border: none; padding: 5px 10px; font-weight: bold; cursor: pointer; z-index: 9001; border-radius: 4px; }
+        .ui-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 9000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .glass-panel { background: #110000; border: 2px solid #f00; padding: 20px; width: 95%; max-width: 600px; border-radius: 8px; box-shadow: 0 0 20px #f00; }
+        
+        /* Botões de Save */
+        .save-slot-container { position: relative; margin: 8px 0; }
+        .btn-main { padding: 15px; background: #300; border: 1px solid #f00; color: #fff; cursor: pointer; width: 100%; font-family: 'Orbitron'; font-weight: bold; transition: 0.2s; font-size: 14px; }
+        .btn-main:hover { background: #500; }
+        .btn-delete { position: absolute; right: 5px; top: 5px; background: #f00; color: #000; border: none; padding: 5px 10px; font-weight: bold; cursor: pointer; z-index: 9001; border-radius: 4px; }
 
-        #class-menu { display: none; width: 100%; flex-direction: column; }
-        .save-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 15px 0; }
-        @media (min-width: 600px) { .save-grid { grid-template-columns: 1fr 1fr 1fr; } }
+        #class-menu { display: none; width: 100%; flex-direction: column; }
+        .save-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 15px 0; }
+        @media (min-width: 600px) { .save-grid { grid-template-columns: 1fr 1fr 1fr; } }
 
-        #hud { position: absolute; top: 10px; left: 10px; z-index: 4000; pointer-events: none; }
-        .masks-container { display: flex; gap: 5px; margin-bottom: 5px; }
-        .mask { width: 20px; height: 25px; background: #f00; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
-        .mask.broken { background: #444; opacity: 0.3; }
+        #hud { position: absolute; top: 10px; left: 10px; z-index: 4000; pointer-events: none; }
+        .masks-container { display: flex; gap: 5px; margin-bottom: 5px; }
+        .mask { width: 20px; height: 25px; background: #f00; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
+        .mask.broken { background: #444; opacity: 0.3; }
 
-        #mobile-controls { position: absolute; inset: 0; z-index: 3000; display: none; pointer-events: none; }
-        #move-zone { position: absolute; bottom: 20px; left: 20px; width: 150px; height: 150px; pointer-events: auto; }
-        #joy-base { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100px; height: 100px; background: rgba(255,0,0,0.1); border: 2px solid #f00; border-radius: 50%; }
-        #stick { position: absolute; top: 30px; left: 30px; width: 40px; height: 40px; background: #f00; border-radius: 50%; transition: transform 0.1s; }
-        
-        .look-zone { position: absolute; inset: 0; z-index: 2900; pointer-events: auto; }
-        .action-btns { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 3100; pointer-events: auto; }
-        .btn-act { width: 80px; height: 80px; background: rgba(40,0,0,0.8); border: 3px solid #f00; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; touch-action: manipulation; }
+        #mobile-controls { position: absolute; inset: 0; z-index: 3000; display: none; pointer-events: none; }
+        #move-zone { position: absolute; bottom: 20px; left: 20px; width: 150px; height: 150px; pointer-events: auto; }
+        #joy-base { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100px; height: 100px; background: rgba(255,0,0,0.1); border: 2px solid #f00; border-radius: 50%; }
+        #stick { position: absolute; top: 30px; left: 30px; width: 40px; height: 40px; background: #f00; border-radius: 50%; transition: transform 0.1s; }
+        
+        .look-zone { position: absolute; inset: 0; z-index: 2900; pointer-events: auto; }
+        .action-btns { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 3100; pointer-events: auto; }
+        .btn-act { width: 80px; height: 80px; background: rgba(40,0,0,0.8); border: 3px solid #f00; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; touch-action: manipulation; }
 
-        #cross { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; border: 2px solid rgba(255,0,0,0.8); border-radius: 50%; pointer-events: none; z-index: 2000; }
-        #cross::after { content: ''; position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: red; transform: translate(-50%, -50%); }
-    </style>
+        #cross { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; border: 2px solid rgba(255,0,0,0.8); border-radius: 50%; pointer-events: none; z-index: 2000; }
+        #cross::after { content: ''; position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: red; transform: translate(-50%, -50%); }
+    </style>
 </head>
 <body>
 
 <div id="start-screen" class="ui-screen">
-    <div class="glass-panel">
-        <h1 style="font-family:'Nosifer'; color:#f00; margin:0; font-size: 28px;">DEN OF SHADOW</h1>
-        <p style="font-size: 10px; color: #f66; margin-bottom: 20px;">V2.3 - FIX CONTROLS & SAVE MGR</p>
-        
-        <div id="save-menu">
-            <h3 style="font-size: 14px;">SELECIONE O SLOT</h3>
-            <div class="save-grid">
-                <div class="save-slot-container">
-                    <button class="btn-main" onclick="selectSlot(1)">SLOT 1<br><small id="s1-info">Vazio</small></button>
-                    <button class="btn-delete" onclick="deleteSave(1, event)">X</button>
-                </div>
-                <div class="save-slot-container">
-                    <button class="btn-main" onclick="selectSlot(2)">SLOT 2<br><small id="s2-info">Vazio</small></button>
-                    <button class="btn-delete" onclick="deleteSave(2, event)">X</button>
-                </div>
-                <div class="save-slot-container">
-                    <button class="btn-main" onclick="selectSlot(3)">SLOT 3<br><small id="s3-info">Vazio</small></button>
-                    <button class="btn-delete" onclick="deleteSave(3, event)">X</button>
-                </div>
-            </div>
-        </div>
+    <div class="glass-panel">
+        <h1 style="font-family:'Nosifer'; color:#f00; margin:0; font-size: 28px;">DEN OF SHADOW</h1>
+        <p style="font-size: 10px; color: #f66; margin-bottom: 20px;">V2.3 - FIX CONTROLS & SAVE MGR</p>
+        
+        <div id="save-menu">
+            <h3 style="font-size: 14px;">SELECIONE O SLOT</h3>
+            <div class="save-grid">
+                <div class="save-slot-container">
+                    <button class="btn-main" onclick="selectSlot(1)">SLOT 1<br><small id="s1-info">Vazio</small></button>
+                    <button class="btn-delete" onclick="deleteSave(1, event)">X</button>
+                </div>
+                <div class="save-slot-container">
+                    <button class="btn-main" onclick="selectSlot(2)">SLOT 2<br><small id="s2-info">Vazio</small></button>
+                    <button class="btn-delete" onclick="deleteSave(2, event)">X</button>
+                </div>
+                <div class="save-slot-container">
+                    <button class="btn-main" onclick="selectSlot(3)">SLOT 3<br><small id="s3-info">Vazio</small></button>
+                    <button class="btn-delete" onclick="deleteSave(3, event)">X</button>
+                </div>
+            </div>
+        </div>
 
-        <div id="class-menu">
-            <h3 style="font-size: 14px;">ESCOLHA SUA CLASSE</h3>
-            <button class="btn-main" onclick="startWithClass('assassin')">ASSASSINO <br><small>VELOZ / FACA</small></button>
-            <button class="btn-main" onclick="startWithClass('soldier')">SOLDADO <br><small>EQUILIBRADO / PISTOLA</small></button>
-            <button class="btn-main" onclick="startWithClass('mage')">MAGO <br><small>DANO ÁREA / FEITIÇO</small></button>
-            <br>
-            <button class="btn-main" style="background:#111; font-size:10px;" onclick="location.reload()">VOLTAR</button>
-        </div>
-    </div>
+        <div id="class-menu">
+            <h3 style="font-size: 14px;">ESCOLHA SUA CLASSE</h3>
+            <button class="btn-main" onclick="startWithClass('assassin')">ASSASSINO <br><small>VELOZ / FACA</small></button>
+            <button class="btn-main" onclick="startWithClass('soldier')">SOLDADO <br><small>EQUILIBRADO / PISTOLA</small></button>
+            <button class="btn-main" onclick="startWithClass('mage')">MAGO <br><small>DANO ÁREA / FEITIÇO</small></button>
+            <br>
+            <button class="btn-main" style="background:#111; font-size:10px;" onclick="location.reload()">VOLTAR</button>
+        </div>
+    </div>
 </div>
 
 <div id="hud" style="display:none;">
-    <div class="masks-container" id="masks"></div>
-    <div id="stats-txt" style="font-size:12px; color:#f00; text-shadow: 1px 1px #000;">SALA: <span id="val-room">1</span> | ALMAS: <span id="val-souls">0</span></div>
+    <div class="masks-container" id="masks"></div>
+    <div id="stats-txt" style="font-size:12px; color:#f00; text-shadow: 1px 1px #000;">SALA: <span id="val-room">1</span> | ALMAS: <span id="val-souls">0</span></div>
 </div>
 
 <div id="mobile-controls">
-    <div id="look-zone" class="look-zone"></div>
-    <div id="move-zone"><div id="joy-base"><div id="stick"></div></div></div>
-    <div class="action-btns">
-        <div class="btn-act" id="btn-fire">ATACAR</div>
-        <div class="btn-act" id="btn-interact" style="border-color: #0f0;">USAR [E]</div>
-        <div class="btn-act" id="btn-jump" style="width:60px; height:60px; border-color: #aaa;">PULAR</div>
-    </div>
+    <div id="look-zone" class="look-zone"></div>
+    <div id="move-zone"><div id="joy-base"><div id="stick"></div></div></div>
+    <div class="action-btns">
+        <div class="btn-act" id="btn-fire">ATACAR</div>
+        <div class="btn-act" id="btn-interact" style="border-color: #0f0;">USAR [E]</div>
+        <div class="btn-act" id="btn-jump" style="width:60px; height:60px; border-color: #aaa;">PULAR</div>
+    </div>
 </div>
 
 <div id="cross" style="display:none;"></div>
@@ -97,12 +97,12 @@
 
 <script>
 // --- CONFIGURAÇÕES GLOBAIS ---
-const G = { 
-    play: false, room: 1, hp: 5, maxHp: 5, souls: 0, 
-    weapon: 'knife', currentSlot: 1, class: '',
-    res: 4, isMobile: false, z: 0, jv: 0, recoil: 0, 
-    doorActive: false, doorPos: {x:0, y:0}, speed: 4,
-    lastHit: 0
+const G = { 
+    play: false, room: 1, hp: 5, maxHp: 5, souls: 0, 
+    weapon: 'knife', currentSlot: 1, class: '',
+    res: 4, isMobile: false, z: 0, jv: 0, recoil: 0, 
+    doorActive: false, doorPos: {x:0, y:0}, speed: 4,
+    lastHit: 0
 };
 
 const canvas = document.getElementById('gameCanvas');
@@ -112,316 +112,316 @@ let map = [], enemies = [], bullets = [], keys = {};
 let player = { x: 0, y: 0, angle: 0, pitch: 0, fov: Math.PI / 3 };
 
 function updateSaveUI() {
-    for(let i=1; i<=3; i++) {
-        const data = localStorage.getItem('den_save_' + i);
-        const info = document.getElementById(`s${i}-info`);
-        if(info) info.innerText = data ? `Sala: ${JSON.parse(data).room}` : "Vazio";
-    }
+    for(let i=1; i<=3; i++) {
+        const data = localStorage.getItem('den_save_' + i);
+        const info = document.getElementById(`s${i}-info`);
+        if(info) info.innerText = data ? `Sala: ${JSON.parse(data).room}` : "Vazio";
+    }
 }
 
 function deleteSave(slot, event) {
-    event.stopPropagation();
-    if(confirm(`Deseja apagar o progresso do Slot ${slot}?`)) {
-        localStorage.removeItem('den_save_' + slot);
-        updateSaveUI();
-    }
+    event.stopPropagation();
+    if(confirm(`Deseja apagar o progresso do Slot ${slot}?`)) {
+        localStorage.removeItem('den_save_' + slot);
+        updateSaveUI();
+    }
 }
 
 function selectSlot(slot) {
-    G.currentSlot = slot;
-    const data = localStorage.getItem('den_save_' + slot);
-    if(data) {
-        const d = JSON.parse(data);
-        G.room = d.room; G.souls = d.souls; G.weapon = d.weapon; G.class = d.class;
-        initGame();
-    } else {
-        document.getElementById('save-menu').style.display = 'none';
-        document.getElementById('class-menu').style.display = 'flex';
-    }
+    G.currentSlot = slot;
+    const data = localStorage.getItem('den_save_' + slot);
+    if(data) {
+        const d = JSON.parse(data);
+        G.room = d.room; G.souls = d.souls; G.weapon = d.weapon; G.class = d.class;
+        initGame();
+    } else {
+        document.getElementById('save-menu').style.display = 'none';
+        document.getElementById('class-menu').style.display = 'flex';
+    }
 }
 
 function startWithClass(type) {
-    G.class = type;
-    if(type === 'assassin') { G.weapon = 'knife'; G.speed = 5.5; G.hp = G.maxHp = 4; }
-    if(type === 'soldier') { G.weapon = 'pistol'; G.speed = 4; G.hp = G.maxHp = 6; }
-    if(type === 'mage') { G.weapon = 'magic'; G.speed = 3.5; G.hp = G.maxHp = 5; }
-    initGame();
+    G.class = type;
+    if(type === 'assassin') { G.weapon = 'knife'; G.speed = 5.5; G.hp = G.maxHp = 4; }
+    if(type === 'soldier') { G.weapon = 'pistol'; G.speed = 4; G.hp = G.maxHp = 6; }
+    if(type === 'mage') { G.weapon = 'magic'; G.speed = 3.5; G.hp = G.maxHp = 5; }
+    initGame();
 }
 
 function setupRoom() {
-    saveGame();
-    document.getElementById('val-room').innerText = G.room;
-    document.getElementById('val-souls').innerText = G.souls;
-    updateMasks();
-    
-    map = Array(MAP_SIZE * MAP_SIZE).fill(0);
-    enemies = []; bullets = [];
-    
-    for(let i=0; i<MAP_SIZE; i++){ 
-        map[i]=1; map[i+(MAP_SIZE*(MAP_SIZE-1))]=1; 
-        map[i*MAP_SIZE]=1; map[i*MAP_SIZE+(MAP_SIZE-1)]=1; 
-    }
+    saveGame();
+    document.getElementById('val-room').innerText = G.room;
+    document.getElementById('val-souls').innerText = G.souls;
+    updateMasks();
+    
+    map = Array(MAP_SIZE * MAP_SIZE).fill(0);
+    enemies = []; bullets = [];
+    
+    for(let i=0; i<MAP_SIZE; i++){ 
+        map[i]=1; map[i+(MAP_SIZE*(MAP_SIZE-1))]=1; 
+        map[i*MAP_SIZE]=1; map[i*MAP_SIZE+(MAP_SIZE-1)]=1; 
+    }
 
-    for(let i=0; i<15; i++) {
-        let tx = Math.floor(Math.random()*(MAP_SIZE-4))+2;
-        let ty = Math.floor(Math.random()*(MAP_SIZE-4))+2;
-        if(tx !== 12) map[ty*MAP_SIZE+tx] = 1;
-    }
+    for(let i=0; i<15; i++) {
+        let tx = Math.floor(Math.random()*(MAP_SIZE-4))+2;
+        let ty = Math.floor(Math.random()*(MAP_SIZE-4))+2;
+        if(tx !== 12) map[ty*MAP_SIZE+tx] = 1;
+    }
 
-    let count = Math.min(15, 3 + Math.floor(G.room / 2));
-    for(let i=0; i<count; i++) {
-        enemies.push({
-            x:(5+Math.random()*14)*TILE, y:(5+Math.random()*14)*TILE, 
-            hp: 40 + (G.room*5), alive: true, 
-            type: (G.room % 5 === 0 && i === 0) ? 'BOSS' : 'MOB',
-            speed: 1.5 + Math.random()
-        });
-    }
+    let count = Math.min(15, 3 + Math.floor(G.room / 2));
+    for(let i=0; i<count; i++) {
+        enemies.push({
+            x:(5+Math.random()*14)*TILE, y:(5+Math.random()*14)*TILE, 
+            hp: 40 + (G.room*5), alive: true, 
+            type: (G.room % 5 === 0 && i === 0) ? 'BOSS' : 'MOB',
+            speed: 1.5 + Math.random()
+        });
+    }
 
-    G.doorPos = { x: 12 * TILE + (TILE/2), y: 1 * TILE + (TILE/2) };
-    map[1*MAP_SIZE + 12] = 2; 
-    
-    player.x = 12*TILE; player.y = 21*TILE;
-    player.angle = -Math.PI/2;
+    G.doorPos = { x: 12 * TILE + (TILE/2), y: 1 * TILE + (TILE/2) };
+    map[1*MAP_SIZE + 12] = 2; 
+    
+    player.x = 12*TILE; player.y = 21*TILE;
+    player.angle = -Math.PI/2;
 }
 
 function performInteract() {
-    let dx = player.x - G.doorPos.x;
-    let dy = player.y - G.doorPos.y;
-    let dist = Math.sqrt(dx*dx + dy*dy);
-    if(enemies.every(e => !e.alive) && dist < 120) {
-        G.room++;
-        setupRoom();
-    }
+    let dx = player.x - G.doorPos.x;
+    let dy = player.y - G.doorPos.y;
+    let dist = Math.sqrt(dx*dx + dy*dy);
+    if(enemies.every(e => !e.alive) && dist < 120) {
+        G.room++;
+        setupRoom();
+    }
 }
 
 // --- RENDER ---
 function draw() {
-    ctx.fillStyle = "#050000"; ctx.fillRect(0,0,canvas.width, canvas.height/2 + player.pitch + G.z);
-    ctx.fillStyle = "#150505"; ctx.fillRect(0,canvas.height/2 + player.pitch + G.z, canvas.width, canvas.height);
+    ctx.fillStyle = "#050000"; ctx.fillRect(0,0,canvas.width, canvas.height/2 + player.pitch + G.z);
+    ctx.fillStyle = "#150505"; ctx.fillRect(0,canvas.height/2 + player.pitch + G.z, canvas.width, canvas.height);
 
-    for(let i=0; i<canvas.width; i+=G.res) {
-        let a = (player.angle - player.fov/2) + (i/canvas.width)*player.fov;
-        let d=0, cos=Math.cos(a), sin=Math.sin(a), hit=0;
-        while(hit===0 && d<900) {
-            d += 4;
-            let tx = Math.floor((player.x+cos*d)/TILE), ty = Math.floor((player.y+sin*d)/TILE);
-            if(tx<0||tx>=MAP_SIZE||ty<0||ty>=MAP_SIZE) { hit=1; break; }
-            let wall = map[ty*MAP_SIZE+tx];
-            if(wall > 0) {
-                hit = wall;
-                let dist = d * Math.cos(player.angle-a);
-                let h = (TILE * canvas.height) / dist;
-                let yPos = (canvas.height-h)/2 + player.pitch + G.z;
-                ctx.fillStyle = hit === 2 ? (enemies.every(e=>!e.alive) ? "#0f0" : "#400") : `rgb(${Math.max(20, 150-dist/5)}, 0, 0)`;
-                ctx.fillRect(i, yPos, G.res, h);
-            }
-        }
-    }
+    for(let i=0; i<canvas.width; i+=G.res) {
+        let a = (player.angle - player.fov/2) + (i/canvas.width)*player.fov;
+        let d=0, cos=Math.cos(a), sin=Math.sin(a), hit=0;
+        while(hit===0 && d<900) {
+            d += 4;
+            let tx = Math.floor((player.x+cos*d)/TILE), ty = Math.floor((player.y+sin*d)/TILE);
+            if(tx<0||tx>=MAP_SIZE||ty<0||ty>=MAP_SIZE) { hit=1; break; }
+            let wall = map[ty*MAP_SIZE+tx];
+            if(wall > 0) {
+                hit = wall;
+                let dist = d * Math.cos(player.angle-a);
+                let h = (TILE * canvas.height) / dist;
+                let yPos = (canvas.height-h)/2 + player.pitch + G.z;
+                ctx.fillStyle = hit === 2 ? (enemies.every(e=>!e.alive) ? "#0f0" : "#400") : `rgb(${Math.max(20, 150-dist/5)}, 0, 0)`;
+                ctx.fillRect(i, yPos, G.res, h);
+            }
+        }
+    }
 
-    let sprites = [...enemies.filter(e=>e.alive), ...bullets];
-    sprites.sort((a,b) => Math.hypot(player.x-b.x, player.y-b.y) - Math.hypot(player.x-a.x, player.y-a.y));
+    let sprites = [...enemies.filter(e=>e.alive), ...bullets];
+    sprites.sort((a,b) => Math.hypot(player.x-b.x, player.y-b.y) - Math.hypot(player.x-a.x, player.y-a.y));
 
-    sprites.forEach(s => {
-        let dx = s.x - player.x, dy = s.y - player.y;
-        let dist = Math.sqrt(dx*dx + dy*dy);
-        let ang = Math.atan2(dy, dx) - player.angle;
-        while(ang < -Math.PI) ang += Math.PI*2; while(ang > Math.PI) ang -= Math.PI*2;
-        if(Math.abs(ang) < player.fov && dist > 10) {
-            let sx = (0.5 * (ang/(player.fov/2)) + 0.5) * canvas.width;
-            let sh = (TILE * canvas.height) / dist;
-            let sy = (canvas.height/2) + player.pitch + G.z;
-            if(s.vx !== undefined) { 
-                ctx.fillStyle = s.magic ? "#f0f" : "#ff0";
-                ctx.beginPath(); ctx.arc(sx, sy, sh/8, 0, 7); ctx.fill();
-            } else { 
-                ctx.fillStyle = s.type === 'BOSS' ? "#f0f" : "#f00";
-                ctx.fillRect(sx - sh/3, sy - sh/2, sh/1.5, sh);
-            }
-        }
-    });
-    drawWeapon();
+    sprites.forEach(s => {
+        let dx = s.x - player.x, dy = s.y - player.y;
+        let dist = Math.sqrt(dx*dx + dy*dy);
+        let ang = Math.atan2(dy, dx) - player.angle;
+        while(ang < -Math.PI) ang += Math.PI*2; while(ang > Math.PI) ang -= Math.PI*2;
+        if(Math.abs(ang) < player.fov && dist > 10) {
+            let sx = (0.5 * (ang/(player.fov/2)) + 0.5) * canvas.width;
+            let sh = (TILE * canvas.height) / dist;
+            let sy = (canvas.height/2) + player.pitch + G.z;
+            if(s.vx !== undefined) { 
+                ctx.fillStyle = s.magic ? "#f0f" : "#ff0";
+                ctx.beginPath(); ctx.arc(sx, sy, sh/8, 0, 7); ctx.fill();
+            } else { 
+                ctx.fillStyle = s.type === 'BOSS' ? "#f0f" : "#f00";
+                ctx.fillRect(sx - sh/3, sy - sh/2, sh/1.5, sh);
+            }
+        }
+    });
+    drawWeapon();
 }
 
 function drawWeapon() {
-    let sw = canvas.width, sh = canvas.height;
-    let bob = Math.sin(Date.now() * 0.008) * 6;
-    let rec = G.recoil * 4;
-    ctx.save();
-    if(G.weapon === 'knife') {
-        ctx.translate(sw * 0.7, sh - 100 + bob - rec);
-        ctx.fillStyle = '#aaa'; ctx.fillRect(-10, -100, 20, 120);
-    } else {
-        ctx.translate(sw * 0.55, sh - 100 + bob - rec);
-        ctx.fillStyle = G.weapon === 'magic' ? '#404' : '#222';
-        ctx.fillRect(-20, -20, 100, 40); ctx.fillRect(-20, -20, 30, 80);
-    }
-    ctx.restore();
+    let sw = canvas.width, sh = canvas.height;
+    let bob = Math.sin(Date.now() * 0.008) * 6;
+    let rec = G.recoil * 4;
+    ctx.save();
+    if(G.weapon === 'knife') {
+        ctx.translate(sw * 0.7, sh - 100 + bob - rec);
+        ctx.fillStyle = '#aaa'; ctx.fillRect(-10, -100, 20, 120);
+    } else {
+        ctx.translate(sw * 0.55, sh - 100 + bob - rec);
+        ctx.fillStyle = G.weapon === 'magic' ? '#404' : '#222';
+        ctx.fillRect(-20, -20, 100, 40); ctx.fillRect(-20, -20, 30, 80);
+    }
+    ctx.restore();
 }
 
 // --- UPDATE ---
 function update() {
-    if(!G.play) return;
-    if(G.recoil > 0) G.recoil -= 2;
-    G.z += G.jv; G.jv -= 0.8; if(G.z <= 0) { G.z = 0; G.jv = 0; }
+    if(!G.play) return;
+    if(G.recoil > 0) G.recoil -= 2;
+    G.z += G.jv; G.jv -= 0.8; if(G.z <= 0) { G.z = 0; G.jv = 0; }
 
-    let mx = 0, my = 0;
-    if(keys['w'] || keys['arrowup']) { mx += Math.cos(player.angle); my += Math.sin(player.angle); }
-    if(keys['s'] || keys['arrowdown']) { mx -= Math.cos(player.angle); my -= Math.sin(player.angle); }
-    if(keys['a'] || keys['arrowleft']) { mx += Math.cos(player.angle - Math.PI/2); my += Math.sin(player.angle - Math.PI/2); }
-    if(keys['d'] || keys['arrowright']) { mx += Math.cos(player.angle + Math.PI/2); my += Math.sin(player.angle + Math.PI/2); }
-    
-    if(mJoy.active) {
-        mx += Math.cos(player.angle) * (-mJoy.dy) + Math.cos(player.angle + Math.PI/2) * mJoy.dx;
-        my += Math.sin(player.angle) * (-mJoy.dy) + Math.sin(player.angle + Math.PI/2) * mJoy.dx;
-    }
+    let mx = 0, my = 0;
+    if(keys['w'] || keys['arrowup']) { mx += Math.cos(player.angle); my += Math.sin(player.angle); }
+    if(keys['s'] || keys['arrowdown']) { mx -= Math.cos(player.angle); my -= Math.sin(player.angle); }
+    if(keys['a'] || keys['arrowleft']) { mx += Math.cos(player.angle - Math.PI/2); my += Math.sin(player.angle - Math.PI/2); }
+    if(keys['d'] || keys['arrowright']) { mx += Math.cos(player.angle + Math.PI/2); my += Math.sin(player.angle + Math.PI/2); }
+    
+    if(mJoy.active) {
+        mx += Math.cos(player.angle) * (-mJoy.dy) + Math.cos(player.angle + Math.PI/2) * mJoy.dx;
+        my += Math.sin(player.angle) * (-mJoy.dy) + Math.sin(player.angle + Math.PI/2) * mJoy.dx;
+    }
 
-    let speed = G.speed;
-    let nx = player.x + mx * speed, ny = player.y + my * speed;
-    if(map[Math.floor(player.y/TILE)*MAP_SIZE + Math.floor(nx/TILE)] === 0) player.x = nx;
-    if(map[Math.floor(ny/TILE)*MAP_SIZE + Math.floor(player.x/TILE)] === 0) player.y = ny;
+    let speed = G.speed;
+    let nx = player.x + mx * speed, ny = player.y + my * speed;
+    if(map[Math.floor(player.y/TILE)*MAP_SIZE + Math.floor(nx/TILE)] === 0) player.x = nx;
+    if(map[Math.floor(ny/TILE)*MAP_SIZE + Math.floor(player.x/TILE)] === 0) player.y = ny;
 
-    enemies.forEach(en => {
-        if(!en.alive) return;
-        let dx = player.x - en.x, dy = player.y - en.y;
-        let dist = Math.hypot(dx, dy);
-        if(dist < 400) { 
-            let ang = Math.atan2(dy, dx);
-            let ex = en.x + Math.cos(ang) * en.speed;
-            let ey = en.y + Math.sin(ang) * en.speed;
-            if(map[Math.floor(ey/TILE)*MAP_SIZE + Math.floor(ex/TILE)] === 0) { en.x = ex; en.y = ey; }
-        }
-        if(dist < 40 && Date.now() - G.lastHit > 1000) {
-            G.hp--; G.lastHit = Date.now(); updateMasks();
-            if(G.hp <= 0) location.reload();
-        }
-    });
+    enemies.forEach(en => {
+        if(!en.alive) return;
+        let dx = player.x - en.x, dy = player.y - en.y;
+        let dist = Math.hypot(dx, dy);
+        if(dist < 400) { 
+            let ang = Math.atan2(dy, dx);
+            let ex = en.x + Math.cos(ang) * en.speed;
+            let ey = en.y + Math.sin(ang) * en.speed;
+            if(map[Math.floor(ey/TILE)*MAP_SIZE + Math.floor(ex/TILE)] === 0) { en.x = ex; en.y = ey; }
+        }
+        if(dist < 40 && Date.now() - G.lastHit > 1000) {
+            G.hp--; G.lastHit = Date.now(); updateMasks();
+            if(G.hp <= 0) location.reload();
+        }
+    });
 
-    bullets = bullets.filter(b => {
-        b.x += b.vx; b.y += b.vy; b.life--;
-        let hit = false;
-        enemies.forEach(en => {
-            if(en.alive && Math.hypot(b.x-en.x, b.y-en.y) < 35) {
-                en.hp -= b.magic ? 50 : 30; b.life = 0; hit = true;
-                if(en.hp <= 0) { en.alive = false; G.souls += 15; document.getElementById('val-souls').innerText = G.souls; }
-            }
-        });
-        return b.life > 0 && !hit && map[Math.floor(b.y/TILE)*MAP_SIZE + Math.floor(b.x/TILE)] === 0;
-    });
+    bullets = bullets.filter(b => {
+        b.x += b.vx; b.y += b.vy; b.life--;
+        let hit = false;
+        enemies.forEach(en => {
+            if(en.alive && Math.hypot(b.x-en.x, b.y-en.y) < 35) {
+                en.hp -= b.magic ? 50 : 30; b.life = 0; hit = true;
+                if(en.hp <= 0) { en.alive = false; G.souls += 15; document.getElementById('val-souls').innerText = G.souls; }
+            }
+        });
+        return b.life > 0 && !hit && map[Math.floor(b.y/TILE)*MAP_SIZE + Math.floor(b.x/TILE)] === 0;
+    });
 }
 
 function shoot() {
-    if(G.recoil > 0) return;
-    G.recoil = 12;
-    if(G.weapon === 'knife') {
-        enemies.forEach(en => {
-            if(en.alive && Math.hypot(player.x-en.x, player.y-en.y) < 80) {
-                en.hp -= 60; if(en.hp<=0){ en.alive=false; G.souls+=15; document.getElementById('val-souls').innerText = G.souls; }
-            }
-        });
-    } else {
-        bullets.push({ x: player.x, y: player.y, vx: Math.cos(player.angle)*15, vy: Math.sin(player.angle)*15, life: 60, magic: G.weapon==='magic' });
-    }
+    if(G.recoil > 0) return;
+    G.recoil = 12;
+    if(G.weapon === 'knife') {
+        enemies.forEach(en => {
+            if(en.alive && Math.hypot(player.x-en.x, player.y-en.y) < 80) {
+                en.hp -= 60; if(en.hp<=0){ en.alive=false; G.souls+=15; document.getElementById('val-souls').innerText = G.souls; }
+            }
+        });
+    } else {
+        bullets.push({ x: player.x, y: player.y, vx: Math.cos(player.angle)*15, vy: Math.sin(player.angle)*15, life: 60, magic: G.weapon==='magic' });
+    }
 }
 
 // --- CONTROLES CORRIGIDOS ---
 const mJoy = { active: false, sx:0, sy:0, dx:0, dy:0, id:null };
 const moveZone = document.getElementById('move-zone');
 
-moveZone.addEventListener('touchstart', e => { 
-    const t = e.changedTouches[0];
-    mJoy.active = true; mJoy.id = t.identifier;
-    mJoy.sx = t.clientX; mJoy.sy = t.clientY;
+moveZone.addEventListener('touchstart', e => { 
+    const t = e.changedTouches[0];
+    mJoy.active = true; mJoy.id = t.identifier;
+    mJoy.sx = t.clientX; mJoy.sy = t.clientY;
 }, {passive: false});
 
 moveZone.addEventListener('touchmove', e => {
-    e.preventDefault();
-    for(let t of e.changedTouches) {
-        if(t.identifier === mJoy.id) {
-            let dx = t.clientX - mJoy.sx;
-            let dy = t.clientY - mJoy.sy;
-            let dist = Math.min(40, Math.hypot(dx, dy));
-            let ang = Math.atan2(dy, dx);
-            mJoy.dx = (Math.cos(ang) * dist) / 40;
-            mJoy.dy = (Math.sin(ang) * dist) / 40;
-            document.getElementById('stick').style.transform = `translate(${Math.cos(ang)*dist}px, ${Math.sin(ang)*dist}px)`;
-        }
-    }
+    e.preventDefault();
+    for(let t of e.changedTouches) {
+        if(t.identifier === mJoy.id) {
+            let dx = t.clientX - mJoy.sx;
+            let dy = t.clientY - mJoy.sy;
+            let dist = Math.min(40, Math.hypot(dx, dy));
+            let ang = Math.atan2(dy, dx);
+            mJoy.dx = (Math.cos(ang) * dist) / 40;
+            mJoy.dy = (Math.sin(ang) * dist) / 40;
+            document.getElementById('stick').style.transform = `translate(${Math.cos(ang)*dist}px, ${Math.sin(ang)*dist}px)`;
+        }
+    }
 }, {passive: false});
 
 moveZone.addEventListener('touchend', () => {
-    mJoy.active = false; mJoy.dx = 0; mJoy.dy = 0;
-    document.getElementById('stick').style.transform = `translate(0,0)`;
+    mJoy.active = false; mJoy.dx = 0; mJoy.dy = 0;
+    document.getElementById('stick').style.transform = `translate(0,0)`;
 });
 
 // Olhar Mobile
 let lTouch = { id: null, x: 0, y: 0 };
 document.getElementById('look-zone').addEventListener('touchstart', e => {
-    const t = e.changedTouches[0];
-    lTouch.id = t.identifier; lTouch.x = t.clientX; lTouch.y = t.clientY;
+    const t = e.changedTouches[0];
+    lTouch.id = t.identifier; lTouch.x = t.clientX; lTouch.y = t.clientY;
 });
 
 document.getElementById('look-zone').addEventListener('touchmove', e => {
-    for(let t of e.changedTouches) {
-        if(t.identifier === lTouch.id) {
-            player.angle += (t.clientX - lTouch.x) * 0.005;
-            player.pitch = Math.max(-150, Math.min(150, player.pitch - (t.clientY - lTouch.y) * 1.5));
-            lTouch.x = t.clientX; lTouch.y = t.clientY;
-        }
-    }
+    for(let t of e.changedTouches) {
+        if(t.identifier === lTouch.id) {
+            player.angle += (t.clientX - lTouch.x) * 0.005;
+            player.pitch = Math.max(-150, Math.min(150, player.pitch - (t.clientY - lTouch.y) * 1.5));
+            lTouch.x = t.clientX; lTouch.y = t.clientY;
+        }
+    }
 });
 
 // Mouse e Cliques
 window.addEventListener('mousedown', (e) => {
-    if(G.play) {
-        if(document.pointerLockElement === canvas) {
-            shoot();
-        } else {
-            canvas.requestPointerLock();
-        }
-    }
+    if(G.play) {
+        if(document.pointerLockElement === canvas) {
+            shoot();
+        } else {
+            canvas.requestPointerLock();
+        }
+    }
 });
 
 window.addEventListener('mousemove', (e) => {
-    if(document.pointerLockElement === canvas && G.play) {
-        player.angle += e.movementX * 0.003;
-        player.pitch = Math.max(-200, Math.min(200, player.pitch - e.movementY * 1.5));
-    }
+    if(document.pointerLockElement === canvas && G.play) {
+        player.angle += e.movementX * 0.003;
+        player.pitch = Math.max(-200, Math.min(200, player.pitch - e.movementY * 1.5));
+    }
 });
 
 document.getElementById('btn-fire').onclick = e => { e.preventDefault(); shoot(); };
 document.getElementById('btn-interact').onclick = e => { e.preventDefault(); performInteract(); };
 document.getElementById('btn-jump').onclick = e => { e.preventDefault(); if(G.z===0) G.jv=10; };
 
-window.onkeydown = e => { 
-    keys[e.key.toLowerCase()] = true; 
-    if(e.key.toLowerCase()==='e') performInteract(); 
-    if(e.code==='Space' && G.z===0) G.jv=10; 
+window.onkeydown = e => { 
+    keys[e.key.toLowerCase()] = true; 
+    if(e.key.toLowerCase()==='e') performInteract(); 
+    if(e.code==='Space' && G.z===0) G.jv=10; 
 };
 window.onkeyup = e => delete keys[e.key.toLowerCase()];
 
 function saveGame() {
-    localStorage.setItem('den_save_' + G.currentSlot, JSON.stringify({ room: G.room, souls: G.souls, weapon: G.weapon, class: G.class }));
+    localStorage.setItem('den_save_' + G.currentSlot, JSON.stringify({ room: G.room, souls: G.souls, weapon: G.weapon, class: G.class }));
 }
 
 function updateMasks() {
-    const c = document.getElementById('masks');
-    c.innerHTML = '';
-    for(let i=0; i<G.maxHp; i++) {
-        let m = document.createElement('div'); m.className = i < G.hp ? 'mask' : 'mask broken';
-        c.appendChild(m);
-    }
+    const c = document.getElementById('masks');
+    c.innerHTML = '';
+    for(let i=0; i<G.maxHp; i++) {
+        let m = document.createElement('div'); m.className = i < G.hp ? 'mask' : 'mask broken';
+        c.appendChild(m);
+    }
 }
 
 function initGame() {
-    G.isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-    document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('hud').style.display = 'block';
-    document.getElementById('cross').style.display = 'block';
-    if(G.isMobile) document.getElementById('mobile-controls').style.display = 'block';
-    setupRoom();
-    G.play = true;
-    requestAnimationFrame(loop);
+    G.isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('hud').style.display = 'block';
+    document.getElementById('cross').style.display = 'block';
+    if(G.isMobile) document.getElementById('mobile-controls').style.display = 'block';
+    setupRoom();
+    G.play = true;
+    requestAnimationFrame(loop);
 }
 
 function loop() { update(); draw(); if(G.play) requestAnimationFrame(loop); }
