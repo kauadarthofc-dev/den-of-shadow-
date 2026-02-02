@@ -74,4 +74,59 @@
         </div>
     </div>
 </div>
- 
+
+function openSaveMenu(){
+    hideAllMenus();
+    document.getElementById('save-menu').style.display = 'block';
+}
+
+function openSettings(){
+    hideAllMenus();
+    document.getElementById('settings-menu').style.display = 'block';
+}
+
+function openCredits(){
+    hideAllMenus();
+    document.getElementById('credits-menu').style.display = 'block';
+}
+
+function backToMain(){
+    hideAllMenus();
+    document.getElementById('main-menu').style.display = 'block';
+}
+
+function hideAllMenus(){
+    ['main-menu','save-menu','settings-menu','credits-menu','class-menu']
+    .forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.style.display='none';
+    });
+}
+
+/* CONFIGS */
+function setSens(v){
+    G.sens = parseFloat(v);
+    localStorage.setItem('cfg_sens', v);
+}
+
+function setRes(v){
+    G.res = parseInt(v);
+    localStorage.setItem('cfg_res', v);
+}
+
+function toggleHUD(){
+    const h = document.getElementById('hud');
+    h.style.display = h.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleCross(){
+    const c = document.getElementById('cross');
+    c.style.display = c.style.display === 'none' ? 'block' : 'none';
+}
+
+/* LOAD CONFIG */
+window.addEventListener('load', ()=>{
+    G.sens = parseFloat(localStorage.getItem('cfg_sens')) || G.sens;
+    G.res  = parseInt(localStorage.getItem('cfg_res')) || G.res;
+});
+
